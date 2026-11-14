@@ -218,6 +218,7 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .ringt .n{z-index:3!important}
 .top-seat .seat.turnring>.runline{z-index:4!important}
 .top-seat .seat .seat-info{position:relative;z-index:5}
+body.netaway .fly-muerto,body.netaway .fbanner,body.netaway .ftile,body.netaway .sr-ring,body.netaway .turn-flash{display:none!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -804,6 +805,15 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
   }
   const _psr=placeSeatRings; placeSeatRings=function(){ const r=_psr.apply(this,arguments); try{ topRunline(); topTimer(); }catch(e){} return r; };
 
+  /* ---------- Si salís al lobby en medio de una partida online: ni fichas volando, ni sonidos, ni voces ---------- */
+  const away=()=>online()&&lobbyOpen;
+  const _fly=flyTiles; flyTiles=function(){ if(away()) return; return _fly.apply(this,arguments); };
+  const _speak=speak; speak=function(){ if(away()) return Promise.resolve(); return _speak.apply(this,arguments); };
+  const _fb=funBanner; funBanner=function(){ if(away()) return; return _fb.apply(this,arguments); };
+  let netMuted=false;
+  setInterval(()=>{ const a=away(); document.body.classList.toggle('netaway',a);
+    if(a&&!netMuted){ netMuted=true; try{ if(AC&&AC.state==='running') AC.suspend(); }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} document.querySelectorAll('.fbanner,.fly-muerto').forEach(e=>e.remove()); }
+    else if(!a&&netMuted){ netMuted=false; try{ if(AC&&AC.state==='suspended') AC.resume(); }catch(e){} } },250);
   /* ---------- Desbloquear la voz y el audio en celulares con el primer toque ---------- */
   let unlocked=false;
   function unlockAudio(){
