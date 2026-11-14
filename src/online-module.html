@@ -101,21 +101,48 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
 .lp-av:hover{transform:scale(1.04)}
 .lp-edit{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:14px;background:#fff;color:#1d1a16;border:2px solid #1d1a16;box-shadow:0 3px 8px rgba(0,0,0,.2)}
 .cavpop.netcav{z-index:2147480000}
-/* confirmación dentro de la mesa */
-.ltable.netready .lfelt.nr-felt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative}
-.nr-play{font:900 clamp(20px,2.4vw,28px)/1 inherit;font-family:inherit;padding:14px 30px;border-radius:999px;border:2.5px solid #1d1a16;background:#1d1a16!important;color:#ffe11f!important;opacity:1!important;font-weight:900!important;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.25);animation:nrpulse 1s ease-in-out infinite;position:relative;z-index:3}
-.nr-play:hover{transform:translateY(-2px)}
-.nr-play:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
-@keyframes nrpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-.nr-done{font:900 20px/1 inherit;font-family:inherit;padding:10px 18px;border-radius:12px;border:3px solid #1f9d55;color:#1f9d55;transform:rotate(-6deg);background:rgba(255,255,255,.85);animation:nrstamp .35s cubic-bezier(.2,1.6,.4,1) both}
-.nr-sub{font-weight:700;font-size:12px;opacity:.8}
-.nr-count{--p:100;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:900 16px/1 inherit;font-family:inherit;color:#1d1a16;background:radial-gradient(closest-side,#fff 76%,transparent 78% 100%),conic-gradient(#ff4d4d calc(var(--p)*1%),rgba(0,0,0,.12) 0);position:relative;z-index:3}
-.nstamp{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-12deg);z-index:4;padding:3px 7px;border-radius:7px;border:2.5px solid #1f9d55;background:rgba(255,255,255,.92);color:#1f9d55;font:900 11px/1 system-ui,-apple-system,sans-serif;font-style:normal;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;pointer-events:none;animation:nrstamp .4s cubic-bezier(.2,1.6,.4,1) both}
+/* confirmación dentro de la mesa (usa los botones y colores de cada diseño) */
+.ltable.netready .lfelt.nr-felt{display:flex;align-items:center;justify-content:center;gap:10px;position:relative}
+.nr-play.btn{font-size:clamp(18px,2vw,22px)!important;font-weight:900!important;padding:10px 26px!important;border-radius:999px!important;min-width:0!important;cursor:pointer;animation:nrpulse 1.1s ease-in-out infinite;position:relative;z-index:3}
+.nr-play.btn:active{transform:scale(.95)!important;animation:none}
+@keyframes nrpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.nr-done,.nr-go{display:inline-flex;align-items:center;gap:6px;font-weight:900;font-size:18px;padding:8px 16px;border-radius:999px;background:var(--me);color:#fff;animation:nrin .35s cubic-bezier(.2,1.6,.4,1) both}
+.nr-go{font-size:20px}
+body.fun .nr-done,body.fun .nr-go{background:#3ccf6e;color:var(--br);border:2px solid var(--br);box-shadow:2px 2px 0 var(--br)}
+body.glass .nr-done,body.glass .nr-go{background:#161618;color:#fff}
+@keyframes nrin{0%{opacity:0;transform:scale(1.8)}100%{opacity:1;transform:scale(1)}}
+.nr-count{--p:100;width:36px;height:36px;flex:0 0 36px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:15px;color:#1d1a16;background:radial-gradient(closest-side,#fff 74%,transparent 76% 100%),conic-gradient(var(--me) calc(var(--p)*1%),rgba(0,0,0,.12) 0);position:relative;z-index:3;font-variant-numeric:tabular-nums}
+body.fun .nr-count{background:radial-gradient(closest-side,var(--cr) 74%,transparent 76% 100%),conic-gradient(var(--br) calc(var(--p)*1%),rgba(0,0,0,.12) 0);color:var(--br)}
+body.glass .nr-count{background:radial-gradient(closest-side,rgba(255,255,255,.9) 74%,transparent 76% 100%),conic-gradient(#161618 calc(var(--p)*1%),rgba(0,0,0,.1) 0)}
+/* "✓ Listo" junto al avatar, sin tapar el nombre */
+.nstamp{position:absolute;right:-10px;top:-8px;z-index:4;display:inline-flex;align-items:center;gap:3px;padding:3px 7px 3px 5px;border-radius:999px;background:var(--me);color:#fff;border:2px solid #fff;font:800 10.5px/1 system-ui,-apple-system,sans-serif;font-style:normal;white-space:nowrap;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.18);animation:nrstamp .4s cubic-bezier(.2,1.6,.4,1) both}
+.nstamp b{display:grid;place-items:center;width:13px;height:13px;border-radius:50%;background:#fff;color:var(--me);font-size:9px}
+body.fun .nstamp{background:#3ccf6e;color:var(--br);border-color:var(--br);box-shadow:2px 2px 0 var(--br)}
+body.fun .nstamp b{background:var(--br);color:var(--cr)}
+body.glass .nstamp{background:#161618;color:#fff;border-color:rgba(255,255,255,.9)}
+body.glass .nstamp b{color:#161618}
 .nstamp.old{animation:none}
-@keyframes nrstamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-12deg) scale(2.4)}100%{opacity:1;transform:translate(-50%,-50%) rotate(-12deg) scale(1)}}
-.nr-done{animation-name:nrstamp2}
-@keyframes nrstamp2{0%{opacity:0;transform:rotate(-6deg) scale(2)}100%{opacity:1;transform:rotate(-6deg) scale(1)}}
-.lcard:has(.ltable.netready){box-shadow:0 0 0 4px #ffe11f,0 14px 34px rgba(0,0,0,.25)}
+@keyframes nrstamp{0%{opacity:0;transform:scale(2) rotate(-10deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+/* mensaje y progreso */
+.nr-hint{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.nr-hint b{font-weight:900}
+.nr-prog{display:block;width:70%;max-width:180px;height:6px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
+.nr-prog i{display:block;height:100%;border-radius:inherit;background:var(--me);transition:width .4s cubic-bezier(.2,.9,.3,1)}
+body.fun .nr-prog i{background:var(--br)} body.glass .nr-prog i{background:#161618}
+.nr-hint small{font-size:12px;font-weight:700;opacity:.75}
+.nr-no.btn{padding:7px 16px!important;font-size:13px!important;border-radius:999px!important;min-width:0!important}
+.lcard:has(.ltable.netready)::after{animation-duration:1.2s!important}
+/* 3, 2, 1… ¡A jugar! */
+#netgo{position:fixed;inset:0;z-index:2147480600;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle,rgba(0,0,0,.28),rgba(0,0,0,0) 70%);transition:opacity .4s}
+#netgo.out{opacity:0}
+#netgo b{display:block;font-weight:900;font-size:clamp(90px,16vw,190px);line-height:1;color:var(--me);text-shadow:0 8px 30px rgba(0,0,0,.25);animation:nrnum .6s cubic-bezier(.2,1.5,.4,1) both}
+#netgo b.go{font-size:clamp(56px,9vw,120px);color:var(--accent)}
+body.fun #netgo b{color:var(--cr);-webkit-text-stroke:4px var(--br);paint-order:stroke fill;text-shadow:6px 6px 0 var(--br)}
+body.fun #netgo b.go{color:var(--f-yel,#ffe11f)}
+body.glass #netgo{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:rgba(255,255,255,.25)}
+body.glass #netgo b{color:#161618;text-shadow:0 10px 40px rgba(0,0,0,.2)}
+@keyframes nrnum{0%{opacity:0;transform:scale(2.2)}60%{opacity:1}100%{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.nr-play.btn,.nstamp,#netgo b,.nr-done,.nr-go{animation:none!important}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -253,11 +280,12 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(m.t==='ready'){ if(NET.role==='host') markReady(m.pid); return; }
     if(m.t==='readycheck'){ if(NET.role==='guest'&&!online()){ NET.seats=m.seats||NET.seats; NET.n=m.n||NET.n; NET.readyUntil=Date.now()+READY_MS; NET.scrolled=false; NET.readyState=m.ready||{}; NET.meReady=false; readyUI(); try{ bell(); }catch(e){} } return; }
     if(m.t==='readystate'){ if(NET.role==='guest'){ NET.readyState=m.ready||{}; readyUI(); } return; }
+    if(m.t==='go'){ if(NET.role==='guest'&&!online()){ NET.readyUntil=0; NET.going=true; closeReady(); goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; },GO_MS+4000); } return; }
     if(m.t==='readycancel'){ if(NET.role==='guest'){ NET.readyUntil=0; readyUI(); if(m.msg) toast(m.msg); netUI(); } return; }
     if(m.t==='handoff'){
       if(NET.role!=='guest'||online()) return; NET.readyUntil=0; NET.seats=m.seats||NET.seats; closeReady();
       const who=m.name||'El anfitrión';
-      if(m.pid===myPid()){ NET.role='host'; NET.ui='wait'; if(NET.seats[0]) NET.seats[0].t='h'; NET.n=m.n||NET.n; NET.bet=m.bet||NET.bet; NET.pub=!!m.pub; connect(); setTimeout(()=>{ sendSeats(); if(NET.pub) list(); },900); toast(who+' no confirmó y salió. Ahora la mesa es tuya: esperá a que se sume alguien.'); }
+      if(m.pid===myPid()){ NET.readyState={}; NET.role='host'; NET.ui='wait'; if(NET.seats[0]) NET.seats[0].t='h'; NET.n=m.n||NET.n; NET.bet=m.bet||NET.bet; NET.pub=!!m.pub; connect(); setTimeout(()=>{ sendSeats(); if(NET.pub) list(); },900); toast(who+' no confirmó y salió. Ahora la mesa es tuya: esperá a que se sume alguien.'); }
       else toast(who+' no confirmó y salió de la mesa. Esperando otro jugador…');
       readyUI(); netUI(); return; }
     if(m.t==='dropped'){ if(NET.role==='guest'&&m.pid===myPid()){ leaveOnline(); closeReady(); toast('Te sacamos de la mesa porque no confirmaste que ibas a jugar.'); lbRefresh(); } return; }
@@ -317,11 +345,43 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   function markReady(pid){
     if(!NET.ready||!(pid in NET.ready)) return; NET.ready[pid]=true; NET.readyState=NET.ready;
     send({t:'readystate',ready:NET.ready}); readyUI();
-    if(Object.values(NET.ready).every(Boolean)){ clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0; closeReady(); startHost(); }
+    if(Object.values(NET.ready).every(Boolean)){ clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0; NET.going=true; closeReady(); send({t:'go'}); goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; if(NET.code&&NET.role==='host'&&!online()) startHost(); },GO_MS); }
+  }
+  const GO_MS=2900;
+  // 3, 2, 1… ¡A jugar!
+  function goAnim(){
+    document.querySelectorAll('#netgo').forEach(e=>e.remove());
+    const d=document.createElement('div'); d.id='netgo'; d.setAttribute('role','status'); d.setAttribute('aria-live','assertive'); document.body.appendChild(d);
+    const steps=['3','2','1','¡A jugar!']; let k=0;
+    const show=()=>{ if(!d.isConnected) return; const t=steps[k]; d.innerHTML='<b class="'+(k===3?'go':'')+'">'+t+'</b>';
+      try{ if(k<3) softPop(); else { fanfare(); } }catch(e){}
+      k++; if(k<steps.length) setTimeout(show,650); else setTimeout(()=>{ d.classList.add('out'); setTimeout(()=>d.remove(),450); },900); };
+    show();
   }
   function cancelReady(msg){
     if(!NET.ready) return; clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0;
     send({t:'readycancel',msg}); sendSeats(); list(); readyUI(); netUI(); if(msg) toast(msg);
+  }
+  // la mesa pasa a otro jugador (yo me voy); se mantiene la posición de cada uno
+  function handoff(np,names,msg){
+    const n=NET.n, j=NET.seats.findIndex(s=>s&&s.pid===np), tmp=NET.seats.slice(); tmp[0]=null;
+    const ns=tmp.map((_,i)=>tmp[(i+j)%n]);
+    send({t:'handoff',pid:np,seats:ns,n,bet:NET.bet,pub:NET.pub,name:myName(),gone:names||[]});
+    NET.pub=false; clearTimeout(NET.hb); const ws=NET.ws; NET.ws=null;
+    setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },400);
+    leaveOnline(); closeReady(); if(msg) toast(msg); setTimeout(lbRefresh,900);
+  }
+  // "No jugar": me voy de la mesa sin perder nada
+  function noPlay(){
+    if(online()||!NET.code) return;
+    if(NET.role==='host'&&NET.ready){
+      const me=myPid(), others=Object.keys(NET.ready).filter(p=>p!==me), pick=others.find(p=>NET.ready[p])||others[0];
+      clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0;
+      if(pick){ send({t:'readycancel',msg:''}); handoff(pick,[],'Saliste de la mesa. No se te descontó nada.'); }
+      else { send({t:'closed'}); leaveOnline(); closeReady(); toast('Saliste de la mesa. No se te descontó nada.'); lbRefresh(); }
+      return;
+    }
+    onAct('netleave',document.body); toast('Saliste de la mesa. No se te descontó nada.');
   }
   function readyTimeout(){
     if(!NET.ready||online()) return;
@@ -330,20 +390,13 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     miss.filter(p=>p!==me).forEach(pid=>{ const i=NET.seats.findIndex(s=>s&&s.pid===pid); if(i>0){ names.push(NET.seats[i].name); NET.seats[i]=null; } send({t:'dropped',pid}); send({t:'kick',pid,soft:true}); });
     clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0;
     if(miss.includes(me)){
-      if(ok.length){ // la mesa sigue: pasa a ser de otro que sí confirmó
-        const np=ok[0], n=NET.n, j=NET.seats.findIndex(s=>s&&s.pid===np), tmp=NET.seats.slice(); tmp[0]=null;
-        const ns=tmp.map((_,i)=>tmp[(i+j)%n]);
-        send({t:'handoff',pid:np,seats:ns,n,bet:NET.bet,pub:NET.pub,name:myName(),gone:names});
-        NET.pub=false; clearTimeout(NET.hb); const ws=NET.ws; NET.ws=null;
-        setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },400);
-        leaveOnline(); closeReady(); toast('Saliste de la mesa porque no confirmaste. La mesa sigue abierta para los demás.'); setTimeout(lbRefresh,900);
-      } else { send({t:'closed',why:'noready'}); leaveOnline(); closeReady(); toast('Cerramos tu mesa porque nadie confirmó.'); lbRefresh(); }
+      if(ok.length){ handoff(ok[0],names,'Saliste de la mesa porque no confirmaste. La mesa sigue abierta para los demás.');      } else { send({t:'closed',why:'noready'}); leaveOnline(); closeReady(); toast('Cerramos tu mesa porque nadie confirmó.'); lbRefresh(); }
       return;
     }
     const msg=names.length?names.join(' y ')+(names.length>1?' no confirmaron. Sus lugares quedaron libres.':' no confirmó. Su lugar quedó libre.'):'';
     send({t:'readycancel',msg}); sendSeats(); list(); readyUI(); netUI(); if(msg) toast(msg);
   }
-  function iAmReady(){ NET.meReady=true; if(NET.role==='host') markReady(myPid()); else { send({t:'ready',pid:myPid()}); readyUI(); } }
+  function iAmReady(){ if(NET.meReady) return; NET.meReady=true; try{ clack(1); }catch(e){} if(NET.role==='host') markReady(myPid()); else { send({t:'ready',pid:myPid()}); readyUI(); } }
   function closeReady(){ const o=document.getElementById('netready'); if(o) o.remove(); }
   function readyTickFn(){
     const left=Math.max(0,(NET.readyUntil-Date.now())/1000);
@@ -366,10 +419,10 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     const st=NET.readyState||{}, seats=NET.seats||[];
     const list=seats.map((s,i)=>s?'<li class="'+(s.t==='b'?'bot':st[s.pid]?'ok':'')+'"><span>'+esc(s.name)+(s.pid===myPid()?' (vos)':'')+'</span><b>'+(s.t==='b'?'🤖':st[s.pid]?'✓ Listo':'Esperando…')+'</b></li>':'').join('');
     const left=Math.max(0,Math.ceil((NET.readyUntil-Date.now())/1000));
-    o.innerHTML='<div class="lmodal net-modal"><div class="card lwait" role="dialog" aria-modal="true" aria-label="Confirmar partida"><span class="label">¡La mesa está lista!</span>'+
-      '<p class="lw-msg">'+(NET.meReady?'Esperando que confirmen los demás…':'Confirmá que vas a jugar para empezar.')+'</p><ul class="nready">'+list+'</ul>'+
+    o.innerHTML='<div class="lmodal net-modal"><div class="card lwait" role="dialog" aria-modal="true" aria-label="Confirmar partida"><span class="label">¡Mesa completa!</span>'+
+      '<p class="lw-msg">'+(NET.meReady?'Esperando a los demás…':'¿Listo para jugar?')+' · '+seats.filter(s=>s&&(s.t==='b'||st[s.pid])).length+' de '+seats.length+' confirmados</p><ul class="nready">'+list+'</ul>'+
       (NET.meReady?'':'<button class="btn primary net-play" data-act="netready">Jugar</button>')+
-      '<p class="net-left">Quedan <b>'+left+'</b> s</p><button class="btn" data-act="netleave">Salir de la mesa</button></div></div>';
+      '<p class="net-left">Quedan <b>'+left+'</b> s</p>'+(NET.meReady?'':'<button class="btn" data-act="netnoplay">No jugar</button>')+'</div></div>';
   }
   // cambiar de lugar dentro de mi mesa (antes de empezar)
   function changeSeat(j){
@@ -451,7 +504,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       return;
     }
     const first=!online();
-    if(first){ if(NET.role!=='guest') return; NET.readyUntil=0; closeReady(); guestInit(c); chargeEntry(); }
+    if(first){ if(NET.role!=='guest') return; NET.readyUntil=0; NET.going=false; closeReady(); guestInit(c); chargeEntry(); }
     NET.seat=me; NET.n=c.n;
     if(c.over==null&&S.over){ try{ if(closeFx) finishClose(); }catch(e){} }
     const g=rot(c,me), prevTurn=S.turn, prevRound=S.round, prevOver=!!S.over, prevDone=!!(S.over&&S.over.done);
@@ -690,6 +743,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(a==='netback'){ NET.share=false; shareBox(); return; }
     if(a==='netfill'){ if(NET.role==='host'&&guests()) fillAnim(); return; }
     if(a==='netready'){ iAmReady(); return; }
+    if(a==='netnoplay'){ noPlay(); return; }
     if(a==='pickme'){ pickMe(el); return; }
     if(a==='mypick'){ setMine(+el.dataset.v); return; }
     if(a==='netwa'){ const L=link(); window.open('https://wa.me/?text='+encodeURIComponent('¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)'),'_blank'); return; }
@@ -712,7 +766,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     return _onAct.apply(this,arguments);
   };
   const _launch=lbLaunch; lbLaunch=function(){ leaveOnline(); return _launch.apply(this,arguments); };
-  function leaveOnline(){ if(NET.share){ NET.share=false; } if(!NET.code){ shareBox(); return; } unlist(); NET.code=null; NET.role=null; NET.seats=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; NET.open=false; NET.ui=null; NET.ready=null; NET.readyUntil=0; clearTimeout(NET.readyT); closeReady(); clearTimeout(NET.timer); clearInterval(NET.ping); badge(); shareBox(); try{ history.replaceState(null,'',location.pathname); }catch(e){} try{ if(lobbyOpen){ LT=LT.filter(x=>!x.joined); renderLGrid(); } }catch(e){} }
+  function leaveOnline(){ if(NET.share){ NET.share=false; } if(!NET.code){ shareBox(); return; } unlist(); NET.code=null; NET.role=null; NET.seats=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; NET.open=false; NET.ui=null; NET.ready=null; NET.readyUntil=0; NET.going=false; NET.meReady=false; clearTimeout(NET.readyT); closeReady(); clearTimeout(NET.timer); clearInterval(NET.ping); badge(); shareBox(); try{ history.replaceState(null,'',location.pathname); }catch(e){} try{ if(lobbyOpen){ LT=LT.filter(x=>!x.joined); renderLGrid(); } }catch(e){} }
 
   /* ---------- Pantallas ---------- */
   const newCode=()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; };
@@ -785,14 +839,18 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       (host&&f>=2&&f<t.n?'<button class="lnet-ic lnet-bot" data-act="netfill" data-tip="Completar con la máquina y empezar" aria-label="Completar con la máquina y empezar">🤖</button>':'')+
       '<button class="lnet-ic lnet-x" data-act="netleave" data-tip="'+(host?'Cerrar la mesa':'Salir de la mesa')+'" aria-label="'+(host?'Cerrar la mesa':'Salir de la mesa')+'">✕</button></div>';
     const hint=!NET.open?'Conectando…':host?(f>=2&&f<t.n?'Esperando jugadores · o tocá 🤖 para empezar con la máquina':'Esperando que se sienten jugadores…'):offHost?esc(h0.name||'')+' no está conectado':'Esperando que '+esc(h0.name||'el anfitrión')+' empiece…';
-    s=s.replace('<div class="ltable','<div class="ltable netmine'+(NET.readyUntil&&!online()?' netready':''));
-    if(NET.readyUntil&&!online()){
-      const st=NET.readyState||{}, seen=NET.stamped||new Set();
-      s=s.replace(/(<span class="lseat[^"]*" data-si="(\d)"[^>]*>)/g,(all,open,i)=>{ const x=(NET.seats||[])[+i]; if(!x) return all; const ok=x.t==='b'||st[x.pid]; return ok?open+'<i class="nstamp'+(seen.has(x.pid||x.id)?' old':'')+'">'+(x.t==='b'?'Listo':'Confirmado')+'</i>':open; });
+    s=s.replace('<div class="ltable','<div class="ltable netmine'+((NET.readyUntil||NET.going)&&!online()?' netready':''));
+    if((NET.readyUntil||NET.going)&&!online()){
+      const st=NET.readyState||{}, seen=NET.stamped||new Set(), seats=NET.seats||[];
+      const done=seats.filter(x=>x&&(x.t==='b'||st[x.pid]||NET.going)).length, tot=NET.n||seats.length;
+      s=s.replace(/(<span class="lseat[^"]*" data-si="(\d)"[^>]*>)/g,(all,open,i)=>{ const x=seats[+i]; if(!x) return all; const ok=x.t==='b'||st[x.pid]||NET.going; return ok?open+'<i class="nstamp'+(seen.has(x.pid||x.id)?' old':'')+'"><b>✓</b>Listo</i>':open; });
       const left=Math.max(0,Math.ceil((NET.readyUntil-Date.now())/1000));
-      s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt">'+(NET.meReady?'<span class="nr-done">¡Confirmado!</span><small class="nr-sub">Esperando a los demás…</small>':'<button class="nr-play" data-act="netready">Jugar</button>')+'<span class="nr-count" style="--p:100">'+left+'</span></div>');
-      s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint">¡Mesa completa! Tocá <b>Jugar</b> para confirmar</p>');
-      return s.replace(/<\/div>\s*$/,'<div class="lnet-acts"><button class="lnet-ic lnet-x" data-act="netleave" data-tip="Salir de la mesa" aria-label="Salir de la mesa">✕</button></div></div>');
+      const felt=NET.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':
+        (NET.meReady?'<span class="nr-done"><b>✓</b> Listo</span>':'<button class="btn primary nr-play" data-act="netready">Jugar</button>')+'<span class="nr-count" style="--p:100" aria-label="Segundos restantes">'+left+'</span>';
+      s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt">'+felt+'</div>');
+      s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint nr-hint"><b>¡Mesa completa!</b> '+(NET.going?'Empieza la partida…':NET.meReady?'Esperando a los demás…':'¿Listo para jugar?')+'<span class="nr-prog"><i style="width:'+Math.round(done/tot*100)+'%"></i></span><small>'+done+' de '+tot+' confirmados</small></p>');
+      if(NET.going) return s;
+      return s.replace(/<\/div>\s*$/,'<div class="lnet-acts">'+(NET.meReady?'':'<button class="btn nr-no" data-act="netnoplay">No jugar</button>')+'</div></div>');
     }
     s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint">'+hint+'</p>');
     return s.replace(/<\/div>\s*$/,acts+'</div>');
