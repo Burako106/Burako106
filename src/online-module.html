@@ -97,6 +97,10 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
 .net-play{font-size:22px!important;padding:16px 18px!important;font-weight:900!important;animation:netpop 1.4s ease-in-out infinite}
 .net-left{margin:0;font-size:14px;opacity:.75}
 #netready .btn{width:100%}
+.lp-av{position:relative;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;flex:0 0 auto}
+.lp-av:hover{transform:scale(1.04)}
+.lp-edit{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:14px;background:#fff;color:#1d1a16;border:2px solid #1d1a16;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.cavpop.netcav{z-index:2147480000}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -145,7 +149,31 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   /* ---------- Identidad ---------- */
   function myPid(){ let id=''; try{ id=localStorage.getItem('burako-pid')||''; if(!id){ id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('burako-pid',id); } }catch(e){ id=NET.tmpPid||(NET.tmpPid=Math.random().toString(36).slice(2)); } return id; }
   function myName(){ let n='Jugador'; try{ n=localStorage.getItem('burako-name')||'Jugador'; }catch(e){} return n.slice(0,18); }
-  function ensureMyCav(){ if(NET.myCav==null) NET.myCav=(typeof myCav==='number'&&myCav>=0&&myCav<CC_AV.b.length)?myCav:Math.floor(Math.random()*CC_AV.b.length); return NET.myCav; }
+  // Mi personaje: el mismo en el perfil, en el lobby y en las mesas (se guarda en este dispositivo)
+  function ensureMyCav(){
+    if(!(typeof myCav==='number'&&myCav>=0&&myCav<CC_AV.b.length)){
+      myCav=(S&&S.cav&&S.cav[0]>=0&&S.cav[0]<CC_AV.b.length)?S.cav[0]:Math.floor(Math.random()*CC_AV.b.length);
+      try{ localStorage.setItem('burako-cav',String(myCav)); }catch(e){}
+    }
+    return myCav;
+  }
+  function pickMe(el){
+    const old=document.getElementById('cavpop'); if(old){ old.remove(); return; }
+    const cur=ensureMyCav(), d=document.createElement('div'); d.id='cavpop'; d.className='cavpop netcav'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Elegí tu personaje');
+    d.innerHTML='<span class="label">Elegí tu personaje</span><div class="cav-grid">'+CC_AV.b.map((src,i)=>'<button class="cav-it'+(i===cur?' on':'')+'" data-act="mypick" data-v="'+i+'" style="--d:'+(i*28)+'ms" aria-label="Personaje '+(i+1)+'"><img src="'+src+'" alt=""></button>').join('')+'</div>';
+    document.body.appendChild(d);
+    const r=el.getBoundingClientRect(), w=d.offsetWidth, hh=d.offsetHeight;
+    d.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left))+'px';
+    d.style.top=(r.bottom+12+hh<innerHeight?r.bottom+12:Math.max(8,r.top-hh-12))+'px';
+  }
+  function setMine(i){
+    myCav=i; try{ localStorage.setItem('burako-cav',String(i)); localStorage.removeItem('burako-photo'); }catch(e){} try{ photo=null; }catch(e){}
+    if(S&&S.cav&&!online()){ try{ setMyCav(i); }catch(e){} }
+    // si estoy sentado esperando en una mesa, que los demás vean el cambio
+    if(NET.code&&!online()&&NET.seats){ const s=NET.seats.find(x=>x&&x.pid===myPid()); if(s){ s.cav=i; if(NET.role==='host'){ sendSeats(); list(); } else send({t:'hello',...myWho()}); } }
+    const c=document.getElementById('cavpop'); if(c) c.remove();
+    try{ if(typeof renderLobby==='function') renderLobby(); }catch(e){} try{ render(); }catch(e){}
+  }
   function myWho(){ return {name:myName(),cav:ensureMyCav(),pid:myPid(),seat:NET.want,cap:NET.role==='host'?NET.n-1:undefined}; }
   const okCav=c=>Number.isInteger(c)&&c>=0&&c<CC_AV.b.length;
 
@@ -614,6 +642,8 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(a==='netback'){ NET.share=false; shareBox(); return; }
     if(a==='netfill'){ if(NET.role==='host'&&guests()) fillAnim(); return; }
     if(a==='netready'){ iAmReady(); return; }
+    if(a==='pickme'){ pickMe(el); return; }
+    if(a==='mypick'){ setMine(+el.dataset.v); return; }
     if(a==='netwa'){ const L=link(); window.open('https://wa.me/?text='+encodeURIComponent('¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)'),'_blank'); return; }
     if(a==='netcopy'){ const L=link(), b=el; const done=()=>{ if(b){ b.textContent='¡Link copiado!'; setTimeout(()=>{ b.textContent='Copiar link'; },1800); } };
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(L).then(done,()=>prompt('Copiá este link:',L)); else prompt('Copiá este link:',L); return; }
