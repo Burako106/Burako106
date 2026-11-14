@@ -8,7 +8,7 @@ def rep(old, new, count=1):
     h = h.replace(old, new)
 # 1) en una mesa online el rival es una persona: nunca juega la máquina por él
 rep("while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen) await botPlay(S.turn);",
-    "while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen&&(S.kind!=='online'||!!(window.BURAKO_NET&&BURAKO_NET.botTurn()))) await botPlay(S.turn);")
+    "while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen&&!abandoned&&(S.kind!=='online'||!!(window.BURAKO_NET&&BURAKO_NET.botTurn()))) await botPlay(S.turn);")
 # 2) sin reacciones ni respuestas automáticas de bots en el chat online
 # 3) botón para jugar con un amigo en el lobby
 rep('<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button></div>',

@@ -4601,7 +4601,7 @@ async function botPlay(p){
 }
 async function runBots(){
   if(busy) return; busy=true;
-  try{ while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen&&(S.kind!=='online'||!!(window.BURAKO_NET&&BURAKO_NET.botTurn()))) await botPlay(S.turn); }
+  try{ while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen&&!abandoned&&(S.kind!=='online'||!!(window.BURAKO_NET&&BURAKO_NET.botTurn()))) await botPlay(S.turn); }
   finally{ busy=false; render(); }
 }
 
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794677155';</script>
+<script>window.BURAKO_BUILD='1794677909';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6899,7 +6899,16 @@ body.clk-discard #mesa{cursor:pointer}
   function clickHints(){ try{ const on=!!(S&&!lobbyOpen&&!S.over&&S.phase==='play'&&S.sel&&S.sel.length&&canPlay());
     document.body.classList.toggle('clk-meld',on); document.body.classList.toggle('clk-discard',on&&S.sel.length===1); }catch(e){} }
   /* ---------- Si salís al lobby en medio de una partida online: ni fichas volando, ni sonidos, ni voces ---------- */
-  const away=()=>online()&&lobbyOpen;
+  const away=()=>(online()&&lobbyOpen)||(abandoned&&lobbyOpen);
+  // Al abandonar una partida (contra la máquina o con gente) se corta todo: jugadas pendientes, voces, fichas en el aire
+  function cutGame(){
+    window.__burakoGen=(window.__burakoGen|0)+1;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    document.querySelectorAll('.ftile,.fbanner,.fly-muerto,.sr-ring,.toast-x').forEach(e=>e.remove());
+    try{ document.querySelectorAll('body>.tile,body>.htile').forEach(e=>e.remove()); }catch(e){}
+  }
+  NET.cutGame=cutGame;
+  window.addEventListener('unhandledrejection',e=>{ if(e&&e.reason&&String(e.reason.message||e.reason).includes('mesa abandonada')) e.preventDefault(); });
   const _fly=flyTiles; flyTiles=function(){ if(away()) return; return _fly.apply(this,arguments); };
   const _speak=speak; speak=function(){ if(away()) return Promise.resolve(); return _speak.apply(this,arguments); };
   const _fb=funBanner; funBanner=function(){ if(away()) return; return _fb.apply(this,arguments); };
@@ -6985,6 +6994,7 @@ body.clk-discard #mesa{cursor:pointer}
     if(a==='netshare'){ NET.share=true; shareBox(); return; }
     if(a==='netback'){ NET.share=false; shareBox(); return; }
     if(a==='netfill'){ if(NET.role==='host'&&guests()) fillAnim(); return; }
+    if(a==='quityes'&&!online()){ const r=_onAct.apply(this,arguments); cutGame(); return r; }
     if(a==='netready'){ iAmReady(); return; }
     if(a==='netexit'){ exitGame(); return; }
     if(a==='netnoplay'){ noPlay(); return; }
