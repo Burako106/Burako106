@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794672957';</script>
+<script>window.BURAKO_BUILD='1794673198';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6397,7 +6397,7 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
         if(!m.on&&m.role==='guest'){ unseat(m.pid); }
       } else if(online()){
         if(m.on&&NET.role==='host') pushNow(true);
-        if(!m.on&&!S.over){ const i=(S.seatInfo||[]).findIndex(s=>s&&s.pid===m.pid); if(i>=0) toast(S.seatInfo[i].name+' se desconectó. Si no vuelve, se le va a terminar el tiempo.'); }
+        if(!m.on&&!S.over){ const i=(S.seatInfo||[]).findIndex(s=>s&&s.pid===m.pid); if(i>=0) toast(S.seatInfo[i].name+' se desconectó. Si no vuelve en 20 segundos, entra la máquina en su lugar.'); }
         setTimeout(()=>{ if(NET.botTurn()) runBots(); },300);
       }
       badge(); netUI(); render(); return;
@@ -6688,7 +6688,7 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
       else if(e.k==='add'){ say(who+' agregó a un juego.'); clack(Math.min((e.c||1)+1,4)); }
       else if(e.k==='muerto'){ say(who+' se fue al muerto.'); setTimeout(()=>funBanner('¡AL MUERTO!',col),300); if(isBoss()) react('muerto',vp); }
       else if(e.k==='timeout') say(who+' no jugó a tiempo: se tiró una ficha al azar.',true);
-      else if(e.k==='out') { say(e.why==='quit'?e.name+' abandonó la partida. Entra la máquina en difícil.':e.name+' no jugó 3 veces. Entra la máquina en difícil.',true); quitSnd(); }
+      else if(e.k==='out') { say(e.why==='quit'?e.name+' abandonó la partida. Entra la máquina en difícil.':e.why==='left'?e.name+' se fue de la partida. Entra la máquina en difícil.':e.name+' no jugó 3 veces. Entra la máquina en difícil.',true); quitSnd(); }
       else if(e.k==='disc'&&e.t){ say(who+' descartó '+tname(e.t)+'.'+(S.turn===0&&!S.over?' Tu turno: robá del mazo o levantá el pozo.':'')); setTimeout(()=>clack(1),260); }
     });
     // canastas nuevas de los demás: mismo festejo y sonido
@@ -6797,7 +6797,7 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
   function replaceSeat(c,why){
     const s=S.seatInfo[c]; if(!s||s.t==='b') return;
     S.seatInfo[c]=Object.assign(botFor(c),{was:s.name}); NET.ev.push({k:'out',s:c,name:s.name,why}); applySeats();
-    if(c!==NET.seat){ say(why==='quit'?s.name+' abandonó la partida. Entra la máquina en difícil.':s.name+' no jugó 3 veces. Entra la máquina en difícil.',true); quitSnd(); }
+    if(c!==NET.seat){ say(why==='quit'?s.name+' abandonó la partida. Entra la máquina en difícil.':why==='left'?s.name+' se fue de la partida. Entra la máquina en difícil.':s.name+' no jugó 3 veces. Entra la máquina en difícil.',true); quitSnd(); }
   }
   function strike(c){ const s=S.seatInfo&&S.seatInfo[c]; if(!s||s.t==='b') return false; s.strikes=(s.strikes||0)+1; if(s.strikes>=3){ replaceSeat(c,'timeout'); return true; } return false; }
   // Se me terminó el tiempo: juega sola la ficha (como siempre) y suma una falta
@@ -6829,6 +6829,17 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
     if(!online()||!S||S.over||dealing||busy||!S.timer||!S.deadline||S.turn===0) return;
     if(!isBoss()) return; const s=infoAt(S.turn); if(!s||s.t==='b') return;
     if(Date.now()>S.deadline+6000) bossTimeout(S.turn);
+  },1000);
+  // Si alguien se desconecta y no vuelve en 20 s, entra la máquina en difícil en su lugar
+  const GONE_MS=20000; NET.offAt={};
+  setInterval(()=>{
+    if(!online()||!S||!S.seatInfo||S.over||dealing||busy) return;
+    const now=Date.now(), me=myPid(); let changed=false;
+    S.seatInfo.forEach((s,c)=>{ if(!s||s.t==='b'||s.pid===me) return;
+      if(NET.on[s.pid]){ delete NET.offAt[s.pid]; return; }
+      if(!NET.offAt[s.pid]) NET.offAt[s.pid]=now;
+      if(isBoss()&&now-NET.offAt[s.pid]>GONE_MS){ delete NET.offAt[s.pid]; replaceSeat(c,'left'); changed=true; } });
+    if(changed){ pushNow(true); render(); setTimeout(()=>{ if(NET.botTurn()) runBots(); },300); }
   },1000);
   // Sin pausa cuando hay otras personas
   const _pause=setPaused; setPaused=function(v){ if(online()&&v){ paused=false; return; } return _pause.apply(this,arguments); };
