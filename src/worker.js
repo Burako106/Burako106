@@ -18,11 +18,32 @@ export class Lobby extends DurableObject {
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1]);
     try { pair[1].send(JSON.stringify({ t: "tables", list: await this.list() })); } catch (e) {}
+    try { pair[1].send(JSON.stringify({ t: "chathist", list: (await this.ctx.storage.get("chat")) || [] })); } catch (e) {}
     return new Response(null, { status: 101, webSocket: pair[0] });
   }
   async webSocketMessage(ws, raw) {
     if (raw === "ping") { try { ws.send("pong"); } catch (e) {} return; }
-    if (raw === "list") { try { ws.send(JSON.stringify({ t: "tables", list: await this.list() })); } catch (e) {} }
+    if (raw === "list") { try { ws.send(JSON.stringify({ t: "tables", list: await this.list() })); } catch (e) {} return; }
+    if (typeof raw !== "string" || raw.length > 600000) return;
+    let m; try { m = JSON.parse(raw); } catch (e) { return; }
+    const clean = (s, n) => String(s || "").replace(/[\u0000-\u001f]/g, "").trim().slice(0, n);
+    if (m.t === "chat" && m.m) {
+      // Chat del club: se reparte a todos y se guardan los últimos mensajes
+      const c = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), who: clean(m.m.who, 18) || "Jugador", cav: Number.isInteger(m.m.cav) ? m.m.cav : 0,
+        pid: clean(m.m.pid, 40), kind: ["text", "emoji", "voice"].includes(m.m.kind) ? m.m.kind : "text", txt: clean(m.m.txt, 120), at: Date.now() };
+      if (!c.txt) return;
+      const hist = ((await this.ctx.storage.get("chat")) || []).filter((x) => Date.now() - x.at < 86400000);
+      hist.push(c); while (hist.length > 40) hist.shift();
+      await this.ctx.storage.put("chat", hist);
+      const data = JSON.stringify({ t: "chat", m: c });
+      for (const w of this.ctx.getWebSockets()) { try { w.send(data); } catch (e) {} }
+      return;
+    }
+    if (m.t === "vn" && typeof m.data === "string" && m.data.length < 460000) {
+      // Nota de voz del club: solo en vivo, no se guarda
+      const data = JSON.stringify({ t: "vn", who: clean(m.who, 18) || "Jugador", cav: Number.isInteger(m.cav) ? m.cav : 0, pid: clean(m.pid, 40), mime: clean(m.mime, 40), data: m.data, dur: Math.min(60, +m.dur || 1) });
+      for (const w of this.ctx.getWebSockets()) { if (w !== ws) { try { w.send(data); } catch (e) {} } }
+    }
   }
   async webSocketClose() {}
   async webSocketError() {}

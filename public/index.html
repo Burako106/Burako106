@@ -5753,7 +5753,7 @@ function lbProfileH(st){
     <p class="set-note">Las partidas abandonadas cuentan como perdidas. Si alguien abandona a mitad de partida, la pierde y entra la máquina en difícil a reemplazarlo.</p></div></div>`;
 }
 let LCHAT=null;
-function lbChatInit(){ if(LCHAT) return; const used=new Set(); const msgs=['¡Bienvenido al club! Por ahora juegan robots, pronto llegan las personas.','Falta uno en Mate y Fichas, ¿te sumás?','Te espero en un 2 vs 2 a 3000','En La Revancha hay lugar','¡Suerte en las mesas! 🍀','Probá un 1 vs 1 vs 1, es rápido'];
+function lbChatInit(){ if(LCHAT) return; const used=new Set(); const msgs=['¡Bienvenidos al club! 👋','Falta uno en Mate y Fichas, ¿te sumás?','Te espero en un 2 vs 2 a 3000','En La Revancha hay lugar','¡Suerte en las mesas! 🍀','Probá un 1 vs 1 vs 1, es rápido'];
   LCHAT=msgs.slice(0,5+Math.floor(Math.random()*3)).map(m=>{ const p=lbPlayer(used); return {who:'🤖 '+p.name,p,txt:m,kind:'text'}; }); }
 const CHAT_COLS=['#4fb8ff','#2fd38a','#a98bff','#ff7fc2','#ff9a3c','#ff6b5e','#ffe11f'], chatColMap={};
 function chatCol(who){ const k=String(who).replace(/^🤖\s*/,''); if(!(k in chatColMap)) chatColMap[k]=CHAT_COLS[Object.keys(chatColMap).length%CHAT_COLS.length]; return chatColMap[k]; }
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794691562';</script>
+<script>window.BURAKO_BUILD='1794696693';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6937,11 +6937,11 @@ body.clk-discard #mesa{cursor:pointer}
   function vnMime(){ try{ for(const m of ['audio/mp4','audio/webm;codecs=opus','audio/webm']) if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)) return m; }catch(e){} return ''; }
   // Arriba del micrófono: el cartel "Grabando" y la ✕ para descartar
   function vnUI(on){
-    if(!on){ clearInterval(VN.tick); if(VN.ui){ VN.ui.remove(); VN.ui=null; } document.querySelectorAll('[data-act="mic"]').forEach(b=>b.classList.remove('rec')); return; }
-    document.querySelectorAll('[data-act="mic"]').forEach(b=>b.classList.add('rec'));
+    if(!on){ clearInterval(VN.tick); if(VN.ui){ VN.ui.remove(); VN.ui=null; } document.querySelectorAll('[data-act="mic"],[data-act="lcmic"]').forEach(b=>b.classList.remove('rec')); return; }
+    document.querySelectorAll('[data-act="mic"],[data-act="lcmic"]').forEach(b=>b.classList.add('rec'));
     if(!VN.ui){ VN.ui=document.createElement('div'); VN.ui.id='vnrec'; VN.ui.setAttribute('role','status');
       VN.ui.innerHTML='<div class="vn-x" aria-label="Descartar nota de voz">✕</div><div class="vn-pill"><i></i>Grabando <b>0:00</b></div>'; document.body.appendChild(VN.ui); }
-    const mic=VN.btn&&VN.btn.isConnected?VN.btn:document.querySelector('[data-act="mic"].rec'), r=mic&&mic.getBoundingClientRect();
+    const mic=VN.btn&&VN.btn.isConnected?VN.btn:document.querySelector('[data-act="mic"].rec,[data-act="lcmic"].rec'), r=mic&&mic.getBoundingClientRect();
     if(r&&r.width){ VN.ui.style.left=(r.left+r.width/2)+'px'; VN.ui.style.bottom=(innerHeight-r.top+10)+'px'; } else { VN.ui.style.left='50%'; VN.ui.style.bottom='130px'; }
     const up=()=>{ const s=Math.floor((Date.now()-VN.t0)/1000), b=VN.ui&&VN.ui.querySelector('.vn-pill b'); if(b) b.textContent='0:'+String(s).padStart(2,'0'); };
     up(); clearInterval(VN.tick); VN.tick=setInterval(up,250);
@@ -6970,18 +6970,22 @@ body.clk-discard #mesa{cursor:pointer}
     if(VN.cancel) return;
     if(dur<600||!chunks.length){ toast('Mantené apretado el micrófono mientras hablás, y soltá para enviar.'); return; }
     const blob=new Blob(chunks,{type}), url=URL.createObjectURL(blob), secs=Math.max(1,Math.round(dur/1000));
+    if(VN.btn&&VN.btn.dataset&&VN.btn.dataset.act==='lcmic'){ // nota de voz en el chat del club
+      lbChatPush({who:lbMyName(),me:true,kind:'audio',url,txt:''});
+      const fr=new FileReader(); fr.onload=()=>{ const d=String(fr.result||''), b64=d.slice(d.indexOf(',')+1); if(b64.length<450000) lsend({t:'vn',who:lbMyName(),cav:ensureMyCav(),pid:myPid(),mime:type,data:b64,dur:secs}); else toast('La nota de voz es muy larga para enviarla.'); }; fr.readAsDataURL(blob);
+      return; }
     postMsg(0,'audio','',{url,dur:secs});
     if(online()){ const fr=new FileReader(); fr.onload=()=>{ const d=String(fr.result||''); const b64=d.slice(d.indexOf(',')+1); if(b64.length<450000) send({t:'vn',seat:NET.seat,mime:type,data:b64,dur:secs}); else toast('La nota de voz es muy larga para enviarla.'); }; fr.readAsDataURL(blob); }
   }
   function vnPlay(url){ try{ if(S&&S.sound===false) return; const a=new Audio(url); a.play().catch(()=>{}); }catch(e){} }
   // botón del micrófono: apretar y soltar
-  document.addEventListener('pointerdown',e=>{ const b=e.target.closest&&e.target.closest('[data-act="mic"]'); if(!b) return; e.preventDefault(); VN.down=true; VN.btn=b; VN.lastPtt=Date.now(); try{ b.setPointerCapture(e.pointerId); }catch(x){} vnStart(); },true);
+  document.addEventListener('pointerdown',e=>{ const b=e.target.closest&&e.target.closest('[data-act="mic"],[data-act="lcmic"]'); if(!b) return; e.preventDefault(); VN.down=true; VN.btn=b; VN.lastPtt=Date.now(); try{ b.setPointerCapture(e.pointerId); }catch(x){} vnStart(); },true);
   document.addEventListener('pointermove',e=>{ if(!VN.down||!VN.ui) return; VN.ui.classList.toggle('hot',overX(e.clientX,e.clientY)); },true);
   const upH=e=>{ if(!VN.down) return; VN.down=false; VN.lastPtt=Date.now();
     const cancel=e.type==='pointercancel'||overX(e.clientX,e.clientY);
     vnStop(cancel); if(cancel&&e.type!=='pointercancel') toast('Nota de voz descartada.'); };
   document.addEventListener('pointerup',upH,true); document.addEventListener('pointercancel',upH,true);
-  document.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('[data-act="mic"]')) e.preventDefault(); },true);
+  document.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('[data-act="mic"],[data-act="lcmic"]')) e.preventDefault(); },true);
 
   /* Chat: mis mensajes llegan a todos (con voz si la tengo activada) */
   const _send=userSend; userSend=function(kind,text){ const r=_send.apply(this,arguments); if(r&&online()) send({t:'chat',kind:(kind==='text'&&S.voiceSend)?'voice':kind,text,seat:NET.seat}); return r; };
@@ -7016,7 +7020,7 @@ body.clk-discard #mesa{cursor:pointer}
       if(isBoss()) hostNext(); else { if(NET.nextAt===S.over.at) return; if(send({t:'next'})){ NET.nextAt=S.over.at; say('Esperando que '+nameC(0)+' reparta la próxima mano…'); } else toast('Sin conexión. Probá de nuevo en unos segundos.'); render(); }
       return;
     }
-    if(a==='mic'&&Date.now()-VN.lastPtt<1500) return;
+    if((a==='mic'||a==='lcmic')&&Date.now()-VN.lastPtt<1500) return;
     if(a==='pause'&&online()){ toast('Con otras personas no hay pausa.'); return; }
     if(a==='quityes'&&online()&&!S.over){
       const e=S.eco; replaceSeat(NET.seat,'quit'); pushNow(true); NET.leaving=true;
@@ -7184,11 +7188,39 @@ body.clk-discard #mesa{cursor:pointer}
   function lobbyWS(){
     if(LWS&&LWS.readyState<2) return; clearTimeout(lwsT);
     try{ LWS=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws/lobby'); }catch(e){ lwsT=setTimeout(lobbyWS,4000); return; }
-    LWS.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch(x){ return; } if(m&&m.t==='tables'){ lbAt=Date.now(); applyTables(m.list); } };
+    LWS.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch(x){ return; } if(!m) return;
+      if(m.t==='tables'){ lbAt=Date.now(); applyTables(m.list); }
+      else if(m.t==='chathist'){ (m.list||[]).forEach(c=>clubIn(c,true)); }
+      else if(m.t==='chat'){ clubIn(m.m,false); }
+      else if(m.t==='vn'){ clubVn(m); } };
     LWS.onclose=()=>{ clearInterval(lwsPing); LWS=null; lwsT=setTimeout(lobbyWS,3000); };
     LWS.onerror=()=>{};
     clearInterval(lwsPing); lwsPing=setInterval(()=>{ try{ if(LWS&&LWS.readyState===1) LWS.send('ping'); }catch(e){} },25000);
   }
+  /* ---------- Chat del club: mensajes reales entre todos los que están en el lobby ---------- */
+  function lsend(o){ try{ if(LWS&&LWS.readyState===1){ LWS.send(JSON.stringify(o)); return true; } }catch(e){} return false; }
+  const clubSeen=new Set();
+  const clubP=c=>({name:c.who,cav:(Number.isInteger(c.cav)&&c.cav>=0&&c.cav<CC_AV.b.length)?c.cav:0,g:(typeof CC_G!=='undefined'&&CC_G[c.cav])||'f',real:true,tone:'dulce'});
+  function clubIn(c,old){
+    if(!c||!c.id||clubSeen.has(c.id)) return; clubSeen.add(c.id); if(c.pid===myPid()) return;
+    const kind=['text','emoji','voice'].includes(c.kind)?c.kind:'text';
+    const m={who:String(c.who||'Jugador'),p:clubP(c),txt:String(c.txt||'').slice(0,120),kind:kind==='voice'&&!lcOpt.botVoices?'text':kind};
+    lbChatPush(m); if(!old&&m.kind==='voice'&&lobbyOpen&&lchatOpen) lbSpeak(m);
+  }
+  function clubVn(c){
+    if(!c||c.pid===myPid()) return;
+    try{ const bin=atob(c.data), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+      const url=URL.createObjectURL(new Blob([u],{type:c.mime||'audio/webm'}));
+      lbChatPush({who:String(c.who||'Jugador'),p:clubP(c),kind:'audio',url,txt:''});
+      if(lobbyOpen&&lchatOpen) vnPlay(url); }catch(e){}
+  }
+  const _lbSend=lbChatSend;
+  lbChatSend=function(txt,kind){
+    const ok=_lbSend.apply(this,arguments); if(!ok) return ok;
+    const last=(LCHAT||[]).filter(m=>m.me).pop();
+    lsend({t:'chat',m:{who:lbMyName(),cav:ensureMyCav(),pid:myPid(),kind:last?last.kind:(kind||'text'),txt:String(txt).trim().slice(0,120)}});
+    return ok;
+  };
   ['visibilitychange','focus','online','pageshow'].forEach(ev=>window.addEventListener(ev,()=>{ if(document.hidden) return; lobbyWS(); if(lobbyOpen) lbRefresh(); }));
   LT=[]; try{ clearInterval(lobbyIv); lobbyIv=null; }catch(e){}
   /* ---------- Mesas de la casa: gente que va y viene, con pocos lugares de la máquina ---------- */
