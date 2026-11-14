@@ -187,6 +187,20 @@ body:not(.fun):not(.glass) #nrfocus{background:rgba(10,4,4,.5)}
 @keyframes nrfout{to{opacity:0;transform:scale(.8)}}
 body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
 @media (prefers-reduced-motion:reduce){#nrfocus,#nrfocus .lcard{animation:none!important}}
+/* 3, 2, 1… ¡A jugar! dentro de una cápsula de vidrio negro con brillo */
+#netgo b{position:relative;overflow:hidden;display:grid;place-items:center;min-width:1.5em;height:1.5em;padding:0 .32em;border-radius:999px;
+  font-size:clamp(70px,11vw,130px)!important;line-height:1;color:#fff!important;-webkit-text-stroke:0!important;
+  background:linear-gradient(180deg,rgba(70,70,78,.92) 0%,rgba(18,18,22,.96) 48%,rgba(6,6,8,.98) 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),inset 0 -6px 18px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.12),0 24px 60px rgba(0,0,0,.45),0 0 70px rgba(255,255,255,.18)!important;
+  text-shadow:0 2px 12px rgba(255,255,255,.35)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#netgo b.go{font-size:clamp(54px,8vw,104px)!important;padding:0 .55em;color:#fff!important}
+#netgo b::before{content:"";position:absolute;left:6%;right:6%;top:4%;height:44%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0));pointer-events:none}
+#netgo b::after{content:"";position:absolute;top:-20%;bottom:-20%;width:28%;left:-40%;transform:skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:nrglare .9s .15s ease-out both;pointer-events:none}
+@keyframes nrglare{to{left:120%}}
+body.fun #netgo b{background:#141414!important;color:#ffe02a!important;box-shadow:8px 8px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.25)!important;text-shadow:none!important}
+body.fun #netgo b.go{color:#ffe02a!important}
+body:not(.fun):not(.glass) #netgo b{color:var(--ink,#f6efe2)!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),inset 0 -6px 18px rgba(0,0,0,.6),0 0 0 2px rgba(230,182,63,.45),0 24px 60px rgba(0,0,0,.5),0 0 60px rgba(230,182,63,.25)!important}
+@media (prefers-reduced-motion:reduce){#netgo b::after{display:none}}
 </style>
 <script id="net-js">
 /* ==========================================================================
