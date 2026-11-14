@@ -25,6 +25,8 @@ rep("function seatKind(p){ return !S||S.kind!=='mesa'?'':isGone(p)?' robo-seat':
 # compañero / rival solo al pasar el mouse
 rep('data-seat="${p}">${avH(p)}\n    <div class="seat-info"><b>${nm(p)}</b><span>${role}</span>',
     'data-seat="${p}" title="${esc(nm(p))} · ${role}">${avH(p)}\n    <div class="seat-info"><b>${nm(p)}</b>')
+# personas: misma forma de ficha que la máquina (sin nivel ni robot, pero ocupando su lugar)
+rep(".seat.human .lvlrow{display:none!important}",".seat.human .lvlrow{visibility:hidden!important}")
 # sin pausa con otras personas
 rep("const canPause=!!(S&&!S.over&&!setupOpen);","const canPause=!!(S&&!S.over&&!setupOpen&&S.kind!=='online');")
 # botón del video

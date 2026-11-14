@@ -2508,7 +2508,7 @@ body.fun .eco-fly .tk-b,body.fun .eco-fly .tk-d{stroke:#141414}
 .eco-bought{animation:ecoBought .6s ease-out}
 @keyframes ecoBought{0%{transform:scale(1)}30%{transform:scale(.96)}65%{transform:scale(1.03)}100%{transform:scale(1)}}
 /* abandono: entra la máquina */
-.seat.human .lvlrow{display:none!important}
+.seat.human .lvlrow{visibility:hidden!important}
 .robo-svg{width:100%;height:100%;display:block}
 .robo-svg .rb-bg{fill:#3a4150} .robo-svg .rb-head{fill:#d9dee8;stroke:#1e2230;stroke-width:1.6} .robo-svg .rb-ear{fill:#9aa3b5;stroke:#1e2230;stroke-width:1.2}
 .robo-svg .rb-eye{fill:#35c7ff} .robo-svg .rb-ln{stroke:#1e2230;stroke-width:1.8;stroke-linecap:round;fill:none} .robo-svg .rb-dot{fill:#ff5a4f} .robo-svg .rb-body{fill:#7b8496;stroke:#1e2230;stroke-width:1.4}
@@ -6131,6 +6131,16 @@ body.glass .lnet-ic{background:var(--gl,rgba(255,255,255,.7));border-color:var(-
 body.classic .lnet-ic{background:rgba(0,0,0,.25);box-shadow:none}
 .lnet-hint{font-weight:800}
 body.netgame [data-act="pause"]{display:none!important}
+/* turno del jugador de arriba: línea exacta sobre el óvalo, en todos los diseños */
+.top-seat .seat.turnring::before{display:none!important}
+.top-seat .seat.turnring>.runline{display:block!important;position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:7;overflow:visible}
+body:not(.fun) .top-seat .runline rect{fill:none;stroke:rgba(var(--rc),1);stroke-width:4;stroke-linecap:round;stroke-dasharray:22 78}
+body:not(.fun) .top-seat .runline rect.b1{animation:runlaps 8s linear infinite both;animation-delay:calc(var(--d,0s) + 5s)}
+body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;animation-delay:var(--d,0s)}
+.top-seat .seat.turnring .av{z-index:8!important}
+.top-seat .seat.turnring .vfan{z-index:8!important}
+.ringt.sr-ring.tops .n{z-index:9!important;font-size:13px!important;line-height:18px!important;height:20px!important;padding:0 8px!important;box-sizing:border-box!important}
+.top-seat .seat.turnring .seat-info{transform:translateY(4px)}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -6444,6 +6454,26 @@ body.netgame [data-act="pause"]{display:none!important}
   },1000);
   // Sin pausa cuando hay otras personas
   const _pause=setPaused; setPaused=function(v){ if(online()&&v){ paused=false; return; } return _pause.apply(this,arguments); };
+
+  /* ---------- Turno del jugador de arriba: la línea sigue el óvalo y el tiempo va sobre el borde ---------- */
+  function ovalRect(seat){ const w=seat.clientWidth, hh=seat.clientHeight, A=getComputedStyle(seat,'::after');
+    const L=parseFloat(A.left)||0, R=parseFloat(A.right)||0, T=parseFloat(A.top)||0, B=parseFloat(A.bottom)||0; return {L,T,w:w-L-R,h:hh-T-B}; }
+  function topRunline(){
+    document.querySelectorAll('.top-seat .seat.turnring').forEach(seat=>{
+      if(seat.querySelector(':scope>.runline')) return;
+      const o=ovalRect(seat), rc='x="'+(o.L+.75)+'" y="'+(o.T+.75)+'" width="'+(o.w-1.5)+'" height="'+(o.h-1.5)+'" rx="'+((o.h-1.5)/2)+'" pathLength="100"';
+      seat.insertAdjacentHTML('beforeend','<svg class="runline" aria-hidden="true"><rect class="b1" '+rc+'/><rect class="b2" '+rc+'/></svg>');
+    });
+  }
+  function topTimer(){
+    const el=document.querySelector('.ringt.sr-ring.tops'); if(!el) return;
+    const seat=el.closest('.seat'), n=el.querySelector('.n'), nb=seat&&seat.querySelector('.seat-info b'); if(!seat||!n||!nb) return;
+    const o=ovalRect(seat), sr=seat.getBoundingClientRect(), er=el.getBoundingClientRect(), nr=nb.getBoundingClientRect();
+    const P=(k,v)=>n.style.setProperty(k,v,'important');
+    P('right','auto'); P('bottom','auto'); P('transform','none');
+    P('left',(nr.left-er.left)+'px'); P('top',(sr.top+seat.clientTop+o.T-er.top-n.offsetHeight/2)+'px');
+  }
+  const _psr=placeSeatRings; placeSeatRings=function(){ const r=_psr.apply(this,arguments); try{ topRunline(); topTimer(); }catch(e){} return r; };
 
   /* Chat */
   const _send=userSend; userSend=function(kind,text){ const r=_send.apply(this,arguments); if(r&&online()) send({t:'chat',kind,text,seat:NET.seat}); return r; };
