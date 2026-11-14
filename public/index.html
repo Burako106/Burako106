@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794673198';</script>
+<script>window.BURAKO_BUILD='1794673688';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6278,6 +6278,9 @@ body:not(.fun):not(.glass) .lsit:hover,body:not(.fun):not(.glass) .lsit:focus-vi
 body:not(.fun):not(.glass) .lnet-ic{background:rgba(0,0,0,.32);color:var(--ink);border:1.5px solid rgba(230,182,63,.55);box-shadow:0 4px 12px rgba(0,0,0,.3)}
 body:not(.fun):not(.glass) .lnet-ic:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* borde dinámico encima del borde de la tarjeta, sin huecos, mismo grosor en los tres diseños */
+.lcard:has(.ltable.netmine){border-color:transparent!important}
+.lcard:has(.ltable.netmine)::after,.lcard:has(.ltable.netready)::after{inset:-2px!important;padding:4px!important;border-radius:inherit!important;z-index:6}
 </style>
 <script id="net-js">
 /* ==========================================================================
