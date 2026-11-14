@@ -219,6 +219,13 @@ body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .top-seat .seat.turnring>.runline{z-index:4!important}
 .top-seat .seat .seat-info{position:relative;z-index:5}
 body.netaway .fly-muerto,body.netaway .fbanner,body.netaway .ftile,body.netaway .sr-ring,body.netaway .turn-flash{display:none!important}
+/* bajar/tirar con clics: se marca dónde podés tocar */
+body.clk-meld .zone.me{cursor:pointer;outline:2px dashed rgba(var(--rc,74,124,247),.55);outline-offset:-6px;transition:outline-color .2s}
+body.clk-meld .zone.me:hover{outline-color:var(--me)}
+body.clk-discard #mesa{cursor:pointer}
+body.clk-discard #mesa .pozo{outline:2px dashed var(--me);outline-offset:4px;border-radius:999px}
+body.fun.clk-meld .zone.me{outline:2px dashed #141414!important}
+body.fun.clk-discard #mesa .pozo{outline:2px dashed #141414!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -666,7 +673,7 @@ body.netaway .fly-muerto,body.netaway .fbanner,body.netaway .ftile,body.netaway 
     send({t:'state',s:c,v:NET.v,ev});
   }
   const _render=render;
-  render=function(){ const r=_render.apply(this,arguments); try{ document.body.classList.toggle('netgame',online()&&!lobbyOpen); if(online()&&document.getElementById('nrfocus')) closeReady(); if(online()) pushNow(false); badge(); }catch(e){} return r; };
+  render=function(){ const r=_render.apply(this,arguments); try{ document.body.classList.toggle('netgame',online()&&!lobbyOpen); clickHints(); if(online()&&document.getElementById('nrfocus')) closeReady(); if(online()) pushNow(false); badge(); }catch(e){} return r; };
 
   /* Registrar jugadas (mías, o de la máquina si soy el anfitrión) */
   const ok=r=>!r||r==='muerto'||r==='cierre';
@@ -805,6 +812,28 @@ body.netaway .fly-muerto,body.netaway .fbanner,body.netaway .ftile,body.netaway 
   }
   const _psr=placeSeatRings; placeSeatRings=function(){ const r=_psr.apply(this,arguments); try{ topRunline(); topTimer(); }catch(e){} return r; };
 
+  /* ---------- Bajar y tirar solo con clics: elegís fichas y tocás tu zona (bajar) o el centro de la mesa (tirar) ---------- */
+  let cp=null;
+  document.addEventListener('pointerdown',e=>{ cp={x:e.clientX,y:e.clientY,t:e.target,drag:!!drag}; },true);
+  document.addEventListener('pointerup',e=>{
+    const d=cp; cp=null; if(!d||d.drag||drag||e.button>0) return;
+    if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>8) return;
+    if(!S||lobbyOpen||S.over||S.phase!=='play'||!S.sel||!S.sel.length) return;
+    try{ if(!canPlay()) return; }catch(x){ return; }
+    const t=e.target, z=t.closest&&t.closest('.zone.me');
+    if(z&&d.t.closest&&d.t.closest('.zone.me')){
+      if(t.closest('[data-act="addto"],.meld,button,a,input')) return;   // agregar a un juego ya existe con su propio clic
+      e.preventDefault(); onAct('meld',z); return;
+    }
+    const m=t.closest&&t.closest('#mesa');
+    if(m&&d.t.closest&&d.t.closest('#mesa')){
+      if(t.closest('[data-act="mazo"],.muertos-col')) return;
+      e.preventDefault();
+      if(S.sel.length===1) onAct('discard',m); else { say('Para tirar, elegí una sola ficha.',true); render(); }
+    }
+  },true);
+  function clickHints(){ try{ const on=!!(S&&!lobbyOpen&&!S.over&&S.phase==='play'&&S.sel&&S.sel.length&&canPlay());
+    document.body.classList.toggle('clk-meld',on); document.body.classList.toggle('clk-discard',on&&S.sel.length===1); }catch(e){} }
   /* ---------- Si salís al lobby en medio de una partida online: ni fichas volando, ni sonidos, ni voces ---------- */
   const away=()=>online()&&lobbyOpen;
   const _fly=flyTiles; flyTiles=function(){ if(away()) return; return _fly.apply(this,arguments); };

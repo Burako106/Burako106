@@ -57,6 +57,9 @@ rep("function lbInit(){ if(LT.length) return; const used=new Set();","function l
 # fin de la partida online: «Volver a las mesas»
 rep("${o.done?'<button class=\"btn primary again-btn\" data-act=\"next\">Jugar otra partida</button><button class=\"btn\" data-act=\"newgame\">Cambiar modalidad</button>'",
     "${o.done?'<button class=\"btn primary again-btn\" data-act=\"next\">Jugar otra partida</button>'+(S.kind==='online'?'<button class=\"btn\" data-act=\"netexit\">Volver a las mesas</button>':'<button class=\"btn\" data-act=\"newgame\">Cambiar modalidad</button>')")
+# bajar y tirar solo con clics: el texto de la zona lo cuenta
+rep("Elegí fichas y arrastralas acá.","Elegí fichas y arrastralas, o tocá acá.",3)
+rep("Select tiles and drag them here.","Select tiles and drag them here, or tap here.",2)
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
