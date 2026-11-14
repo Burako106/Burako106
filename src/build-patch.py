@@ -63,6 +63,10 @@ rep("Select tiles and drag them here.","Select tiles and drag them here, or tap 
 # Glass es el diseño inicial para todos (una vez se pasa a Glass a quien ya tenía otro guardado)
 rep("let theme='fun'; try{ theme=localStorage.getItem('burako-theme')||'fun'; }catch(e){}",
     "let theme='glass'; try{ if(!localStorage.getItem('burako-theme-v2')){ localStorage.setItem('burako-theme','glass'); localStorage.setItem('burako-theme-v2','1'); } theme=localStorage.getItem('burako-theme')||'glass'; }catch(e){}")
+# logo de Facebook en el ingreso: dibujado, no una letra estirada
+rep('<button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic">f</span>',
+    '<button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#fff"/><path fill="#1877f2" d="M13.4 24v-8.4h2.8l.42-3.26H13.4v-2.08c0-.94.26-1.59 1.62-1.59h1.73V5.75a23 23 0 0 0-2.53-.13c-2.5 0-4.22 1.53-4.22 4.34v2.4H7.18v3.26H10V24z"/></svg></span>')
+rep(".el-fb .el-ic{background:#fff;color:#1877f2;border-radius:50%;font-size:18px;padding-top:4px}",".el-fb .el-ic{background:none;border-radius:50%;padding:0;overflow:hidden}.el-fb .el-ic svg{width:24px;height:24px;display:block}")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

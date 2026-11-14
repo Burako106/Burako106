@@ -2408,7 +2408,7 @@ body:not(.fun):not(.glass) .eco-play{background:#e6b63f;color:#2a1517}
 .el-ic{display:grid;place-items:center;width:24px;height:24px;font:900 20px/1 Arial,sans-serif}
 .el-ic svg{width:22px;height:22px}
 .el-fb{background:#1877f2;color:#fff}
-.el-fb .el-ic{background:#fff;color:#1877f2;border-radius:50%;font-size:18px;padding-top:4px}
+.el-fb .el-ic{background:none;border-radius:50%;padding:0;overflow:hidden}.el-fb .el-ic svg{width:24px;height:24px;display:block}
 .el-gg{background:#fff;color:#1f1f1f}
 .el-mail{background:#e6b63f;color:#2a1517}
 .el-or{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px;opacity:.7}
@@ -5913,7 +5913,7 @@ function ecoShowLogin(){ if(document.getElementById('ecologin')) return; setTime
     <div class="el-brand">Bura<i>ko</i> <small>CLUB</small></div>
     <h2 id="elTitle">Entrá para jugar</h2>
     <p class="el-sub">Creá tu cuenta y te regalamos <b>${ecoN(ECO.SIGNUP)} tickets</b>.</p>
-    <button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic">f</span>Continuar con Facebook</button>
+    <button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#fff"/><path fill="#1877f2" d="M13.4 24v-8.4h2.8l.42-3.26H13.4v-2.08c0-.94.26-1.59 1.62-1.59h1.73V5.75a23 23 0 0 0-2.53-.13c-2.5 0-4.22 1.53-4.22 4.34v2.4H7.18v3.26H10V24z"/></svg></span>Continuar con Facebook</button>
     <button class="el-btn el-gg" data-eco="login" data-v="google"><span class="el-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.5l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 13.9a6 6 0 0 1 0-3.8V7.5H3.1a10 10 0 0 0 0 9z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.5l3.3 2.6C7.2 7.8 9.4 6 12 6z"/></svg></span>Continuar con Google</button>
     <div class="el-or"><span>o con tu email</span></div>
     <label class="el-field"><span>Email</span><input type="email" placeholder="tu@email.com" autocomplete="email"></label>
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794690271';</script>
+<script>window.BURAKO_BUILD='1794691096';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
