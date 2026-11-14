@@ -52,7 +52,13 @@ body.lobby #netbadge{display:none}
 .lcard:has(.ltable.netmine),.hb.netmine{position:relative}
 .lcard:has(.ltable.netmine)::after{content:"";position:absolute;inset:-5px;border-radius:28px;padding:4px;pointer-events:none;
   background:conic-gradient(from var(--na),#ff7a1a,#ffd23f,#2ecc71,#3b82f6,#ef4444,#ff7a1a);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:netspin 2.6s linear infinite}
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:netspin 2.6s linear infinite,netglow 2.2s ease-in-out infinite}
+@keyframes netglow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,190,70,.35))}50%{filter:drop-shadow(0 0 9px rgba(255,190,70,.75)) brightness(1.12)}}
+/* mesa completa: borde negro fino que corre */
+.lcard:has(.ltable.netready)::after{inset:-4px;padding:2px;border-radius:27px;
+  background:conic-gradient(from var(--na),rgba(22,22,24,.18) 0deg,#161618 70deg,rgba(22,22,24,.18) 140deg,rgba(22,22,24,.18) 180deg,#161618 250deg,rgba(22,22,24,.18) 320deg);
+  animation:netspin 1.4s linear infinite;filter:none}
+body.fun .lcard:has(.ltable.netready)::after{background:conic-gradient(from var(--na),rgba(20,20,20,.2) 0deg,var(--br) 70deg,rgba(20,20,20,.2) 140deg,rgba(20,20,20,.2) 180deg,var(--br) 250deg,rgba(20,20,20,.2) 320deg)}
 .hb.netmine{filter:drop-shadow(0 0 6px #ff7a1a)}
 .ltable.netmine .lnet-acts{display:flex;justify-content:center;gap:12px;margin-top:10px;position:relative;z-index:3}
 .lnet-ic{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;font-size:19px;line-height:1;cursor:pointer;
@@ -101,37 +107,51 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
 .lp-av:hover{transform:scale(1.04)}
 .lp-edit{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:14px;background:#fff;color:#1d1a16;border:2px solid #1d1a16;box-shadow:0 3px 8px rgba(0,0,0,.2)}
 .cavpop.netcav{z-index:2147480000}
-/* confirmación dentro de la mesa (usa los botones y colores de cada diseño) */
-.ltable.netready .lfelt.nr-felt{display:flex;align-items:center;justify-content:center;gap:10px;position:relative}
-.nr-play.btn{font-size:clamp(18px,2vw,22px)!important;font-weight:900!important;padding:10px 26px!important;border-radius:999px!important;min-width:0!important;cursor:pointer;animation:nrpulse 1.1s ease-in-out infinite;position:relative;z-index:3}
+/* confirmación dentro de la mesa (usa los botones de cada diseño) */
+.ltable.netready .lfelt.nr-felt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;line-height:1.15}
+.nr-t1{font-weight:900;font-size:15px}
+.nr-t2{font-weight:700;font-size:12px;opacity:.8}
+.nr-box{display:flex;flex-direction:column;align-items:center;gap:8px;margin:12px 0 4px;position:relative;z-index:3}
+.nr-play.btn{display:flex!important;align-items:center;justify-content:center;gap:14px;width:100%;max-width:260px;font-size:30px!important;font-weight:900!important;letter-spacing:-.01em;padding:12px 14px 12px 24px!important;border-radius:999px!important;min-width:0!important;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.28);animation:nrpulse 1.1s ease-in-out infinite}
+body.fun .nr-play.btn{box-shadow:4px 4px 0 var(--br)}
+.nr-play.btn span:first-child{flex:1;text-align:center}
+.nr-play.btn:hover{filter:brightness(1.08)}
 .nr-play.btn:active{transform:scale(.95)!important;animation:none}
-@keyframes nrpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.nr-done,.nr-go{display:inline-flex;align-items:center;gap:6px;font-weight:900;font-size:18px;padding:8px 16px;border-radius:999px;background:var(--me);color:#fff;animation:nrin .35s cubic-bezier(.2,1.6,.4,1) both}
-.nr-go{font-size:20px}
-body.fun .nr-done,body.fun .nr-go{background:#3ccf6e;color:var(--br);border:2px solid var(--br);box-shadow:2px 2px 0 var(--br)}
-body.glass .nr-done,body.glass .nr-go{background:#161618;color:#fff}
-@keyframes nrin{0%{opacity:0;transform:scale(1.8)}100%{opacity:1;transform:scale(1)}}
-.nr-count{--p:100;width:36px;height:36px;flex:0 0 36px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:15px;color:#1d1a16;background:radial-gradient(closest-side,#fff 74%,transparent 76% 100%),conic-gradient(var(--me) calc(var(--p)*1%),rgba(0,0,0,.12) 0);position:relative;z-index:3;font-variant-numeric:tabular-nums}
-body.fun .nr-count{background:radial-gradient(closest-side,var(--cr) 74%,transparent 76% 100%),conic-gradient(var(--br) calc(var(--p)*1%),rgba(0,0,0,.12) 0);color:var(--br)}
-body.glass .nr-count{background:radial-gradient(closest-side,rgba(255,255,255,.9) 74%,transparent 76% 100%),conic-gradient(#161618 calc(var(--p)*1%),rgba(0,0,0,.1) 0)}
-/* "✓ Listo" junto al avatar, sin tapar el nombre */
-.nstamp{position:absolute;right:-10px;top:-8px;z-index:4;display:inline-flex;align-items:center;gap:3px;padding:3px 7px 3px 5px;border-radius:999px;background:var(--me);color:#fff;border:2px solid #fff;font:800 10.5px/1 system-ui,-apple-system,sans-serif;font-style:normal;white-space:nowrap;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.18);animation:nrstamp .4s cubic-bezier(.2,1.6,.4,1) both}
-.nstamp b{display:grid;place-items:center;width:13px;height:13px;border-radius:50%;background:#fff;color:var(--me);font-size:9px}
-body.fun .nstamp{background:#3ccf6e;color:var(--br);border-color:var(--br);box-shadow:2px 2px 0 var(--br)}
-body.fun .nstamp b{background:var(--br);color:var(--cr)}
-body.glass .nstamp{background:#161618;color:#fff;border-color:rgba(255,255,255,.9)}
-body.glass .nstamp b{color:#161618}
+@keyframes nrpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.nr-count{--p:100;position:relative;width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;color:currentColor}
+.nr-count i{position:absolute;inset:0;border-radius:50%;-webkit-mask:radial-gradient(closest-side,transparent 74%,#000 76%);mask:radial-gradient(closest-side,transparent 74%,#000 76%)}
+.nr-count .nr-trk{background:currentColor;opacity:.22}
+.nr-count .nr-arc{background:conic-gradient(currentColor calc(var(--p)*1%),transparent 0)}
+.nr-count b{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.nr-count.low{color:#ff5a4d!important;animation:nrlow .5s ease-in-out infinite alternate}
+@keyframes nrlow{to{transform:scale(1.12)}}
+.nr-done,.nr-go{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:260px;font-weight:900;font-size:28px;padding:12px 14px 12px 24px;border-radius:999px;background:#1fb35a;color:#fff;box-shadow:0 8px 20px rgba(31,179,90,.35);animation:nrin .4s cubic-bezier(.2,1.6,.4,1) both;box-sizing:border-box}
+.nr-go{padding:14px 24px}
+body.fun .nr-done,body.fun .nr-go{color:var(--br);border:2.5px solid var(--br);box-shadow:4px 4px 0 var(--br)}
+@keyframes nrin{0%{opacity:0;transform:scale(1.5)}100%{opacity:1;transform:scale(1)}}
+/* "✓ Listo" justo arriba del nombre, verde, con pop */
+.lseat:has(.nstamp) .lav{border-color:#1fb35a!important;box-shadow:0 0 0 3px rgba(31,179,90,.35),0 4px 10px rgba(0,0,0,.25)!important;transition:border-color .3s,box-shadow .3s}
+.nstamp{position:absolute;left:50%;bottom:15px;z-index:5;display:inline-flex;align-items:center;gap:4px;padding:4px 10px 4px 5px;border-radius:999px;background:#1fb35a;color:#fff;border:2px solid #fff;font:900 13px/1 system-ui,-apple-system,sans-serif;font-style:normal;white-space:nowrap;pointer-events:none;box-shadow:0 4px 10px rgba(0,0,0,.22);transform:translateX(-50%);animation:nrstamp .55s cubic-bezier(.2,1.6,.4,1) both}
+.nstamp b{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#fff;color:#1fb35a;font-size:11px}
+body.fun .nstamp{border-color:var(--br);color:var(--br);box-shadow:2px 2px 0 var(--br)}
+body.fun .nstamp b{background:var(--br);color:#1fb35a}
 .nstamp.old{animation:none}
-@keyframes nrstamp{0%{opacity:0;transform:scale(2) rotate(-10deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
-/* mensaje y progreso */
-.nr-hint{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
-.nr-hint b{font-weight:900}
-.nr-prog{display:block;width:70%;max-width:180px;height:6px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden}
-.nr-prog i{display:block;height:100%;border-radius:inherit;background:var(--me);transition:width .4s cubic-bezier(.2,.9,.3,1)}
-body.fun .nr-prog i{background:var(--br)} body.glass .nr-prog i{background:#161618}
-.nr-hint small{font-size:12px;font-weight:700;opacity:.75}
-.nr-no.btn{padding:7px 16px!important;font-size:13px!important;border-radius:999px!important;min-width:0!important}
-.lcard:has(.ltable.netready)::after{animation-duration:1.2s!important}
+@keyframes nrstamp{0%{opacity:0;transform:translateX(-50%) scale(.3);background:#fff}55%{opacity:1;transform:translateX(-50%) scale(1.35)}100%{transform:translateX(-50%) scale(1);background:#1fb35a}}
+/* puntos de progreso */
+.nr-dots{display:flex;gap:9px;justify-content:center;margin-top:4px}
+.nr-dots i{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;opacity:.3;transition:all .3s;box-sizing:border-box}
+.nr-dots i.on{background:#1fb35a;border-color:#1fb35a;opacity:1;animation:nrdot .5s cubic-bezier(.2,1.6,.4,1) both}
+.nr-dots i.on.old{animation:none}
+body.fun .nr-dots i{border-color:var(--br)} body.fun .nr-dots i.on{border-color:var(--br)}
+@keyframes nrdot{0%{transform:scale(.2)}60%{transform:scale(1.5)}100%{transform:scale(1)}}
+.nr-n{font-size:12px;font-weight:800;opacity:.7}
+.nr-no.btn{padding:8px 22px!important;font-size:14px!important;font-weight:800!important;border-radius:999px!important;min-width:0!important;background:transparent!important;border:2px solid #161618!important;color:#161618!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.nr-no.btn:hover{background:#161618!important;color:#fff!important}
+body:not(.fun):not(.glass) .nr-no.btn{border-color:var(--ink)!important;color:var(--ink)!important}
+body:not(.fun):not(.glass) .nr-no.btn:hover{background:var(--ink)!important;color:#1d1a16!important}
+body:not(.fun):not(.glass) .lcard:has(.ltable.netready)::after{background:conic-gradient(from var(--na),rgba(246,239,226,.2) 0deg,var(--ink) 70deg,rgba(246,239,226,.2) 140deg,rgba(246,239,226,.2) 180deg,var(--ink) 250deg,rgba(246,239,226,.2) 320deg)}
+body.fun .nr-no.btn{border-color:var(--br)!important;color:var(--br)!important}
+body.fun .nr-no.btn:hover{background:var(--br)!important;color:var(--cr)!important}
 /* 3, 2, 1… ¡A jugar! */
 #netgo{position:fixed;inset:0;z-index:2147480600;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle,rgba(0,0,0,.28),rgba(0,0,0,0) 70%);transition:opacity .4s}
 #netgo.out{opacity:0}
@@ -142,7 +162,11 @@ body.fun #netgo b.go{color:var(--f-yel,#ffe11f)}
 body.glass #netgo{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:rgba(255,255,255,.25)}
 body.glass #netgo b{color:#161618;text-shadow:0 10px 40px rgba(0,0,0,.2)}
 @keyframes nrnum{0%{opacity:0;transform:scale(2.2)}60%{opacity:1}100%{opacity:1;transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){.nr-play.btn,.nstamp,#netgo b,.nr-done,.nr-go{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.nr-play.btn,.nstamp,#netgo b,.nr-done,.nr-go,.nr-dots i,.nr-count.low{animation:none!important}}
+body.fun .nr-dots i{outline:2px solid #141414!important;outline-offset:-2px;opacity:.35}
+body.fun .nr-dots i.on{opacity:1;background:#1fb35a!important}
+body.fun .nr-no.btn{outline:2px solid #141414!important;outline-offset:-2px;color:#141414!important;background:transparent!important}
+body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -400,7 +424,7 @@ body.glass #netgo b{color:#161618;text-shadow:0 10px 40px rgba(0,0,0,.2)}
   function closeReady(){ const o=document.getElementById('netready'); if(o) o.remove(); }
   function readyTickFn(){
     const left=Math.max(0,(NET.readyUntil-Date.now())/1000);
-    document.querySelectorAll('.nr-count').forEach(el=>{ el.textContent=Math.ceil(left); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
+    document.querySelectorAll('.nr-count').forEach(el=>{ const b=el.querySelector('b'); if(b) b.textContent=Math.ceil(left); el.classList.toggle('low',left<=3); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
     const b=document.querySelector('#netready .net-left b'); if(b) b.textContent=Math.ceil(left);
     if(!NET.readyUntil) clearInterval(NET.readyTick);
   }
@@ -845,10 +869,11 @@ body.glass #netgo b{color:#161618;text-shadow:0 10px 40px rgba(0,0,0,.2)}
       const done=seats.filter(x=>x&&(x.t==='b'||st[x.pid]||NET.going)).length, tot=NET.n||seats.length;
       s=s.replace(/(<span class="lseat[^"]*" data-si="(\d)"[^>]*>)/g,(all,open,i)=>{ const x=seats[+i]; if(!x) return all; const ok=x.t==='b'||st[x.pid]||NET.going; return ok?open+'<i class="nstamp'+(seen.has(x.pid||x.id)?' old':'')+'"><b>✓</b>Listo</i>':open; });
       const left=Math.max(0,Math.ceil((NET.readyUntil-Date.now())/1000));
-      const felt=NET.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':
-        (NET.meReady?'<span class="nr-done"><b>✓</b> Listo</span>':'<button class="btn primary nr-play" data-act="netready">Jugar</button>')+'<span class="nr-count" style="--p:100" aria-label="Segundos restantes">'+left+'</span>';
-      s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt">'+felt+'</div>');
-      s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint nr-hint"><b>¡Mesa completa!</b> '+(NET.going?'Empieza la partida…':NET.meReady?'Esperando a los demás…':'¿Listo para jugar?')+'<span class="nr-prog"><i style="width:'+Math.round(done/tot*100)+'%"></i></span><small>'+done+' de '+tot+' confirmados</small></p>');
+      const ring='<span class="nr-count" style="--p:100" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
+      const big=NET.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':
+        NET.meReady?'<span class="nr-done"><b>✓</b> Listo'+ring+'</span>':'<button class="btn primary nr-play" data-act="netready"><span>Jugar</span>'+ring+'</button>';
+      s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt"><span class="nr-t1">¡Mesa completa!</span><span class="nr-t2">'+(NET.going?'Empieza la partida…':NET.meReady?'Esperando a los demás…':'¿Listo para jugar?')+'</span></div>');
+      s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=seats[i], on=x&&(x.t==='b'||st[x.pid]||NET.going); return '<i class="'+(on?'on'+(seen.has(x.pid||x.id)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
       if(NET.going) return s;
       return s.replace(/<\/div>\s*$/,'<div class="lnet-acts">'+(NET.meReady?'':'<button class="btn nr-no" data-act="netnoplay">No jugar</button>')+'</div></div>');
     }
