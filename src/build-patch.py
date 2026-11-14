@@ -15,12 +15,20 @@ rep("function react(ev,p,x={}){\n  if(!S||S.n<2||chatOff()) return;",
 rep("function botReply(kind,text){", "function botReply(kind,text){ if(S&&S.kind==='online') return;")
 # 3) botón para jugar con un amigo en el lobby
 rep('<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button></div>',
-    '<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button>\n    <button class="lbig lfriend" data-act="netcreate"><span class="lplus">👥</span><b>Jugar con un amigo</b><small>Mandale un link y juegan online</small></button></div>')
+    '<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button>\n    <button class="lbig lfriend" data-act="netcreate"><span class="lplus">👥</span><b>Jugar con un amigo</b></button></div>')
 # 4) mesas reales: sin robot ni nivel para personas, "Gratis" y "Sin tiempo"
 rep('<i class="lcoin tk">${TKI}</i>${ecoN(t.bet)}', "${t.bet?`<i class=\"lcoin tk\">${TKI}</i>${ecoN(t.bet)}`:'Gratis'}", 2)
 rep("t.timer+' s'", "(t.timer?t.timer+' s':'Sin tiempo')")
-rep('<span class="lvlrow">${lvlH(lvlOf(p))}<i class="botmk" title="Robot (la máquina)" aria-label="robot">🤖</i></span>',
-    '${S&&S.kind===\'online\'?\'\':`<span class="lvlrow">${lvlH(lvlOf(p))}<i class="botmk" title="Robot (la máquina)" aria-label="robot">🤖</i></span>`}', 2)
+# personas vs máquina en mesas online (la máquina muestra el robot)
+rep("function seatKind(p){ return !S||S.kind!=='mesa'?'':isGone(p)?' robo-seat':' human'; }",
+    "function seatKind(p){ return !S||(S.kind!=='mesa'&&S.kind!=='online')?'':(isGone(p)||(S.kind==='online'&&!charOf(p).real))?' robo-seat':' human'; }")
+# compañero / rival solo al pasar el mouse
+rep('data-seat="${p}">${avH(p)}\n    <div class="seat-info"><b>${nm(p)}</b><span>${role}</span>',
+    'data-seat="${p}" title="${esc(nm(p))} · ${role}">${avH(p)}\n    <div class="seat-info"><b>${nm(p)}</b>')
+# sin pausa con otras personas
+rep("const canPause=!!(S&&!S.over&&!setupOpen);","const canPause=!!(S&&!S.over&&!setupOpen&&S.kind!=='online');")
+# botón del video
+rep("+${ECO.VIDEO}</button>","Ganá +${ECO.VIDEO} ${TKI}</button>")
 rep("${me?'':'<i class=\"lbot\" title=\"Robot\">🤖</i>'}", "${me||s.real?'':'<i class=\"lbot\" title=\"Robot\">🤖</i>'}")
 rep("${x==='me'?'':'<i class=\"hbot\">🤖</i>'}", "${x==='me'||x.real?'':'<i class=\"hbot\">🤖</i>'}")
 # 5) módulo online al final

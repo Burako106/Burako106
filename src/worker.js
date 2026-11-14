@@ -44,6 +44,8 @@ function tableFrom(b, code) {
     n: [2, 3, 4].includes(b.n) ? b.n : 2,
     seats: Array.isArray(b.seats) ? b.seats.slice(0, 4).map((s) => (s ? { name: clean(s.name, 18) || "Jugador", cav: Number.isInteger(s.cav) ? s.cav : 0 } : null)) : null,
     goal: [0, 1500, 2500, 3000, 5000, 10000].includes(b.goal) ? b.goal : 3000,
+    bet: [100, 500, 1000].includes(b.bet) ? b.bet : 100,
+    timer: [30, 60, 120].includes(b.timer) ? b.timer : 60,
     rules: { legs: r.legs !== false, impura: r.impura !== false, chat: r.chat !== false },
   };
 }
@@ -140,6 +142,8 @@ export class Room extends DurableObject {
       if (role !== "host") return;
       const room = (await this.ctx.storage.get("room")) || {};
       room.seats = m.seats;
+      if ([2, 3, 4].includes(m.n)) room.n = m.n;
+      if ([100, 500, 1000].includes(m.bet)) room.bet = m.bet;
       await this.ctx.storage.put("room", room);
     }
     if (m.t === "state") {
