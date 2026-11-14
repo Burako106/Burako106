@@ -272,7 +272,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       if(online()){ // me sacaron de la partida (no jugué 3 veces)
         const e=S.eco; lbRecord('lose');
         if(e&&e.mode==='tickets'){ ecoTx(-PEN(e.entry),'penalty'); setTimeout(()=>ecoNote('Penalización por dejar la partida: <b>−'+ecoN(PEN(e.entry))+'</b> '+TKI,'down'),1200); }
-        leaveOnline(); abandoned=true; lobbyOpen=true; try{ renderMenu(); render(); }catch(x){}
+        leaveOnline(); detach();
         toast('Te sacamos de la partida porque se te terminó el tiempo 3 veces. Entró la máquina en tu lugar.');
       } else { leaveOnline(); toast('Esa mesa ya empezó sin vos.'); }
       return;
@@ -346,6 +346,18 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   const _meld=doMeld; doMeld=function(p,ids,dry){ const r=_meld.apply(this,arguments); if(!dry&&ok(r)&&mineOrBot(p)){ evp(p,{k:'meld',c:ids.length}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
   const _add=doAdd; doAdd=function(p,mi,ids,dry){ const r=_add.apply(this,arguments); if(!dry&&ok(r)&&mineOrBot(p)){ evp(p,{k:'add',c:ids.length}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
   const _disc=doDiscard; doDiscard=function(p,id){ const t=S.hands[p].find(x=>x.id===id); const r=_disc.apply(this,arguments); if(ok(r)&&mineOrBot(p)){ evp(p,{k:'disc',t:t?{n:t.n,c:t.c,id:t.id}:null}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
+
+  /* Dejar la mesa del todo: nada de esa partida sigue moviéndose ni sonando */
+  function detach(){
+    window.__burakoGen=(window.__burakoGen|0)+1;
+    try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){}
+    try{ document.querySelectorAll('.sr-ring,.fbanner,.toast-x').forEach(e=>e.remove()); if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+    try{ if(closeFx){ closeFx=false; pendingEndFx=null; } }catch(e){}
+    NET.ev=[]; busy=false; paused=false; dealing=false;
+    S=null; newRound({n:2}); S.kind='bot'; abandoned=true;
+    lobbyOpen=true; menuOpen=false; setupOpen=false; quitOpen=false;
+    try{ save(); renderMenu(); renderPause(); render(); }catch(e){}
+  }
 
   /* ---------- Tiempo de turno, abandono y máquina de reemplazo ---------- */
   function botFor(c){ const used=new Set((S.seatInfo||[]).filter(x=>x&&x.t==='b').map(x=>x.id));
@@ -434,7 +446,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(a==='quityes'&&online()&&!S.over){
       const e=S.eco; replaceSeat(NET.seat,'quit'); pushNow(true); NET.leaving=true;
       if(e&&e.mode==='tickets'&&!e.settled){ setTimeout(()=>{ ecoTx(-PEN(e.entry),'penalty'); ecoNote('Abandonaste: perdiste la entrada y <b>−'+ecoN(PEN(e.entry))+'</b> '+TKI+' de penalización','down'); },300); }
-      lbRecord('lose'); setTimeout(()=>{ leaveOnline(); NET.leaving=false; },400);
+      lbRecord('lose'); const ws=NET.ws; NET.ws=null; setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(x){} },400); leaveOnline(); NET.leaving=false; detach(); return;
     }
     if(a==='start') leaveOnline();
     return _onAct.apply(this,arguments);
