@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794672269';</script>
+<script>window.BURAKO_BUILD='1794672752';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6261,6 +6261,17 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
 #netgo b.go{font-size:clamp(54px,8vw,104px)!important;padding:0 .5em}
 body.glass #netgo b{background:rgba(22,22,24,.82);color:#fff!important;border:1px solid rgba(255,255,255,.18);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 20px 50px rgba(0,0,0,.22)}
 body.fun #netgo b{background:#141414;color:#ffe02a!important;box-shadow:6px 6px 0 rgba(20,20,20,.35)}
+/* borde de mi mesa: calza justo sobre el borde de la tarjeta, en todos los diseños */
+.lcard:has(.ltable.netmine)::after{inset:-1px!important;padding:3px!important;border-radius:inherit!important}
+.lcard:has(.ltable.netready)::after{inset:-1px!important;padding:3px!important;border-radius:inherit!important}
+/* Fun: colores planos, sin arcoíris ni destellos: un tramo negro sólido que recorre el borde */
+body.fun .lcard:has(.ltable.netmine)::after{background:conic-gradient(from var(--na),#141414 0deg 110deg,rgba(20,20,20,.12) 110deg 360deg)!important;animation:netspin 2.4s linear infinite!important;filter:none!important}
+body.fun .lcard:has(.ltable.netready)::after{background:conic-gradient(from var(--na),#141414 0deg 70deg,rgba(20,20,20,.12) 70deg 180deg,#141414 180deg 250deg,rgba(20,20,20,.12) 250deg 360deg)!important;animation:netspin 1.4s linear infinite!important}
+/* Fun: Jugar y la cuenta en blanco para que contraste */
+body.fun .nr-play.btn{color:#fff!important}
+body.fun .nr-play.btn .nr-count{color:#fff!important}
+/* Fun: reglas de la mesa con fondo blanco */
+body.fun .lcard .lrules span{background:#fff!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -6277,7 +6288,7 @@ body.fun #netgo b{background:#141414;color:#ffe02a!important;box-shadow:6px 6px 
   const GAME=['n','hands','muertos','taken','melds','rules','pozo','mazo','turn','phase','totals','round','over','mid','goal','freeM','muertoMazo','lastDisc','actor','drawn','mode','timer','seatInfo'];
   const clone=o=>JSON.parse(JSON.stringify(o));
   const NET={role:null,code:null,ws:null,v:0,last:'',ev:[],seat:0,n:2,seats:null,open:false,on:{},retry:0,timer:null,ping:null,ui:null,pub:false,want:null,nextAt:null};
-  window.BURAKO_NET=NET;
+  window.BURAKO_NET=NET; NET._ui=()=>readyUI();
   // Modo prueba: los videos dan tickets sin límite (las compras ya son simuladas)
   try{ ECO.VIDEO_MAX=999; ECO.VIDEO_GAP=0; }catch(e){}
   const PEN=e=>Math.round((e||ECO.ENTRIES[0])*.5);   // penalización por abandonar: la mitad de la entrada, además de perderla
