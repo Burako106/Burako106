@@ -88,7 +88,7 @@ export class Room extends DurableObject {
   }
 
   async webSocketMessage(ws, raw) {
-    if (typeof raw !== "string" || raw.length > 400000) return;
+    if (typeof raw !== "string" || raw.length > 600000) return;
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
     const role = this.ctx.getTags(ws)[0];
