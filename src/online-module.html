@@ -738,7 +738,8 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(L).then(done,()=>prompt('Copiá este link:',L)); else prompt('Copiá este link:',L); };
   }
 
-  function inPlay(){ if(online()||(typeof inGame==='function'&&inGame())){ toast('Tenés una partida en curso. Terminala o abandonala antes de entrar a otra mesa.'); return true; } return false; }
+  // Solo frena si estás en medio de una partida online. Una partida contra la máquina que dejaste a medias se descarta.
+  function inPlay(){ if(online()&&S&&!(S.over&&S.over.done)){ toast('Tenés una partida en curso. Terminala o abandonala antes de entrar a otra mesa.'); return true; } return false; }
   function createTable(pub,n,bet){
     if(inPlay()) return;
     if(NET.code&&!online()){ toast('Ya estás en una mesa. Salí de esa antes de crear otra.'); return; }
