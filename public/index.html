@@ -6348,7 +6348,17 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(c.over==null&&S.over){ try{ if(closeFx) finishClose(); }catch(e){} }
     const g=rot(c,me), prevTurn=S.turn, prevRound=S.round, prevOver=!!S.over, prevDone=!!(S.over&&S.over.done);
     const canPrev={}; [].concat(...(S.melds||[])).forEach(m=>{ canPrev[m.id]=isCanasta(m)?(analyze(m.tiles).wilds===0?'pura':'impura'):''; });
-    const srcDraw=mazoRect();
+    const srcDraw=mazoRect(), evs=ev||[];
+    // mismas animaciones que cuando juega la máquina: orígenes tomados antes de actualizar la mesa
+    const fx={pozo:null,fly:null,muerto:null};
+    try{
+      const pz=evs.find(e=>e.k==='pozo'); if(pz){ fx.pozo={p:toView(pz.s),src:pozoRects()}; }
+      const ml=evs.filter(e=>(e.k==='meld'||e.k==='add')&&Array.isArray(e.ids));
+      if(ml.length){ const p=toView(ml[0].s), ids=[].concat(...ml.map(e=>e.ids)); fx.fly={ids,src:avSrc(p,ids)}; }
+      const mu=evs.find(e=>e.k==='muerto');
+      if(mu){ const p=toView(mu.s), T=team(p), free=!pool3()&&!S.muertos[T].length&&S.freeM&&S.freeM.length, mi=pool3()?S.muertos.findIndex(m=>m.length):T;
+        const me=document.querySelector(free?'[data-mp="free"]':pool3()?'[data-mp="'+mi+'"]':'[data-muerto="'+T+'"]'); if(me) fx.muerto={p,T,rect:me.getBoundingClientRect()}; }
+    }catch(e){}
     GAME.forEach(k=>{ S[k]=g[k]; });
     const ids=new Set(S.hands[0].map(t=>t.id)); S.sel=(S.sel||[]).filter(id=>ids.has(id));
     NET.v=v; NET.last=JSON.stringify(c); S.net.v=v; S.net.n=c.n; NET.nextAt=null;
@@ -6364,7 +6374,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       const who=nameC(e.s);
       const vp=toView(e.s), col=team(vp)?'red':'blue';
       if(e.k==='draw') say(who+' robó del mazo.');
-      else if(e.k==='pozo'){ say(who+' levantó el pozo ('+e.n+' '+(e.n===1?'ficha':'fichas')+').'); clack(Math.min(e.n||1,10)); if(e.n>7) setTimeout(()=>funBanner('¡SE LLEVÓ TODO!',col),350); }
+      else if(e.k==='pozo'){ say(who+' levantó el pozo ('+e.n+' '+(e.n===1?'ficha':'fichas')+').'); clack(1); if(e.n>7) setTimeout(()=>funBanner('¡SE LLEVÓ TODO!',col),350); }
       else if(e.k==='meld'){ say(who+' bajó un juego.'); clack(Math.min(e.c||3,5)); }
       else if(e.k==='add'){ say(who+' agregó a un juego.'); clack(Math.min((e.c||1)+1,4)); }
       else if(e.k==='muerto'){ say(who+' se fue al muerto.'); setTimeout(()=>funBanner('¡AL MUERTO!',col),300); }
@@ -6383,7 +6393,12 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
         else if(typeof cl==='number'&&team(cl)===0){ tone([523,659,784,1047],'triangle'); setTimeout(()=>confetti(false),150); } else tone([392,349,294],'triangle'); }catch(e){}
     }
     if(S.turn!==prevTurn&&!S.over){ const d=S.drawn; beginTurn(); S.drawn=d; }
+    try{
+      if(fx.fly) pendingFly=fx.fly;
+      if(fx.muerto){ const m=fx.muerto; pendingMuerto={p:m.p,T:m.T,ids:(S.hands[m.p]||[]).map(t=>t.id),rect:m.rect}; }
+    }catch(e){}
     render();
+    try{ if(fx.pozo&&fx.pozo.src&&fx.pozo.src.length){ const p=fx.pozo.p; flyTiles(fx.pozo.src,()=>avRect(p)); } }catch(e){}
     try{ (ev||[]).forEach(e=>{ const p=toView(e.s); if(!p) return;
       if(e.k==='draw'&&srcDraw){ const a=avRect(p); if(a) flyTiles([srcDraw],()=>a); }
       if(e.k==='disc'&&e.t){ const el=document.querySelector('[data-av="'+p+'"]'), r=el&&el.getBoundingClientRect(); if(r) flyDiscard({html:tileH(e.t),rect:tileRectAt(r.left+r.width/2,r.top+r.height/2),size:1}); }
@@ -6408,8 +6423,8 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   const evp=(p,e)=>{ e.s=toCanon(p); NET.ev.push(e); };
   const _draw=drawMazo; drawMazo=function(p){ const r=_draw.apply(this,arguments); if(r&&mineOrBot(p)) evp(p,{k:'draw'}); return r; };
   const _pozo=takePozo; takePozo=function(p){ const k=S.pozo.length; const r=_pozo.apply(this,arguments); if(mineOrBot(p)) evp(p,{k:'pozo',n:k}); return r; };
-  const _meld=doMeld; doMeld=function(p,ids,dry){ const r=_meld.apply(this,arguments); if(!dry&&ok(r)&&mineOrBot(p)){ evp(p,{k:'meld',c:ids.length}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
-  const _add=doAdd; doAdd=function(p,mi,ids,dry){ const r=_add.apply(this,arguments); if(!dry&&ok(r)&&mineOrBot(p)){ evp(p,{k:'add',c:ids.length}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
+  const _meld=doMeld; doMeld=function(p,ids,dry){ const r=_meld.apply(this,arguments); if(!dry&&ok(r)&&mineOrBot(p)){ evp(p,{k:'meld',c:ids.length,ids:ids.slice()}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
+  const _add=doAdd; doAdd=function(p,mi,ids,dry){ const r=_add.apply(this,arguments); if(!dry&&ok(r)&&mineOrBot(p)){ evp(p,{k:'add',c:ids.length,ids:ids.slice()}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
   const _disc=doDiscard; doDiscard=function(p,id){ const t=S.hands[p].find(x=>x.id===id); const r=_disc.apply(this,arguments); if(ok(r)&&mineOrBot(p)){ evp(p,{k:'disc',t:t?{n:t.n,c:t.c,id:t.id}:null}); if(r==='muerto') evp(p,{k:'muerto'}); } return r; };
 
   /* Dejar la mesa del todo: nada de esa partida sigue moviéndose ni sonando */
