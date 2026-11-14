@@ -1,0 +1,313 @@
+<style id="net-css">
+.lfriend{background:rgba(0,0,0,.18)}
+body.fun .lfriend{background:var(--cr)}
+.lfriend small{font-weight:600}
+#netov{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:20px;background:rgba(10,8,20,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d1a16}
+#netov .nc{width:min(420px,100%);background:#fffaf0;border:2.5px solid #1d1a16;border-radius:22px;box-shadow:5px 5px 0 #1d1a16;padding:24px 22px 20px;text-align:center}
+#netov h2{margin:4px 0 6px;font-size:24px;line-height:1.15}
+#netov p{margin:6px 0 14px;color:#4a443c}
+#netov .nlogo{font-weight:900;font-size:20px;letter-spacing:.5px}
+#netov .nlogo span{color:#f07a1a;margin-left:4px}
+#netov label{display:block;text-align:left;font-weight:800;font-size:13px;margin:10px 0 6px}
+#netov input{width:100%;box-sizing:border-box;font:inherit;font-size:17px;padding:12px 14px;border:2px solid #1d1a16;border-radius:14px;background:#fff;color:#1d1a16}
+#netov .nlink{display:flex;gap:8px;align-items:center;background:#fff;border:2px dashed #1d1a16;border-radius:14px;padding:10px 12px;font-size:14px;word-break:break-all;text-align:left;margin:4px 0 12px}
+#netov .nbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;font:inherit;font-weight:900;font-size:17px;padding:13px 16px;margin-top:10px;border-radius:14px;border:2px solid #1d1a16;background:#fff;color:#1d1a16;cursor:pointer;box-shadow:3px 3px 0 #1d1a16}
+#netov .nbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1d1a16}
+#netov .nbtn.pri{background:#f07a1a;color:#1d1a16}
+#netov .nbtn.wa{background:#25d366}
+#netov .nbtn.ghost{background:transparent;box-shadow:none;border-color:transparent;text-decoration:underline;font-weight:700;font-size:15px}
+#netov .nwait{display:flex;justify-content:center;gap:6px;margin:14px 0 4px}
+#netov .nwait i{width:9px;height:9px;border-radius:50%;background:#f07a1a;animation:netdot 1s infinite ease-in-out}
+#netov .nwait i:nth-child(2){animation-delay:.15s}#netov .nwait i:nth-child(3){animation-delay:.3s}
+#netov .nerr{color:#c0392b;font-weight:700;min-height:1.2em;margin:8px 0 0}
+@keyframes netdot{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
+#netbadge{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:2147482000;display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:rgba(255,250,240,.95);border:2px solid #1d1a16;font:800 13px/1 system-ui,-apple-system,sans-serif;color:#1d1a16;box-shadow:2px 2px 0 #1d1a16;pointer-events:none;max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#netbadge i{width:9px;height:9px;border-radius:50%;background:#2ecc71;flex:none}
+#netbadge.off i{background:#e74c3c}
+#netbadge.wait i{background:#f1c40f}
+body.lobby #netbadge{display:none}
+</style>
+<script id="net-js">
+/* ==========================================================================
+   Burako 106 — Jugar online con un amigo (etapa 1: mesa privada 1 contra 1)
+   --------------------------------------------------------------------------
+   Quien crea la mesa es el "anfitrión" (host) y reparte las fichas. Cada
+   jugador hace sus movimientos en su propio navegador y, después de cada
+   movimiento, le manda el estado de la partida al otro a través del servidor
+   (Cloudflare). El servidor guarda el último estado para poder volver si
+   alguien recarga la página o se corta internet.
+   ========================================================================== */
+(function(){
+  const GAME=['n','hands','muertos','taken','melds','rules','pozo','mazo','turn','phase','totals','round','over','mid','goal','freeM','muertoMazo','lastDisc','actor','drawn','mode','timer'];
+  const clone=o=>JSON.parse(JSON.stringify(o));
+  const NET={role:null,code:null,ws:null,v:0,last:'',ev:[],peer:null,peerOn:false,open:false,retry:0,timer:null,ping:null,ui:null};
+  window.BURAKO_NET=NET;
+  const online=()=>!!(S&&S.kind==='online'&&NET.code);
+
+  /* ---------- Estado: perspectiva de cada jugador ----------
+     En la pantalla, "vos" siempre sos el asiento 0. El estado que viaja por
+     la red está siempre del lado del anfitrión; el invitado lo da vuelta. */
+  function rot(g){
+    const o=clone(g), sw=a=>Array.isArray(a)?a.slice().reverse():a, fl=p=>typeof p==='number'?1-p:p;
+    ['hands','muertos','taken','melds','totals'].forEach(k=>{ o[k]=sw(o[k]); });
+    o.turn=fl(o.turn); o.lastDisc=fl(o.lastDisc); o.actor=fl(o.actor);
+    if(o.over){ o.over.closer=fl(o.over.closer); o.over.rows=sw(o.over.rows); }
+    return o;
+  }
+  function pick(){ const g={}; GAME.forEach(k=>{ g[k]=S[k]===undefined?null:S[k]; }); return clone(g); }
+  const canon=()=>NET.role==='host'?pick():rot(pick());
+  const mine=c=>NET.role==='host'?clone(c):rot(c);
+
+  /* ---------- Conexión ---------- */
+  function wsURL(){ return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws?mesa='+encodeURIComponent(NET.code)+'&role='+NET.role; }
+  function send(m){ if(NET.ws&&NET.ws.readyState===1){ try{ NET.ws.send(JSON.stringify(m)); return true; }catch(e){} } return false; }
+  function myWho(){ ensureMyCav(); return {name:myName(),cav:NET.myCav}; }
+  function connect(){
+    clearTimeout(NET.timer);
+    if(NET.ws){ try{ NET.ws.onclose=null; NET.ws.close(); }catch(e){} }
+    let ws; try{ ws=new WebSocket(wsURL()); }catch(e){ schedule(); return; }
+    NET.ws=ws; badge();
+    ws.onopen=()=>{ NET.open=true; NET.retry=0; send({t:'hello',who:myWho()}); badge();
+      clearInterval(NET.ping); NET.ping=setInterval(()=>send({t:'ping'}),25000); };
+    ws.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch(x){ return; } onMsg(m); };
+    ws.onclose=ev=>{ NET.open=false; clearInterval(NET.ping); badge(); if(ev&&ev.code===4000) return; schedule(); };
+    ws.onerror=()=>{};
+  }
+  function schedule(){ clearTimeout(NET.timer); const d=Math.min(15000,800*Math.pow(1.7,NET.retry++)); NET.timer=setTimeout(()=>{ if(NET.code) connect(); },d); }
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&NET.code&&(!NET.ws||NET.ws.readyState>1)){ NET.retry=0; connect(); } });
+  window.addEventListener('online',()=>{ if(NET.code){ NET.retry=0; connect(); } });
+
+  /* ---------- Mensajes ---------- */
+  function onMsg(m){
+    if(m.t==='pong') return;
+    if(m.t==='sync'){
+      const r=m.room||{}, other=NET.role==='host'?'guest':'host';
+      NET.peerOn=(m.online||[]).includes(other);
+      if(r[other]) setPeer(r[other]);
+      if(NET.role==='host'){
+        if(online()){ if(r.state&&(r.v||0)>NET.v) apply(r.state,r.v,true); else pushNow(true); }
+        else if(r.guest&&NET.peerOn) startHost();
+      } else if(r.state&&(!online()||(r.v||0)>=NET.v)){ apply(r.state,r.v||1,true); } else if(online()) pushNow(true);
+      badge(); netUI(); return;
+    }
+    if(m.t==='presence'){
+      const other=NET.role==='host'?'guest':'host'; if(m.role!==other) return;
+      NET.peerOn=!!m.on; badge();
+      if(m.on&&NET.role==='host'&&online()) pushNow(true);
+      if(!m.on&&online()&&!S.over) toast(peerName()+' se desconectó. Puede volver con el mismo link.');
+      return;
+    }
+    if(m.t==='hello'){
+      setPeer(m.who); NET.peerOn=true; badge();
+      if(NET.role==='host'){ if(!online()) startHost(); else { regPeer(); render(); pushNow(true); } }
+      else if(online()){ regPeer(); render(); }
+      netUI(); return;
+    }
+    if(m.t==='state'){ apply(m.s,m.v,false,m.ev); return; }
+    if(m.t==='next'){ if(NET.role==='host'&&online()&&S.over) hostNext(); return; }
+    if(m.t==='chat'){ if(!online()) return; postMsg(1,m.kind==='voice'?'voice':m.kind==='emoji'?'emoji':'text',String(m.text||'').slice(0,300)); if(m.kind==='voice'&&S.botVoices!==false) speak(1,m.text); return; }
+  }
+
+  /* ---------- El otro jugador ---------- */
+  function ensureMyCav(){
+    if(NET.myCav==null){ NET.myCav=(typeof myCav==='number'&&myCav>=0&&myCav<CC_AV.b.length)?myCav:Math.floor(Math.random()*CC_AV.b.length); }
+  }
+  function myName(){ let n='Jugador'; try{ n=localStorage.getItem('burako-name')||'Jugador'; }catch(e){} return n.slice(0,18); }
+  function setPeer(who){
+    if(!who) return; const cav=(typeof who.cav==='number'&&who.cav>=0&&who.cav<CC_AV.b.length)?who.cav:0;
+    const id='net-'+(NET.role==='host'?'guest':'host');
+    NET.peer={id,name:String(who.name||'Amigo').slice(0,18),ini:'',g:CC_G[cav]||'f',cav,fun:'orange',lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1}};
+  }
+  function regPeer(){
+    if(!NET.peer||!S) return; const c=NET.peer;
+    const i=ROSTER.findIndex(r=>r.id===c.id); if(i>=0) ROSTER[i]=c; else ROSTER.push(c); FUN_MAP[c.id]=c.fun;
+    S.seats=[null,c.id]; S.xchars=[c]; ensureMyCav(); S.cav=[NET.myCav,c.cav];
+  }
+  const peerName=()=>NET.peer?NET.peer.name:'Tu amigo';
+
+  /* ---------- Empezar y seguir la partida ---------- */
+  function base(){
+    abandoned=false; paused=false; setupOpen=false; quitOpen=false; lobbyOpen=false; menuOpen=false; busy=false;
+    try{ renderLobby(); renderMenu(); renderPause(); }catch(e){}
+  }
+  function startHost(){
+    if(!NET.peer) return; closeUI(); base(); S=null;
+    newRound({mode:(pref.level||2)===1?'facil':'dificil',timer:0,goal:pref.goal===undefined?3000:pref.goal,n:2,
+      rules:{legs:pref.legs!==false,impura:pref.impura!==false,chat:pref.chat!==false},seats:[null,'net-guest'],lv:[null,2]});
+    S.kind='online'; S.net={code:NET.code,role:'host'}; regPeer();
+    S.msg='¡Empieza la partida con '+peerName()+'! Tu turno: robá del mazo o levantá el pozo.';
+    NET.v=0; NET.last=''; beginTurn(); render(); pushNow(true); dealAnim();
+  }
+  function hostNext(){
+    if(!S||!S.over) return; try{ if(closeFx) finishClose(); }catch(e){} const o=S.over;
+    newRound({totals:o.done?null:S.totals,round:o.done?1:S.round+1,timer:0,n:2});
+    S.kind='online'; S.net={code:NET.code,role:'host',v:NET.v}; regPeer(); sumClosed=false;
+    S.turn=(S.round-1)%2; S.msg=S.turn===0?'Nueva mano. Tu turno: robá del mazo o levantá el pozo.':'Nueva mano. Empieza '+peerName()+'.';
+    beginTurn(); render(); dealAnim();
+  }
+  function guestInit(){
+    closeUI(); base(); S=null;
+    newRound({n:2,timer:0,seats:[null,'net-host'],lv:[null,2]});
+    S.kind='online'; S.net={code:NET.code,role:'guest',v:NET.v}; regPeer();
+  }
+
+  /* Recibir un estado nuevo del otro jugador */
+  function apply(c,v,fresh,ev){
+    if(!c||!c.hands) return;
+    if(!fresh&&v<=NET.v) return;
+    const first=!online()||(S.net&&S.net.code!==NET.code);
+    if(first){ if(NET.role==='guest') guestInit(); else return; }
+    if(c.over==null&&S.over){ try{ if(closeFx) finishClose(); }catch(e){} }
+    const g=mine(c), prevTurn=S.turn, prevRound=S.round, prevOver=!!S.over, prevOverAt=S.over&&S.over.at;
+    const src={draw:mazoRect()};
+    GAME.forEach(k=>{ S[k]=g[k]; });
+    if(S.freeM===null) S.freeM=null;
+    const ids=new Set(S.hands[0].map(t=>t.id)); S.sel=(S.sel||[]).filter(id=>ids.has(id));
+    NET.v=v; NET.last=JSON.stringify(c); S.net.v=v; NET.nextAt=null;
+    regPeer();
+    if(first||S.round!==prevRound||(prevOver&&!S.over)){
+      sortRack('color'); sumClosed=false;
+      S.msg=S.turn===0?'Nueva mano. Tu turno: robá del mazo o levantá el pozo.':'Empieza '+peerName()+'.';
+      if(S.turn===0){ const d=S.drawn; beginTurn(); S.drawn=d; }
+      render(); dealAnim(); netUI(); return;
+    }
+    // Contar lo que hizo el otro
+    (ev||[]).forEach(e=>{
+      if(e.k==='draw') say(peerName()+' robó del mazo.');
+      else if(e.k==='pozo') say(peerName()+' levantó el pozo ('+e.n+' '+(e.n===1?'ficha':'fichas')+').');
+      else if(e.k==='meld') say(peerName()+' bajó un juego.');
+      else if(e.k==='add') say(peerName()+' agregó a un juego.');
+      else if(e.k==='muerto') say(peerName()+' se fue al muerto.');
+      else if(e.k==='disc'&&e.t) say(peerName()+' descartó '+tname(e.t)+'.'+(S.turn===0&&!S.over?' Tu turno: robá del mazo o levantá el pozo.':''));
+    });
+    if(S.over&&!prevOver){
+      say(S.over.closer===0?'¡Cerraste la mano!':S.over.closer===1?peerName()+' cerró la mano.':'Se terminó el mazo: fin de la mano.');
+      try{ const won=S.over.done&&S.totals[0]>S.totals[1];
+        if(won){ fanfare(); setTimeout(()=>confetti(true),150); } else if(S.over.done) waWaWaa(); else tone([392,349,294],'triangle'); }catch(e){}
+    }
+    if(S.turn!==prevTurn&&!S.over){ const d=S.drawn; beginTurn(); S.drawn=d; }
+    render();
+    try{ (ev||[]).forEach(e=>{
+      if(e.k==='draw'&&src.draw){ const a=avRect(1); if(a) flyTiles([src.draw],()=>a); }
+      if(e.k==='disc'&&e.t){ const el=document.querySelector('[data-av="1"]'), r=el&&el.getBoundingClientRect(); if(r) flyDiscard({html:tileH(e.t),rect:tileRectAt(r.left+r.width/2,r.top+r.height/2),size:1}); }
+    }); }catch(e){}
+  }
+
+  /* Mandar el estado cuando yo hice algo */
+  function pushNow(force){
+    if(!online()) return; const c=canon(), js=JSON.stringify(c);
+    if(!force&&js===NET.last) return;
+    if(js!==NET.last){ NET.v++; NET.last=js; S.net.v=NET.v; save(); }
+    const ev=NET.ev; NET.ev=[];
+    send({t:'state',s:c,v:NET.v,ev});
+  }
+  const _render=render;
+  render=function(){ const r=_render.apply(this,arguments); try{ if(online()) pushNow(false); badge(); }catch(e){} return r; };
+
+  /* Registrar mis movimientos para contárselos al otro */
+  const ok=r=>!r||r==='muerto'||r==='cierre';
+  const _draw=drawMazo; drawMazo=function(p){ const r=_draw.apply(this,arguments); if(online()&&p===0&&r) NET.ev.push({k:'draw'}); return r; };
+  const _pozo=takePozo; takePozo=function(p){ const k=S.pozo.length; const r=_pozo.apply(this,arguments); if(online()&&p===0) NET.ev.push({k:'pozo',n:k}); return r; };
+  const _meld=doMeld; doMeld=function(p,ids,dry){ const r=_meld.apply(this,arguments); if(online()&&p===0&&!dry&&ok(r)){ NET.ev.push({k:'meld'}); if(r==='muerto') NET.ev.push({k:'muerto'}); } return r; };
+  const _add=doAdd; doAdd=function(p,mi,ids,dry){ const r=_add.apply(this,arguments); if(online()&&p===0&&!dry&&ok(r)){ NET.ev.push({k:'add'}); if(r==='muerto') NET.ev.push({k:'muerto'}); } return r; };
+  const _disc=doDiscard; doDiscard=function(p,id){ const t=S.hands[p].find(x=>x.id===id); const r=_disc.apply(this,arguments); if(online()&&p===0&&ok(r)){ NET.ev.push({k:'disc',t:t?{n:t.n,c:t.c,id:t.id}:null}); if(r==='muerto') NET.ev.push({k:'muerto'}); } return r; };
+
+  /* Chat: lo que escribo le llega al otro */
+  const _send=userSend; userSend=function(kind,text){ const r=_send.apply(this,arguments); if(r&&online()) send({t:'chat',kind,text}); return r; };
+
+  /* Botones */
+  const _onAct=onAct;
+  onAct=function(a,el){
+    if(a==='netcreate'){ createTable(); return; }
+    if(a==='next'&&online()){
+      if(!S.over) return;
+      if(NET.role==='host') hostNext(); else { if(NET.nextAt===S.over.at) return; if(send({t:'next'})){ NET.nextAt=S.over.at; say('Esperando que '+peerName()+' reparta la próxima mano…'); } else toast('Sin conexión. Probá de nuevo en unos segundos.'); render(); }
+      return;
+    }
+    if(a==='start') leaveOnline();
+    return _onAct.apply(this,arguments);
+  };
+  const _launch=lbLaunch; lbLaunch=function(){ leaveOnline(); return _launch.apply(this,arguments); };
+  function leaveOnline(){ if(!NET.code) return; NET.code=null; NET.role=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; clearTimeout(NET.timer); clearInterval(NET.ping); badge(); try{ history.replaceState(null,'',location.pathname); }catch(e){} }
+
+  /* ---------- Pantallas: crear mesa / unirse ---------- */
+  const newCode=()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; };
+  const link=()=>location.origin+location.pathname+'?mesa='+NET.code;
+  function ov(html){ let o=document.getElementById('netov'); if(!o){ o=document.createElement('div'); o.id='netov'; document.body.appendChild(o); } o.innerHTML='<div class="nc" role="dialog" aria-modal="true">'+html+'</div>'; return o; }
+  function closeUI(){ NET.ui=null; const o=document.getElementById('netov'); if(o) o.remove(); }
+  const logo='<div class="nlogo">Burako<span>106</span></div>';
+  function nameField(){ const n=myName(); return '<label for="netname">Tu nombre</label><input id="netname" maxlength="18" autocomplete="nickname" placeholder="Ej: Jimmy" value="'+(n==='Jugador'?'':esc(n))+'">'; }
+  function saveName(){ const i=document.getElementById('netname'); const v=i&&i.value.trim().slice(0,18); if(!v){ if(i){ i.focus(); const e=document.querySelector('#netov .nerr'); if(e) e.textContent='Escribí tu nombre para que el otro sepa quién sos.'; } return false; } try{ localStorage.setItem('burako-name',v); }catch(e){} return true; }
+
+  function createTable(){
+    ensureAudio(); leaveOnline(); NET.role='host'; NET.code=newCode(); NET.v=0; NET.last=''; NET.peer=null; NET.peerOn=false; NET.ui='create';
+    const o=ov(logo+'<h2>Jugar con un amigo</h2><p>Escribí tu nombre y mandale el link a quien quieras invitar. La partida empieza sola cuando entre.</p>'+nameField()+
+      '<button class="nbtn pri" data-n="go">Crear mesa</button><p class="nerr"></p><button class="nbtn ghost" data-n="cancel">Cancelar</button>');
+    o.querySelector('[data-n="go"]').onclick=()=>{ if(!saveName()) return; NET.ui='wait'; connect(); netUI(); };
+    o.querySelector('[data-n="cancel"]').onclick=()=>{ leaveOnline(); closeUI(); };
+    setTimeout(()=>{ const i=document.getElementById('netname'); if(i&&!i.value) i.focus(); },50);
+  }
+  function netUI(){
+    if(NET.ui==='wait'&&NET.role==='host'&&!online()){
+      const L=link(), txt='¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)';
+      const o=ov(logo+'<h2>Tu mesa está lista</h2><p>Mandale este link a tu amigo. Cuando entre, empieza la partida.</p><div class="nlink">'+esc(L)+'</div>'+
+        '<button class="nbtn wa" data-n="wa">Mandar por WhatsApp</button><button class="nbtn" data-n="copy">Copiar link</button>'+
+        '<div class="nwait"><i></i><i></i><i></i></div><p>'+(NET.open?'Esperando a que entre tu amigo…':'Conectando…')+'</p><button class="nbtn ghost" data-n="cancel">Cancelar</button>');
+      o.querySelector('[data-n="wa"]').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); };
+      o.querySelector('[data-n="copy"]').onclick=e=>{ const b=e.currentTarget; const done=()=>{ b.textContent='¡Link copiado!'; setTimeout(()=>{ b.textContent='Copiar link'; },1800); };
+        if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(L).then(done,()=>prompt('Copiá este link:',L)); else prompt('Copiá este link:',L); };
+      o.querySelector('[data-n="cancel"]').onclick=()=>{ leaveOnline(); closeUI(); };
+      return;
+    }
+    if(NET.ui==='join'&&NET.role==='guest'&&!online()){
+      if(NET.open){
+        const o=ov(logo+'<h2>¡Estás en la mesa!</h2><p>'+(NET.peer?'Esperando a que '+esc(NET.peer.name)+' reparta las fichas…':'Esperando a que empiece la partida…')+'</p><div class="nwait"><i></i><i></i><i></i></div><button class="nbtn ghost" data-n="cancel">Salir</button>');
+        o.querySelector('[data-n="cancel"]').onclick=()=>{ leaveOnline(); closeUI(); };
+      }
+      return;
+    }
+    if(online()) closeUI();
+  }
+  function joinScreen(code){
+    NET.role='guest'; NET.code=code; NET.ui='ask';
+    const o=ov(logo+'<h2>¡Te invitaron a jugar!</h2><p>Escribí tu nombre y entrá a la mesa.</p>'+nameField()+
+      '<button class="nbtn pri" data-n="go">Entrar a la mesa</button><p class="nerr"></p><button class="nbtn ghost" data-n="cancel">Ahora no</button>');
+    o.querySelector('[data-n="go"]').onclick=()=>{ if(!saveName()) return; ensureAudio(); joinNow(); };
+    o.querySelector('[data-n="cancel"]').onclick=()=>{ leaveOnline(); closeUI(); };
+    o.querySelector('#netname').addEventListener('keydown',e=>{ if(e.key==='Enter') o.querySelector('[data-n="go"]').click(); });
+    setTimeout(()=>{ const i=document.getElementById('netname'); if(i&&!i.value) i.focus(); },50);
+  }
+  function joinNow(){
+    try{ if(!E.account){ ecoLogin('invitado'); } }catch(e){}
+    try{ const l=document.getElementById('ecologin'); if(l) l.remove(); }catch(e){}
+    NET.ui='join'; NET.v=0; NET.last='';
+    const o=ov(logo+'<h2>Entrando…</h2><div class="nwait"><i></i><i></i><i></i></div>');
+    connect();
+  }
+
+  /* ---------- Indicador de conexión ---------- */
+  function badge(){
+    let b=document.getElementById('netbadge');
+    if(!online()){ if(b) b.remove(); return; }
+    if(!b){ b=document.createElement('div'); b.id='netbadge'; b.setAttribute('role','status'); document.body.appendChild(b); }
+    const st=!NET.open?'off':NET.peerOn?'':'wait', tx=!NET.open?'Sin conexión… reconectando':NET.peerOn?'Jugando online con '+peerName():peerName()+' no está conectado';
+    if(b._k===st+tx) return; b._k=st+tx; clearTimeout(b._t);
+    b.style.display=''; if(!st) b._t=setTimeout(()=>{ b.style.display='none'; },4000);
+    b.className=st; b.innerHTML='<i></i><span></span>'; b.lastChild.textContent=tx;
+  }
+
+  /* ---------- Al abrir la página ---------- */
+  function boot(){
+    const q=new URLSearchParams(location.search), code=(q.get('mesa')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    // Volver a una partida online que estaba en curso (recargó la página)
+    if(S&&S.kind==='online'&&S.net&&S.net.code&&(!code||code===S.net.code)){
+      NET.role=S.net.role; NET.code=S.net.code; NET.v=S.net.v||0; NET.last=JSON.stringify(canon());
+      if(S.xchars&&S.xchars[0]){ NET.peer=S.xchars[0]; regPeer(); }
+      ensureMyCav(); paused=false; try{ renderPause(); }catch(e){} render(); connect(); return;
+    }
+    if(S&&S.kind==='online'){ S.kind='bot'; abandoned=true; }
+    if(code.length>=4) joinScreen(code);
+  }
+  setTimeout(boot,0);
+})();
+</script>
