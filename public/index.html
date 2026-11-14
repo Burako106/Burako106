@@ -3947,7 +3947,7 @@ function waitVoices(){
 async function speak(p,text){
   if(!S||!S.sound||!('speechSynthesis' in window)) return;
   try{ text=tr(text); const t=String(text).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/…/g,', ').trim(); if(!t) return;
-    await waitVoices(); voiceCache=null;
+    if(!speechSynthesis.getVoices().length){ await waitVoices(); voiceCache=null; }
     const v=voiceFor(p);
     if(!v){ if(!noEsWarned){ noEsWarned=true; toast('Tu navegador no tiene voces en español, así que los mensajes se muestran sin voz.'); } return; }
     const u=new SpeechSynthesisUtterance(t); u.voice=v; u.lang=v.lang;
@@ -3955,6 +3955,7 @@ async function speak(p,text){
     if(p!==0&&v._unk) u.pitch=Math.max(.1,Math.min(2,vc.pitch*(charOf(p).g==='f'?1.25:.75)));
     curUtter=u; u.onend=()=>{ if(curUtter===u) curUtter=null; };
     if(speechSynthesis.pending) speechSynthesis.cancel();
+    try{ speechSynthesis.resume(); }catch(e){}
     speechSynthesis.speak(u);
   }catch(e){} }
 function bubble(p,kind,text){
@@ -6063,7 +6064,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794656370';</script>
+<script>window.BURAKO_BUILD='1794656593';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6521,6 +6522,16 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     P('left',(nr.left-er.left)+'px'); P('top',(sr.top+seat.clientTop+o.T-er.top-n.offsetHeight/2)+'px');
   }
   const _psr=placeSeatRings; placeSeatRings=function(){ const r=_psr.apply(this,arguments); try{ topRunline(); topTimer(); }catch(e){} return r; };
+
+  /* ---------- Desbloquear la voz y el audio en celulares con el primer toque ---------- */
+  let unlocked=false;
+  function unlockAudio(){
+    if(unlocked) return; unlocked=true;
+    try{ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); speechSynthesis.getVoices(); } }catch(e){}
+    try{ ensureAudio(); }catch(e){}
+    try{ const a=new Audio('data:audio/mp4;base64,AAAAHGZ0eXBNNEEgAAAAAE00QSBpc29tbXA0MgAAAAhmcmVlAAAAAG1kYXQ='); a.muted=true; a.play().catch(()=>{}); }catch(e){}
+  }
+  ['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 
   /* ---------- Notas de voz: mantener apretado para grabar, soltar para enviar ---------- */
   const VN={st:null,r:null,ch:[],t0:0,down:false,cancel:false,lastPtt:0,ui:null,tick:null};

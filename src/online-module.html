@@ -456,6 +456,16 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   }
   const _psr=placeSeatRings; placeSeatRings=function(){ const r=_psr.apply(this,arguments); try{ topRunline(); topTimer(); }catch(e){} return r; };
 
+  /* ---------- Desbloquear la voz y el audio en celulares con el primer toque ---------- */
+  let unlocked=false;
+  function unlockAudio(){
+    if(unlocked) return; unlocked=true;
+    try{ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); speechSynthesis.getVoices(); } }catch(e){}
+    try{ ensureAudio(); }catch(e){}
+    try{ const a=new Audio('data:audio/mp4;base64,AAAAHGZ0eXBNNEEgAAAAAE00QSBpc29tbXA0MgAAAAhmcmVlAAAAAG1kYXQ='); a.muted=true; a.play().catch(()=>{}); }catch(e){}
+  }
+  ['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
+
   /* ---------- Notas de voz: mantener apretado para grabar, soltar para enviar ---------- */
   const VN={st:null,r:null,ch:[],t0:0,down:false,cancel:false,lastPtt:0,ui:null,tick:null};
   function vnMime(){ try{ for(const m of ['audio/mp4','audio/webm;codecs=opus','audio/webm']) if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)) return m; }catch(e){} return ''; }

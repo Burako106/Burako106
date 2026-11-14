@@ -27,6 +27,11 @@ rep(".seat.human .lvlrow{display:none!important}",".seat.human .lvlrow{visibilit
 # cortar en seco las jugadas en curso de la máquina cuando dejo una mesa online
 rep("const think=async(a,b)=>{ await sleep(a+Math.random()*(b-a)); await waitPause(); };",
     "const think=async(a,b)=>{ const g=window.__burakoGen|0; await sleep(a+Math.random()*(b-a)); await waitPause(); if((window.__burakoGen|0)!==g) throw new Error('mesa abandonada'); };")
+# voz: no perder el permiso del toque esperando las voces, y despertar el sintetizador
+rep("    await waitVoices(); voiceCache=null;\n    const v=voiceFor(p);",
+    "    if(!speechSynthesis.getVoices().length){ await waitVoices(); voiceCache=null; }\n    const v=voiceFor(p);")
+rep("    if(speechSynthesis.pending) speechSynthesis.cancel();\n    speechSynthesis.speak(u);",
+    "    if(speechSynthesis.pending) speechSynthesis.cancel();\n    try{ speechSynthesis.resume(); }catch(e){}\n    speechSynthesis.speak(u);")
 # sin pausa con otras personas
 rep("const canPause=!!(S&&!S.over&&!setupOpen);","const canPause=!!(S&&!S.over&&!setupOpen&&S.kind!=='online');")
 # botón del video
