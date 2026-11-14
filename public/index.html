@@ -5504,7 +5504,7 @@ function lbTableH(t,big){
   return `<div class="ltable m${t.n}${big?' big':''}${t.status==='playing'?' playing':''}${t.mine?' mine':''}">
     <span class="lbadge m${t.n}">${MODE_BADGE[t.n]}</span>
     <div class="loval"><div class="lfelt"><b class="lname">${esc(t.name)}</b><span class="lbet">${t.bet?`<i class="lcoin tk">${TKI}</i>${ecoN(t.bet)}`:'Gratis'}</span>${t.status==='playing'?`<span class="lstate">En juego · mano ${t.hand}</span>`:`<span class="lstate">${filled}/${t.n} jugadores</span>`}</div>${seats}</div>
-    ${big?'':`<p class="lhint">${t.n===4?LL('Tocá + para sentarte · mismo color, misma pareja','Tap + to sit · same color, same team'):LL('Tocá + para sentarte','Tap + to sit')}</p>`}
+    ${big?'':`<p class="lhint"></p>`}
     <p class="lrules">${lbRules(t).map(r=>`<span>${r}</span>`).join('')}</p>
   </div>`;
 }
@@ -6064,7 +6064,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794668653';</script>
+<script>window.BURAKO_BUILD='1794669099';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6234,6 +6234,26 @@ body.fun .nr-dots i{outline:2px solid #141414!important;outline-offset:-2px;opac
 body.fun .nr-dots i.on{opacity:1;background:#1fb35a!important}
 body.fun .nr-no.btn{outline:2px solid #141414!important;outline-offset:-2px;color:#141414!important;background:transparent!important}
 body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
+.lhint:empty{display:none}
+/* mesa completa: al centro, grande, fondo desenfocado */
+#nrfocus{position:fixed;inset:0;z-index:2147480000;display:grid;place-items:center;padding:16px;background:rgba(18,18,22,.32);-webkit-backdrop-filter:blur(10px) saturate(.9);backdrop-filter:blur(10px) saturate(.9);animation:nrfbg .3s ease both}
+#nrfocus.out{animation:nrfbgout .3s ease both}
+#nrfocus .nrf-wrap{width:min(92vw,380px);transform-origin:center}
+#nrfocus .lcard{position:relative;width:100%;margin:0;box-shadow:0 30px 70px rgba(0,0,0,.4);background:var(--rail);animation:nrfin .5s cubic-bezier(.2,1.3,.4,1) both;cursor:default}
+#nrfocus .lcard:hover{transform:none!important}
+#nrfocus.out .lcard{animation:nrfout .28s ease-in both}
+body.glass #nrfocus{background:rgba(240,242,248,.35);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2)}
+body.glass #nrfocus .lcard{background:rgba(248,249,252,.97)}
+body.fun #nrfocus{background:rgba(20,20,20,.3)}
+body.fun #nrfocus .lcard{background:var(--cr2,var(--cr))!important;box-shadow:8px 8px 0 #141414!important}
+body:not(.fun):not(.glass) #nrfocus{background:rgba(10,4,4,.5)}
+@media (min-width:700px) and (min-height:720px){#nrfocus .nrf-wrap{transform:scale(1.22)}}
+@keyframes nrfbg{from{opacity:0}to{opacity:1}}
+@keyframes nrfbgout{from{opacity:1}to{opacity:0}}
+@keyframes nrfin{0%{opacity:0;transform:scale(.55) translateY(40px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes nrfout{to{opacity:0;transform:scale(.8)}}
+body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
+@media (prefers-reduced-motion:reduce){#nrfocus,#nrfocus .lcard{animation:none!important}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -6371,13 +6391,12 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
     if(m.t==='ready'){ if(NET.role==='host') markReady(m.pid); return; }
     if(m.t==='readycheck'){ if(NET.role==='guest'&&!online()){ clearTimeout(NET.selfDrop); NET.selfDrop=setTimeout(()=>{ if(NET.code&&NET.role==='guest'&&!online()&&NET.readyUntil&&!NET.meReady&&!NET.going){ send({t:'bye',pid:myPid()}); const ws=NET.ws; NET.ws=null; setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },300); leaveOnline(); closeReady(); toast('Saliste de la mesa porque no confirmaste.'); lbRefresh(); } },READY_MS+1500); NET.seats=m.seats||NET.seats; NET.n=m.n||NET.n; NET.readyUntil=Date.now()+READY_MS; NET.scrolled=false; NET.readyState=m.ready||{}; NET.meReady=false; readyUI(); try{ bell(); }catch(e){} } return; }
     if(m.t==='readystate'){ if(NET.role==='guest'){ NET.readyState=m.ready||{}; readyUI(); } return; }
-    if(m.t==='go'){ if(NET.role==='guest'&&!online()){ NET.readyUntil=0; NET.going=true; closeReady(); goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; },GO_MS+4000); } return; }
+    if(m.t==='go'){ if(NET.role==='guest'&&!online()){ NET.readyUntil=0; NET.going=true; goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; },GO_MS+4000); } return; }
     if(m.t==='readycancel'){ if(NET.role==='guest'){ NET.readyUntil=0; readyUI(); if(m.msg) toast(m.msg); netUI(); } return; }
     if(m.t==='handoff'){
       if(NET.role!=='guest'||online()) return; NET.readyUntil=0; NET.seats=m.seats||NET.seats; closeReady();
       const who=m.name||'El anfitrión';
-      if(m.pid===myPid()){ NET.readyState={}; NET.role='host'; NET.ui='wait'; if(NET.seats[0]) NET.seats[0].t='h'; NET.n=m.n||NET.n; NET.bet=m.bet||NET.bet; NET.pub=!!m.pub; connect(); setTimeout(()=>{ sendSeats(); if(NET.pub) list(); },900); toast(who+' no confirmó y salió. Ahora la mesa es tuya: esperá a que se sume alguien.'); }
-      else toast(who+' no confirmó y salió de la mesa. Esperando otro jugador…');
+      if(m.pid===myPid()){ NET.readyState={}; NET.role='host'; NET.ui='wait'; if(NET.seats[0]) NET.seats[0].t='h'; NET.n=m.n||NET.n; NET.bet=m.bet||NET.bet; NET.pub=!!m.pub; connect(); setTimeout(()=>{ sendSeats(); if(NET.pub) list(); },900);  }
       readyUI(); netUI(); return; }
     if(m.t==='dropped'){ if(NET.role==='guest'&&m.pid===myPid()){ leaveOnline(); closeReady(); toast('Te sacamos de la mesa porque no confirmaste que ibas a jugar.'); lbRefresh(); } return; }
     if(m.t==='closed'){ if(NET.role==='guest'&&!online()){ const hn=((NET.seats&&NET.seats[0])||{}).name||'El anfitrión'; leaveOnline(); closeReady(); toast(hn+' cerró la mesa.'); lbRefresh(); } return; }
@@ -6410,7 +6429,7 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
     if(i<0){ send({t:'kick',pid:w.pid}); return; }
     NET.seats[i]={t:'g',pid:w.pid,name:String(w.name||'Jugador').slice(0,18),cav:okCav(w.cav)?w.cav:0};
   }
-  function unseat(pid){ if(!NET.seats) return; const i=NET.seats.findIndex(s=>s&&s.pid===pid); if(i>0){ const nm0=NET.seats[i].name; NET.seats[i]=null; send({t:'kick',pid,soft:true}); if(NET.ready){ delete NET.ready[pid]; cancelReady(nm0+' se fue de la mesa. Esperando otro jugador…'); } sendSeats(); list(); netUI(); } }
+  function unseat(pid){ if(!NET.seats) return; const i=NET.seats.findIndex(s=>s&&s.pid===pid); if(i>0){ const nm0=NET.seats[i].name; NET.seats[i]=null; send({t:'kick',pid,soft:true}); if(NET.ready){ delete NET.ready[pid]; cancelReady(''); } sendSeats(); list(); netUI(); } }
   function sendSeats(){ if(NET.role==='host'&&NET.seats) send({t:'seats',seats:NET.seats,n:NET.n,bet:NET.bet}); }
   const guests=()=>(NET.seats||[]).filter(s=>s&&s.t==='g').length;
   function maybeAutoStart(){ if(NET.role==='host'&&!online()&&NET.seats&&NET.seats.every(Boolean)) startReady(); }
@@ -6436,7 +6455,7 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
   function markReady(pid){
     if(!NET.ready||!(pid in NET.ready)) return; NET.ready[pid]=true; NET.readyState=NET.ready;
     send({t:'readystate',ready:NET.ready}); readyUI();
-    if(Object.values(NET.ready).every(Boolean)){ clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0; NET.going=true; closeReady(); send({t:'go'}); goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; if(NET.code&&NET.role==='host'&&!online()) startHost(); },GO_MS); }
+    if(Object.values(NET.ready).every(Boolean)){ clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0; NET.going=true; send({t:'go'}); goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; if(NET.code&&NET.role==='host'&&!online()) startHost(); },GO_MS); }
   }
   const GO_MS=2900;
   // 3, 2, 1… ¡A jugar!
@@ -6484,11 +6503,20 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
       if(ok.length){ handoff(ok[0],names,'Saliste de la mesa porque no confirmaste. La mesa sigue abierta para los demás.');      } else { send({t:'closed',why:'noready'}); leaveOnline(); closeReady(); toast('Cerramos tu mesa porque nadie confirmó.'); lbRefresh(); }
       return;
     }
-    const msg=names.length?names.join(' y ')+(names.length>1?' no confirmaron. Sus lugares quedaron libres.':' no confirmó. Su lugar quedó libre.'):'';
+    const msg='';
     send({t:'readycancel',msg}); sendSeats(); list(); readyUI(); netUI(); if(msg) toast(msg);
   }
   function iAmReady(){ if(NET.meReady) return; NET.meReady=true; try{ clack(1); }catch(e){} if(NET.role==='host') markReady(myPid()); else { send({t:'ready',pid:myPid()}); readyUI(); } }
-  function closeReady(){ const o=document.getElementById('netready'); if(o) o.remove(); }
+  function closeReady(){ const o=document.getElementById('netready'); if(o) o.remove(); const f=document.getElementById('nrfocus'); if(f&&!f.classList.contains('out')){ f.classList.add('out'); setTimeout(()=>f.remove(),320); } document.body.classList.remove('nrfocus'); }
+  // La mesa llena pasa al centro, grande, con el fondo desenfocado
+  function focusUI(){
+    const i=LT.findIndex(x=>x.net===NET.code), t=i>=0?LT[i]:myTable(); let html='';
+    try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'</div>'; }catch(e){ return false; }
+    let f=document.getElementById('nrfocus');
+    if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
+    const w=f.querySelector('.nrf-wrap'); if(w._h!==html){ w.innerHTML=html; w._h=html; }
+    document.body.classList.add('nrfocus'); return true;
+  }
   function readyTickFn(){
     const left=Math.max(0,(NET.readyUntil-Date.now())/1000);
     document.querySelectorAll('.nr-count').forEach(el=>{ const b=el.querySelector('b'); if(b) b.textContent=Math.ceil(left); el.classList.toggle('low',left<=3); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
@@ -6496,12 +6524,10 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
     if(!NET.readyUntil) clearInterval(NET.readyTick);
   }
   function readyUI(){
-    if(online()||!NET.readyUntil){ closeReady(); clearInterval(NET.readyTick); try{ if(lobbyOpen&&!online()){ mergeMine(); renderLGrid(); } }catch(e){} return; }
+    if(online()||(!NET.readyUntil&&!NET.going)){ closeReady(); clearInterval(NET.readyTick); try{ if(lobbyOpen&&!online()){ mergeMine(); renderLGrid(); } }catch(e){} return; }
     try{ if(lobbyOpen){ mergeMine(); renderLGrid(); } }catch(e){}
-    const card=lobbyOpen&&document.querySelector('.ltable.netmine.netready');
-    if(card){ closeReady(); if(!NET.scrolled){ NET.scrolled=true; try{ card.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} } }
-    else readyModal();
-    clearInterval(NET.readyTick); NET.readyTick=setInterval(readyTickFn,200); readyTickFn();
+    if(!focusUI()) readyModal();
+    clearInterval(NET.readyTick); if(NET.readyUntil){ NET.readyTick=setInterval(readyTickFn,200); readyTickFn(); }
     setTimeout(()=>{ (NET.seats||[]).forEach(s=>{ if(s&&(s.t==='b'||(NET.readyState||{})[s.pid])) (NET.stamped=NET.stamped||new Set()).add(s.pid||s.id); }); },700);
   }
   function readyModal(){
@@ -6668,7 +6694,7 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
     send({t:'state',s:c,v:NET.v,ev});
   }
   const _render=render;
-  render=function(){ const r=_render.apply(this,arguments); try{ document.body.classList.toggle('netgame',online()&&!lobbyOpen); if(online()) pushNow(false); badge(); }catch(e){} return r; };
+  render=function(){ const r=_render.apply(this,arguments); try{ document.body.classList.toggle('netgame',online()&&!lobbyOpen); if(online()&&document.getElementById('nrfocus')) closeReady(); if(online()) pushNow(false); badge(); }catch(e){} return r; };
 
   /* Registrar jugadas (mías, o de la máquina si soy el anfitrión) */
   const ok=r=>!r||r==='muerto'||r==='cierre';
