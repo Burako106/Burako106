@@ -204,6 +204,12 @@ body.fun .nr-play.btn{color:#fff!important}
 body.fun .nr-play.btn .nr-count{color:#fff!important}
 /* Fun: reglas de la mesa con fondo blanco */
 body.fun .lcard .lrules span{background:#fff!important}
+/* Classic: lugares libres con fondo oscuro translúcido y botones de la mesa en su estilo */
+body:not(.fun):not(.glass) .lsit{background:rgba(18,6,6,.62);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+body:not(.fun):not(.glass) .lsit:hover,body:not(.fun):not(.glass) .lsit:focus-visible{background:var(--accent);color:var(--accent-ink)}
+body:not(.fun):not(.glass) .lnet-ic{background:rgba(0,0,0,.32);color:var(--ink);border:1.5px solid rgba(230,182,63,.55);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+body:not(.fun):not(.glass) .lnet-ic:hover{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+body:not(.fun):not(.glass) .lnet-ic:active{box-shadow:0 2px 6px rgba(0,0,0,.3)}
 </style>
 <script id="net-js">
 /* ==========================================================================
