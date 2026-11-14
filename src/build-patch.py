@@ -16,7 +16,14 @@ rep("function botReply(kind,text){", "function botReply(kind,text){ if(S&&S.kind
 # 3) botón para jugar con un amigo en el lobby
 rep('<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button></div>',
     '<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button>\n    <button class="lbig lfriend" data-act="netcreate"><span class="lplus">👥</span><b>Jugar con un amigo</b><small>Mandale un link y juegan online</small></button></div>')
-# 4) módulo online al final
+# 4) mesas reales: sin robot ni nivel para personas, "Gratis" y "Sin tiempo"
+rep('<i class="lcoin tk">${TKI}</i>${ecoN(t.bet)}', "${t.bet?`<i class=\"lcoin tk\">${TKI}</i>${ecoN(t.bet)}`:'Gratis'}", 2)
+rep("t.timer+' s'", "(t.timer?t.timer+' s':'Sin tiempo')")
+rep('<span class="lvlrow">${lvlH(lvlOf(p))}<i class="botmk" title="Robot (la máquina)" aria-label="robot">🤖</i></span>',
+    '${S&&S.kind===\'online\'?\'\':`<span class="lvlrow">${lvlH(lvlOf(p))}<i class="botmk" title="Robot (la máquina)" aria-label="robot">🤖</i></span>`}', 2)
+rep("${me?'':'<i class=\"lbot\" title=\"Robot\">🤖</i>'}", "${me||s.real?'':'<i class=\"lbot\" title=\"Robot\">🤖</i>'}")
+rep("${x==='me'?'':'<i class=\"hbot\">🤖</i>'}", "${x==='me'||x.real?'':'<i class=\"hbot\">🤖</i>'}")
+# 5) módulo online al final
 rep("</body>", open(net, encoding='utf-8').read() + "\n</body>")
 open(out, 'w', encoding='utf-8').write(h)
 print("ok", len(h))

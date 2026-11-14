@@ -8,9 +8,15 @@
     "binding": "ASSETS"
   },
   "durable_objects": {
-    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+    "bindings": [
+      { "name": "ROOMS", "class_name": "Room" },
+      { "name": "LOBBY", "class_name": "Lobby" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] },
+    { "tag": "v2", "new_sqlite_classes": ["Lobby"] }
+  ],
   "routes": [
     { "pattern": "burako106.com", "custom_domain": true },
     { "pattern": "www.burako106.com", "custom_domain": true }

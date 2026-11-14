@@ -61,7 +61,8 @@ body.lobby #netbadge{display:none}
   /* ---------- Conexión ---------- */
   function wsURL(){ return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws?mesa='+encodeURIComponent(NET.code)+'&role='+NET.role; }
   function send(m){ if(NET.ws&&NET.ws.readyState===1){ try{ NET.ws.send(JSON.stringify(m)); return true; }catch(e){} } return false; }
-  function myWho(){ ensureMyCav(); return {name:myName(),cav:NET.myCav}; }
+  function myPid(){ let id=''; try{ id=localStorage.getItem('burako-pid')||''; if(!id){ id=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('burako-pid',id); } }catch(e){ id=NET.tmpPid||(NET.tmpPid=Math.random().toString(36).slice(2)); } return id; }
+  function myWho(){ ensureMyCav(); return {name:myName(),cav:NET.myCav,pid:myPid()}; }
   function connect(){
     clearTimeout(NET.timer);
     if(NET.ws){ try{ NET.ws.onclose=null; NET.ws.close(); }catch(e){} }
@@ -80,6 +81,7 @@ body.lobby #netbadge{display:none}
   /* ---------- Mensajes ---------- */
   function onMsg(m){
     if(m.t==='pong') return;
+    if(m.t==='full'){ const was=NET.role; leaveOnline(); closeUI(); toast(was==='guest'?'Esa mesa ya se llenó. Elegí otra o creá una.':'Esta mesa ya la está usando otra persona.'); lbRefresh(); return; }
     if(m.t==='sync'){
       const r=m.room||{}, other=NET.role==='host'?'guest':'host';
       NET.peerOn=(m.online||[]).includes(other);
@@ -92,7 +94,7 @@ body.lobby #netbadge{display:none}
     }
     if(m.t==='presence'){
       const other=NET.role==='host'?'guest':'host'; if(m.role!==other) return;
-      NET.peerOn=!!m.on; badge();
+      NET.peerOn=!!m.on; badge(); netUI();
       if(m.on&&NET.role==='host'&&online()) pushNow(true);
       if(!m.on&&online()&&!S.over) toast(peerName()+' se desconectó. Puede volver con el mismo link.');
       return;
@@ -131,7 +133,7 @@ body.lobby #netbadge{display:none}
     try{ renderLobby(); renderMenu(); renderPause(); }catch(e){}
   }
   function startHost(){
-    if(!NET.peer) return; closeUI(); base(); S=null;
+    if(!NET.peer) return; unlist(); closeUI(); base(); S=null;
     newRound({mode:(pref.level||2)===1?'facil':'dificil',timer:0,goal:pref.goal===undefined?3000:pref.goal,n:2,
       rules:{legs:pref.legs!==false,impura:pref.impura!==false,chat:pref.chat!==false},seats:[null,'net-guest'],lv:[null,2]});
     S.kind='online'; S.net={code:NET.code,role:'host'}; regPeer();
@@ -218,7 +220,8 @@ body.lobby #netbadge{display:none}
   /* Botones */
   const _onAct=onAct;
   onAct=function(a,el){
-    if(a==='netcreate'){ createTable(); return; }
+    if(a==='netcreate'){ createTable(false); return; }
+    if(a==='ljoin'&&el&&el.dataset&&String(el.dataset.id||'').startsWith('net:')){ realJoin(el.dataset.id.slice(4)); return; }
     if(a==='next'&&online()){
       if(!S.over) return;
       if(NET.role==='host') hostNext(); else { if(NET.nextAt===S.over.at) return; if(send({t:'next'})){ NET.nextAt=S.over.at; say('Esperando que '+peerName()+' reparta la próxima mano…'); } else toast('Sin conexión. Probá de nuevo en unos segundos.'); render(); }
@@ -228,7 +231,7 @@ body.lobby #netbadge{display:none}
     return _onAct.apply(this,arguments);
   };
   const _launch=lbLaunch; lbLaunch=function(){ leaveOnline(); return _launch.apply(this,arguments); };
-  function leaveOnline(){ if(!NET.code) return; NET.code=null; NET.role=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; clearTimeout(NET.timer); clearInterval(NET.ping); badge(); try{ history.replaceState(null,'',location.pathname); }catch(e){} }
+  function leaveOnline(){ if(!NET.code) return; unlist(); NET.code=null; NET.role=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; clearTimeout(NET.timer); clearInterval(NET.ping); badge(); try{ history.replaceState(null,'',location.pathname); }catch(e){} }
 
   /* ---------- Pantallas: crear mesa / unirse ---------- */
   const newCode=()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; };
@@ -239,18 +242,23 @@ body.lobby #netbadge{display:none}
   function nameField(){ const n=myName(); return '<label for="netname">Tu nombre</label><input id="netname" maxlength="18" autocomplete="nickname" placeholder="Ej: Jimmy" value="'+(n==='Jugador'?'':esc(n))+'">'; }
   function saveName(){ const i=document.getElementById('netname'); const v=i&&i.value.trim().slice(0,18); if(!v){ if(i){ i.focus(); const e=document.querySelector('#netov .nerr'); if(e) e.textContent='Escribí tu nombre para que el otro sepa quién sos.'; } return false; } try{ localStorage.setItem('burako-name',v); }catch(e){} return true; }
 
-  function createTable(){
-    ensureAudio(); leaveOnline(); NET.role='host'; NET.code=newCode(); NET.v=0; NET.last=''; NET.peer=null; NET.peerOn=false; NET.ui='create';
-    const o=ov(logo+'<h2>Jugar con un amigo</h2><p>Escribí tu nombre y mandale el link a quien quieras invitar. La partida empieza sola cuando entre.</p>'+nameField()+
+  function createTable(pub){
+    ensureAudio(); leaveOnline(); NET.role='host'; NET.code=newCode(); NET.v=0; NET.last=''; NET.peer=null; NET.peerOn=false; NET.ui='create'; NET.pub=!!pub;
+    const go=()=>{ NET.ui='wait'; connect(); if(NET.pub) list(); netUI(); };
+    if(pub&&myName()!=='Jugador'){ go(); return; }
+    const o=ov(logo+(pub?'<h2>Crear mesa</h2><p>Escribí tu nombre: así te ven los demás en el lobby.</p>':'<h2>Jugar con un amigo</h2><p>Escribí tu nombre y mandale el link a quien quieras invitar. La partida empieza sola cuando entre.</p>')+nameField()+
       '<button class="nbtn pri" data-n="go">Crear mesa</button><p class="nerr"></p><button class="nbtn ghost" data-n="cancel">Cancelar</button>');
-    o.querySelector('[data-n="go"]').onclick=()=>{ if(!saveName()) return; NET.ui='wait'; connect(); netUI(); };
+    o.querySelector('[data-n="go"]').onclick=()=>{ if(!saveName()) return; go(); };
     o.querySelector('[data-n="cancel"]').onclick=()=>{ leaveOnline(); closeUI(); };
     setTimeout(()=>{ const i=document.getElementById('netname'); if(i&&!i.value) i.focus(); },50);
   }
   function netUI(){
     if(NET.ui==='wait'&&NET.role==='host'&&!online()){
       const L=link(), txt='¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)';
-      const o=ov(logo+'<h2>Tu mesa está lista</h2><p>Mandale este link a tu amigo. Cuando entre, empieza la partida.</p><div class="nlink">'+esc(L)+'</div>'+
+      const o=ov(NET.pub
+        ?logo+'<h2>Tu mesa está abierta</h2><p>Ya aparece en el lobby como <b>'+esc(tableName())+'</b>. Cuando alguien se siente, empieza la partida.</p><div class="nwait"><i></i><i></i><i></i></div><p>'+(NET.open?'Esperando que se siente alguien…':'Conectando…')+'</p>'+
+          '<p style="margin:14px 0 0;font-weight:800">¿Querés invitar a alguien en particular?</p><button class="nbtn wa" data-n="wa">Mandar por WhatsApp</button><button class="nbtn" data-n="copy">Copiar link</button><button class="nbtn ghost" data-n="cancel">Cerrar la mesa</button>'
+        :logo+'<h2>Tu mesa está lista</h2><p>Mandale este link a tu amigo. Cuando entre, empieza la partida.</p><div class="nlink">'+esc(L)+'</div>'+
         '<button class="nbtn wa" data-n="wa">Mandar por WhatsApp</button><button class="nbtn" data-n="copy">Copiar link</button>'+
         '<div class="nwait"><i></i><i></i><i></i></div><p>'+(NET.open?'Esperando a que entre tu amigo…':'Conectando…')+'</p><button class="nbtn ghost" data-n="cancel">Cancelar</button>');
       o.querySelector('[data-n="wa"]').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); };
@@ -261,7 +269,7 @@ body.lobby #netbadge{display:none}
     }
     if(NET.ui==='join'&&NET.role==='guest'&&!online()){
       if(NET.open){
-        const o=ov(logo+'<h2>¡Estás en la mesa!</h2><p>'+(NET.peer?'Esperando a que '+esc(NET.peer.name)+' reparta las fichas…':'Esperando a que empiece la partida…')+'</p><div class="nwait"><i></i><i></i><i></i></div><button class="nbtn ghost" data-n="cancel">Salir</button>');
+        const o=ov(logo+'<h2>¡Estás en la mesa!</h2><p>'+(NET.peer&&!NET.peerOn?esc(NET.peer.name)+' no está conectado en este momento. Podés esperar o salir y elegir otra mesa.':NET.peer?'Esperando a que '+esc(NET.peer.name)+' reparta las fichas…':'Esperando a que empiece la partida…')+'</p><div class="nwait"><i></i><i></i><i></i></div><button class="nbtn ghost" data-n="cancel">Salir</button>');
         o.querySelector('[data-n="cancel"]').onclick=()=>{ leaveOnline(); closeUI(); };
       }
       return;
@@ -296,6 +304,38 @@ body.lobby #netbadge{display:none}
     b.className=st; b.innerHTML='<i></i><span></span>'; b.lastChild.textContent=tx;
   }
 
+  /* ---------- Mesas reales en el lobby ---------- */
+  const tableName=()=>'Mesa de '+myName().split(' ')[0];
+  function list(){
+    if(!NET.pub||NET.role!=='host'||!NET.code) return;
+    const body={name:tableName(),host:{name:myName(),cav:(ensureMyCav(),NET.myCav)},goal:pref.goal===undefined?3000:pref.goal,rules:{legs:pref.legs!==false,impura:pref.impura!==false,chat:pref.chat!==false}};
+    fetch('/api/tables?mesa='+NET.code,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).then(lbRefresh,()=>{});
+    clearTimeout(NET.hb); NET.hb=setTimeout(()=>{ if(NET.pub&&NET.role==='host'&&!online()) list(); },20000);
+  }
+  function unlist(){ clearTimeout(NET.hb); if(NET.pub&&NET.role==='host'&&NET.code){ const c=NET.code; NET.pub=false; try{ fetch('/api/tables?mesa='+c,{method:'DELETE',keepalive:true}).then(lbRefresh,()=>{}); }catch(e){} } }
+  window.addEventListener('pagehide',()=>{ if(NET.pub&&NET.role==='host'&&!online()&&NET.code){ try{ fetch('/api/tables?mesa='+NET.code,{method:'DELETE',keepalive:true}); }catch(e){} } });
+  let lbAt=0, lbBusy=false;
+  function seatOf(t){ const cav=(t.host&&Number.isInteger(t.host.cav)&&t.host.cav<CC_AV.b.length)?t.host.cav:0;
+    return {id:'nt-'+t.code,name:(t.host&&t.host.name)||'Jugador',ini:'',g:CC_G[cav]||'f',cav,fun:LB_FUN[cav%LB_FUN.length],lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1},real:true}; }
+  function lbRefresh(){
+    if(lbBusy) return; lbBusy=true; lbAt=Date.now();
+    fetch('/api/tables',{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(list=>{
+      LT=(Array.isArray(list)?list:[]).map(t=>{ const mine=NET.role==='host'&&NET.code===t.code;
+        return {id:'net:'+t.code,net:t.code,name:t.name||'Mesa',n:2,timer:0,goal:t.goal,rules:t.rules||{},bet:0,seats:[mine?'me':seatOf(t),null],status:'open',hand:1,mine}; });
+      if(lobbyOpen) renderLGrid();
+    },()=>{}).finally(()=>{ lbBusy=false; });
+  }
+  LT=[]; try{ clearInterval(lobbyIv); lobbyIv=null; }catch(e){}
+  lbInit=function(){ if(Date.now()-lbAt>3000) lbRefresh(); };
+  lbTick=function(){ if(lobbyOpen) lbRefresh(); };
+  const _create=lbCreateFromPref; lbCreateFromPref=function(){ setupOpen=false; setupKind=null; render(); if((pref.n||2)!==2) toast('Por ahora las mesas online son de 1 contra 1.'); createTable(true); };
+  function realJoin(code){
+    if(NET.role==='host'&&NET.code===code){ toast('Esta es tu mesa: esperá a que se siente alguien.'); return; }
+    leaveOnline(); ensureAudio();
+    if(myName()==='Jugador'){ joinScreen(code); return; }
+    NET.role='guest'; NET.code=code; joinNow();
+  }
+
   /* ---------- Al abrir la página ---------- */
   function boot(){
     const q=new URLSearchParams(location.search), code=(q.get('mesa')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -307,6 +347,7 @@ body.lobby #netbadge{display:none}
     }
     if(S&&S.kind==='online'){ S.kind='bot'; abandoned=true; }
     if(code.length>=4) joinScreen(code);
+    lbRefresh();
   }
   setTimeout(boot,0);
 })();
