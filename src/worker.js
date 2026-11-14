@@ -42,7 +42,7 @@ function tableFrom(b, code) {
     name: clean(b.name, 30) || "Mesa",
     host: { name: clean(b.host && b.host.name, 18) || "Jugador", cav: Number.isInteger(b.host && b.host.cav) ? b.host.cav : 0 },
     n: [2, 3, 4].includes(b.n) ? b.n : 2,
-    seats: Array.isArray(b.seats) ? b.seats.slice(0, 4).map((s) => (s ? { name: clean(s.name, 18) || "Jugador", cav: Number.isInteger(s.cav) ? s.cav : 0 } : null)) : null,
+    seats: Array.isArray(b.seats) ? b.seats.slice(0, 4).map((s) => (s ? { name: clean(s.name, 18) || "Jugador", cav: Number.isInteger(s.cav) ? s.cav : 0, bot: !!s.bot } : null)) : null,
     goal: [0, 1500, 2500, 3000, 5000, 10000].includes(b.goal) ? b.goal : 3000,
     bet: [100, 500, 1000].includes(b.bet) ? b.bet : 100,
     timer: [30, 60, 120].includes(b.timer) ? b.timer : 60,

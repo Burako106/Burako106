@@ -6064,7 +6064,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794656593';</script>
+<script>window.BURAKO_BUILD='1794657652';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6145,11 +6145,25 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
 .top-seat .seat.turnring .seat-info{transform:translateY(4px)}
 #netupd{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483600;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:999px;background:#1d1a16;color:#fff;font:700 14px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
 #netupd button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:8px 14px;background:#ff7a1a;color:#1d1a16;cursor:pointer}
-#vnrec{position:fixed;left:50%;bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px));transform:translateX(-50%);z-index:2147483500;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:#1d1a16;color:#fff;font:700 14px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap}
-#vnrec i{width:11px;height:11px;border-radius:50%;background:#ff4d4d;animation:recp 1s ease-in-out infinite}
-#vnrec b{font-variant-numeric:tabular-nums}
-#vnrec span{font-weight:600;opacity:.8;font-size:12px}
+#vnrec{position:fixed;transform:translateX(-50%);z-index:2147483500;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;font:700 14px/1.2 system-ui,-apple-system,sans-serif}
+#vnrec .vn-x{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:900;background:#fff;color:#1d1a16;border:2px solid #1d1a16;box-shadow:0 6px 16px rgba(0,0,0,.2);transition:transform .15s,background .15s}
+#vnrec.hot .vn-x{transform:scale(1.25);background:#ff4d4d;color:#fff;border-color:#ff4d4d}
+#vnrec .vn-pill{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#1d1a16;color:#fff;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+#vnrec .vn-pill i{width:10px;height:10px;border-radius:50%;background:#ff4d4d;animation:recp 1s ease-in-out infinite}
+#vnrec .vn-pill b{font-variant-numeric:tabular-nums}
+#vnrec.hot .vn-pill{opacity:.6}
 [data-act="mic"]{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#netready .net-modal{z-index:2147480500}
+#netready .lwait{align-items:stretch}
+#netready .label,#netready .lw-msg,#netready .net-left{text-align:center}
+.nready{list-style:none;margin:4px 0;padding:0;display:grid;gap:6px}
+.nready li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;border:2px solid currentColor;font-weight:700}
+.nready li b{font-size:13px;opacity:.7}
+.nready li.ok b{opacity:1;color:#1f9d55}
+.nready li.bot{opacity:.7;border-style:dashed}
+.net-play{font-size:22px!important;padding:16px 18px!important;font-weight:900!important;animation:netpop 1.4s ease-in-out infinite}
+.net-left{margin:0;font-size:14px;opacity:.75}
+#netready .btn{width:100%}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -6250,6 +6264,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       }
       badge(); netUI(); render(); return;
     }
+    if(m.t==='bye'){ if(NET.role==='host'&&!online()) unseat(m.pid); return; }
     if(m.t==='hello'){
       const w=m.who||{}; NET.on[w.pid]=true;
       if(NET.role==='host'){
@@ -6258,6 +6273,13 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       } else if(m.from==='host'){ NET.hostName=w.name; }
       badge(); netUI(); return;
     }
+    if(m.t==='seat'){ if(NET.role==='host'&&!online()&&NET.seats&&!NET.ready){ const i=NET.seats.findIndex(s=>s&&s.pid===m.pid), j=m.seat; if(i>0&&Number.isInteger(j)&&j>0&&j<NET.n&&!NET.seats[j]){ NET.seats[j]=NET.seats[i]; NET.seats[i]=null; sendSeats(); list(); netUI(); } } return; }
+    if(m.t==='ready'){ if(NET.role==='host') markReady(m.pid); return; }
+    if(m.t==='readycheck'){ if(NET.role==='guest'&&!online()){ NET.seats=m.seats||NET.seats; NET.n=m.n||NET.n; NET.readyUntil=m.until; NET.readyState=m.ready||{}; NET.meReady=false; readyUI(); try{ bell(); }catch(e){} } return; }
+    if(m.t==='readystate'){ if(NET.role==='guest'){ NET.readyState=m.ready||{}; readyUI(); } return; }
+    if(m.t==='readycancel'){ if(NET.role==='guest'){ NET.readyUntil=0; closeReady(); if(m.msg) toast(m.msg); netUI(); } return; }
+    if(m.t==='dropped'){ if(NET.role==='guest'&&m.pid===myPid()){ leaveOnline(); closeReady(); toast('Te sacamos de la mesa porque no confirmaste que ibas a jugar.'); lbRefresh(); } return; }
+    if(m.t==='closed'){ if(NET.role==='guest'&&!online()){ const hn=((NET.seats&&NET.seats[0])||{}).name||'El anfitrión'; leaveOnline(); closeReady(); toast(hn+' cerró la mesa.'); lbRefresh(); } return; }
     if(m.t==='seats'){ if(NET.role==='guest'){ NET.seats=m.seats; NET.n=m.n||NET.n; if(m.bet) NET.bet=m.bet; betCheck(); netUI(); } return; }
     if(m.t==='state'){ apply(m.s,m.v,false,m.ev); return; }
     if(m.t==='next'){ if(isBoss()&&S.over) hostNext(); return; }
@@ -6287,10 +6309,67 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(i<0){ send({t:'kick',pid:w.pid}); return; }
     NET.seats[i]={t:'g',pid:w.pid,name:String(w.name||'Jugador').slice(0,18),cav:okCav(w.cav)?w.cav:0};
   }
-  function unseat(pid){ if(!NET.seats) return; const i=NET.seats.findIndex(s=>s&&s.pid===pid); if(i>0){ NET.seats[i]=null; send({t:'kick',pid,soft:true}); sendSeats(); list(); netUI(); } }
+  function unseat(pid){ if(!NET.seats) return; const i=NET.seats.findIndex(s=>s&&s.pid===pid); if(i>0){ const nm0=NET.seats[i].name; NET.seats[i]=null; send({t:'kick',pid,soft:true}); if(NET.ready){ delete NET.ready[pid]; cancelReady(nm0+' se fue de la mesa. Esperando otro jugador…'); } sendSeats(); list(); netUI(); } }
   function sendSeats(){ if(NET.role==='host'&&NET.seats) send({t:'seats',seats:NET.seats,n:NET.n,bet:NET.bet}); }
   const guests=()=>(NET.seats||[]).filter(s=>s&&s.t==='g').length;
-  function maybeAutoStart(){ if(NET.role==='host'&&!online()&&NET.seats&&NET.seats.every(Boolean)) startHost(); }
+  function maybeAutoStart(){ if(NET.role==='host'&&!online()&&NET.seats&&NET.seats.every(Boolean)) startReady(); }
+  // 🤖: la máquina se sienta de a uno, rápido
+  function fillAnim(){
+    if(NET.role!=='host'||online()||NET.filling||NET.ready) return; NET.filling=true;
+    const info=fillBots(), idx=info.map((s,i)=>i).filter(i=>!NET.seats[i]); let k=0;
+    const step=()=>{ if(!NET.code||online()||NET.role!=='host'){ NET.filling=false; return; }
+      if(k>=idx.length){ NET.filling=false; startReady(); return; }
+      const i=idx[k++]; if(!NET.seats[i]) NET.seats[i]=info[i]; sendSeats(); list(); netUI(); try{ softPop(); }catch(e){}
+      setTimeout(step,420); };
+    step();
+  }
+  /* ---------- Confirmar que vas a jugar ---------- */
+  const READY_MS=20000;
+  const humanPids=()=>(NET.seats||[]).filter(s=>s&&s.t!=='b').map(s=>s.pid);
+  function startReady(){
+    if(NET.role!=='host'||online()||NET.ready) return;
+    NET.ready={}; humanPids().forEach(p=>{ NET.ready[p]=false; }); NET.readyUntil=Date.now()+READY_MS;
+    send({t:'readycheck',until:NET.readyUntil,seats:NET.seats,n:NET.n,ready:NET.ready}); NET.readyState=NET.ready; NET.meReady=false;
+    clearTimeout(NET.readyT); NET.readyT=setTimeout(readyTimeout,READY_MS+600); readyUI();
+  }
+  function markReady(pid){
+    if(!NET.ready||!(pid in NET.ready)) return; NET.ready[pid]=true; NET.readyState=NET.ready;
+    send({t:'readystate',ready:NET.ready}); readyUI();
+    if(Object.values(NET.ready).every(Boolean)){ clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0; closeReady(); startHost(); }
+  }
+  function cancelReady(msg){
+    if(!NET.ready) return; clearTimeout(NET.readyT); NET.ready=null; NET.readyUntil=0;
+    NET.seats=NET.seats.map(s=>s&&s.t==='b'?null:s); send({t:'readycancel',msg}); sendSeats(); list(); closeReady(); netUI(); if(msg) toast(msg);
+  }
+  function readyTimeout(){
+    if(!NET.ready||online()) return; const miss=Object.keys(NET.ready).filter(p=>!NET.ready[p]);
+    if(miss.includes(myPid())){ send({t:'closed',why:'noready'}); leaveOnline(); closeReady(); toast('Cerramos tu mesa porque no confirmaste que ibas a jugar.'); lbRefresh(); return; }
+    const names=[]; miss.forEach(pid=>{ const i=NET.seats.findIndex(s=>s&&s.pid===pid); if(i>0){ names.push(NET.seats[i].name); NET.seats[i]=null; } send({t:'dropped',pid}); send({t:'kick',pid,soft:true}); });
+    NET.ready=Object.fromEntries(humanPids().map(p=>[p,true])); // los que quedan ya confirmaron
+    cancelReady(names.length?names.join(' y ')+(names.length>1?' no confirmaron':' no confirmó')+'. Esperando otro jugador…':'');
+  }
+  function iAmReady(){ NET.meReady=true; if(NET.role==='host') markReady(myPid()); else { send({t:'ready',pid:myPid()}); readyUI(); } }
+  function closeReady(){ clearInterval(NET.readyTick); const o=document.getElementById('netready'); if(o) o.remove(); }
+  function readyUI(){
+    if(online()||!NET.readyUntil){ closeReady(); return; }
+    let o=document.getElementById('netready'); if(!o){ o=document.createElement('div'); o.id='netready'; document.body.appendChild(o); }
+    const st=NET.readyState||{}, seats=NET.seats||[];
+    const list=seats.map((s,i)=>s?'<li class="'+(s.t==='b'?'bot':st[s.pid]?'ok':'')+'"><span>'+esc(s.name)+(s.pid===myPid()?' (vos)':'')+'</span><b>'+(s.t==='b'?'🤖':st[s.pid]?'✓ Listo':'Esperando…')+'</b></li>':'').join('');
+    const left=Math.max(0,Math.ceil((NET.readyUntil-Date.now())/1000));
+    o.innerHTML='<div class="lmodal net-modal"><div class="card lwait" role="dialog" aria-modal="true" aria-label="Confirmar partida"><span class="label">¡La mesa está lista!</span>'+
+      '<p class="lw-msg">'+(NET.meReady?'Esperando que confirmen los demás…':'Confirmá que vas a jugar para empezar.')+'</p><ul class="nready">'+list+'</ul>'+
+      (NET.meReady?'':'<button class="btn primary net-play" data-act="netready">Jugar</button>')+
+      '<p class="net-left">Quedan <b>'+left+'</b> s</p><button class="btn" data-act="netleave">Salir de la mesa</button></div></div>';
+    clearInterval(NET.readyTick); NET.readyTick=setInterval(()=>{ const b=o.querySelector('.net-left b'); if(b) b.textContent=Math.max(0,Math.ceil((NET.readyUntil-Date.now())/1000)); },250);
+  }
+  // cambiar de lugar dentro de mi mesa (antes de empezar)
+  function changeSeat(j){
+    if(online()||NET.ready||!NET.seats||!Number.isInteger(j)||j<0||j>=NET.n||NET.seats[j]) return;
+    if(NET.role==='host'){
+      const n=NET.n, tmp=NET.seats.slice(); tmp[j]=tmp[0]; tmp[0]=null; NET.seats=tmp.map((_,i)=>tmp[(i+j)%n]);
+      sendSeats(); list(); netUI(); try{ softPop(); }catch(e){}
+    } else send({t:'seat',seat:j,pid:myPid()});
+  }
 
   /* ---------- Personajes de cada asiento ---------- */
   function charFor(info){
@@ -6306,7 +6385,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     S.seats=seats; S.lv=lv; S.cav=cav; S.xchars=xs;
   }
   function fillBots(){
-    const n=NET.n, used=new Set(), cavs=new Set(NET.seats.filter(Boolean).map(s=>s.cav)), lv=pref.level||2;
+    const n=NET.n, used=new Set(NET.seats.filter(s=>s&&s.t==='b').map(s=>s.id)), cavs=new Set(NET.seats.filter(Boolean).map(s=>s.cav)), lv=3;
     const pool=shuf(ROSTER.filter(r=>DEF_SEATS[4].includes(r.id)||['tito','coca','hugo'].includes(r.id)).map(r=>r.id));
     return NET.seats.map((s,i)=>{ if(s) return s;
       const id=pool.find(x=>!used.has(x))||'rulo'; used.add(id); const g=charById(id).g;
@@ -6363,7 +6442,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       return;
     }
     const first=!online();
-    if(first){ if(NET.role!=='guest') return; guestInit(c); chargeEntry(); }
+    if(first){ if(NET.role!=='guest') return; NET.readyUntil=0; closeReady(); guestInit(c); chargeEntry(); }
     NET.seat=me; NET.n=c.n;
     if(c.over==null&&S.over){ try{ if(closeFx) finishClose(); }catch(e){} }
     const g=rot(c,me), prevTurn=S.turn, prevRound=S.round, prevOver=!!S.over, prevDone=!!(S.over&&S.over.done);
@@ -6536,13 +6615,18 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   /* ---------- Notas de voz: mantener apretado para grabar, soltar para enviar ---------- */
   const VN={st:null,r:null,ch:[],t0:0,down:false,cancel:false,lastPtt:0,ui:null,tick:null};
   function vnMime(){ try{ for(const m of ['audio/mp4','audio/webm;codecs=opus','audio/webm']) if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m)) return m; }catch(e){} return ''; }
+  // Arriba del micrófono: el cartel "Grabando" y la ✕ para descartar
   function vnUI(on){
     if(!on){ clearInterval(VN.tick); if(VN.ui){ VN.ui.remove(); VN.ui=null; } document.querySelectorAll('[data-act="mic"]').forEach(b=>b.classList.remove('rec')); return; }
     document.querySelectorAll('[data-act="mic"]').forEach(b=>b.classList.add('rec'));
-    if(!VN.ui){ VN.ui=document.createElement('div'); VN.ui.id='vnrec'; VN.ui.setAttribute('role','status'); document.body.appendChild(VN.ui); }
-    const up=()=>{ const s=Math.floor((Date.now()-VN.t0)/1000); VN.ui.innerHTML='<i></i><b>0:'+String(s).padStart(2,'0')+'</b><span>Soltá para enviar · deslizá afuera para cancelar</span>'; };
+    if(!VN.ui){ VN.ui=document.createElement('div'); VN.ui.id='vnrec'; VN.ui.setAttribute('role','status');
+      VN.ui.innerHTML='<div class="vn-x" aria-label="Descartar nota de voz">✕</div><div class="vn-pill"><i></i>Grabando <b>0:00</b></div>'; document.body.appendChild(VN.ui); }
+    const mic=VN.btn&&VN.btn.isConnected?VN.btn:document.querySelector('[data-act="mic"].rec'), r=mic&&mic.getBoundingClientRect();
+    if(r&&r.width){ VN.ui.style.left=(r.left+r.width/2)+'px'; VN.ui.style.bottom=(innerHeight-r.top+10)+'px'; } else { VN.ui.style.left='50%'; VN.ui.style.bottom='130px'; }
+    const up=()=>{ const s=Math.floor((Date.now()-VN.t0)/1000), b=VN.ui&&VN.ui.querySelector('.vn-pill b'); if(b) b.textContent='0:'+String(s).padStart(2,'0'); };
     up(); clearInterval(VN.tick); VN.tick=setInterval(up,250);
   }
+  const overX=(x,y)=>{ const e=VN.ui&&VN.ui.querySelector('.vn-x'); if(!e) return false; const r=e.getBoundingClientRect(); return x>=r.left-8&&x<=r.right+8&&y>=r.top-8&&y<=r.bottom+8; };
   async function vnStart(){
     if(VN.r||VN.starting) return; VN.starting=true; VN.cancel=false;
     try{
@@ -6571,10 +6655,11 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   }
   function vnPlay(url){ try{ if(S&&S.sound===false) return; const a=new Audio(url); a.play().catch(()=>{}); }catch(e){} }
   // botón del micrófono: apretar y soltar
-  document.addEventListener('pointerdown',e=>{ const b=e.target.closest&&e.target.closest('[data-act="mic"]'); if(!b) return; e.preventDefault(); VN.down=true; VN.lastPtt=Date.now(); try{ b.setPointerCapture(e.pointerId); }catch(x){} vnStart(); },true);
-  const upH=e=>{ if(!VN.down) return; VN.down=false; VN.lastPtt=Date.now(); const b=e.target.closest&&e.target.closest('[data-act="mic"]');
-    const out=e.type==='pointercancel'||(!b&&e.type==='pointerup'&&!(document.elementFromPoint(e.clientX,e.clientY)||{closest:()=>null}).closest('[data-act="mic"]'));
-    vnStop(out); };
+  document.addEventListener('pointerdown',e=>{ const b=e.target.closest&&e.target.closest('[data-act="mic"]'); if(!b) return; e.preventDefault(); VN.down=true; VN.btn=b; VN.lastPtt=Date.now(); try{ b.setPointerCapture(e.pointerId); }catch(x){} vnStart(); },true);
+  document.addEventListener('pointermove',e=>{ if(!VN.down||!VN.ui) return; VN.ui.classList.toggle('hot',overX(e.clientX,e.clientY)); },true);
+  const upH=e=>{ if(!VN.down) return; VN.down=false; VN.lastPtt=Date.now();
+    const cancel=e.type==='pointercancel'||overX(e.clientX,e.clientY);
+    vnStop(cancel); if(cancel&&e.type!=='pointercancel') toast('Nota de voz descartada.'); };
   document.addEventListener('pointerup',upH,true); document.addEventListener('pointercancel',upH,true);
   document.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('[data-act="mic"]')) e.preventDefault(); },true);
 
@@ -6591,10 +6676,11 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   const _onAct=onAct;
   onAct=function(a,el){
     if(a==='netcreate'){ if(!ecoGate({kind:'mesa',entry:ECO.ENTRIES[0]},()=>onAct('netcreate',el))) return; createTable(false,2,ECO.ENTRIES[0]); return; }
-    if(a==='netleave'){ leaveOnline(); lbRefresh(); return; }
+    if(a==='netleave'){ if(!online()&&NET.code){ if(NET.role==='host') send({t:'closed'}); else send({t:'bye',pid:myPid()}); } closeReady(); const ws=NET.ws; NET.ws=null; setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },300); leaveOnline(); lbRefresh(); return; }
     if(a==='netshare'){ NET.share=true; shareBox(); return; }
     if(a==='netback'){ NET.share=false; shareBox(); return; }
-    if(a==='netfill'){ if(NET.role==='host'&&guests()) startHost(); return; }
+    if(a==='netfill'){ if(NET.role==='host'&&guests()) fillAnim(); return; }
+    if(a==='netready'){ iAmReady(); return; }
     if(a==='netwa'){ const L=link(); window.open('https://wa.me/?text='+encodeURIComponent('¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)'),'_blank'); return; }
     if(a==='netcopy'){ const L=link(), b=el; const done=()=>{ if(b){ b.textContent='¡Link copiado!'; setTimeout(()=>{ b.textContent='Copiar link'; },1800); } };
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(L).then(done,()=>prompt('Copiá este link:',L)); else prompt('Copiá este link:',L); return; }
@@ -6615,7 +6701,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     return _onAct.apply(this,arguments);
   };
   const _launch=lbLaunch; lbLaunch=function(){ leaveOnline(); return _launch.apply(this,arguments); };
-  function leaveOnline(){ if(NET.share){ NET.share=false; } if(!NET.code){ shareBox(); return; } unlist(); NET.code=null; NET.role=null; NET.seats=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; NET.open=false; NET.ui=null; clearTimeout(NET.timer); clearInterval(NET.ping); badge(); shareBox(); try{ history.replaceState(null,'',location.pathname); }catch(e){} try{ if(lobbyOpen){ LT=LT.filter(x=>!x.joined); renderLGrid(); } }catch(e){} }
+  function leaveOnline(){ if(NET.share){ NET.share=false; } if(!NET.code){ shareBox(); return; } unlist(); NET.code=null; NET.role=null; NET.seats=null; try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){} NET.ws=null; NET.open=false; NET.ui=null; NET.ready=null; NET.readyUntil=0; clearTimeout(NET.readyT); closeReady(); clearTimeout(NET.timer); clearInterval(NET.ping); badge(); shareBox(); try{ history.replaceState(null,'',location.pathname); }catch(e){} try{ if(lobbyOpen){ LT=LT.filter(x=>!x.joined); renderLGrid(); } }catch(e){} }
 
   /* ---------- Pantallas ---------- */
   const newCode=()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; };
@@ -6729,7 +6815,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   const tableName=()=>'Mesa de '+myName().split(' ')[0];
   function list(){
     if(!NET.pub||NET.role!=='host'||!NET.code||online()) return;
-    const body={name:tableName(),n:NET.n,bet:NET.bet,timer:pref.timer||60,seats:(NET.seats||[]).map(s=>s?{name:s.name,cav:s.cav}:null),host:{name:myName(),cav:ensureMyCav()},goal:pref.goal===undefined?3000:pref.goal,rules:hostRules()};
+    const body={name:tableName(),n:NET.n,bet:NET.bet,timer:pref.timer||60,seats:(NET.seats||[]).map(s=>s?{name:s.name,cav:s.cav,bot:s.t==='b'}:null),host:{name:myName(),cav:ensureMyCav()},goal:pref.goal===undefined?3000:pref.goal,rules:hostRules()};
     fetch('/api/tables?mesa='+NET.code,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).then(lbRefresh,()=>{});
     clearTimeout(NET.hb); NET.hb=setTimeout(list,20000);
   }
@@ -6737,7 +6823,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   window.addEventListener('pagehide',()=>{ if(NET.pub&&NET.role==='host'&&!online()&&NET.code){ try{ fetch('/api/tables?mesa='+NET.code,{method:'DELETE',keepalive:true}); }catch(e){} } });
   let lbAt=0, lbBusy=false;
   function seatObj(code,i,s){ const cav=okCav(s.cav)?s.cav:0;
-    return {id:'nt-'+code+'-'+i,name:s.name||'Jugador',ini:'',g:CC_G[cav]||'f',cav,fun:LB_FUN[cav%LB_FUN.length],lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1},real:true}; }
+    return {id:'nt-'+code+'-'+i,name:s.name||'Jugador',ini:'',g:CC_G[cav]||'f',cav,fun:LB_FUN[cav%LB_FUN.length],lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1},real:!(s.bot||s.t==='b')}; }
   function lbRefresh(){
     if(lbBusy) return; lbBusy=true; lbAt=Date.now();
     fetch('/api/tables',{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(arr=>{
@@ -6755,7 +6841,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(!ecoGate({kind:'mesa',entry:bet},()=>lbCreateFromPref())) return;
     setupOpen=false; setupKind=null; render(); createTable(true,pref.n||2,bet); };
   function realJoin(code,seat){
-    if(NET.code===code&&!online()){ toast(NET.role==='host'?'Esta es tu mesa: esperá a que se sienten.':'Ya estás sentado en esta mesa.'); return; }
+    if(NET.code===code&&!online()){ if(Number.isInteger(seat)&&seat>=0) changeSeat(seat); return; }
     const t=LT.find(x=>x.net===code), bet=(t&&t.bet)||0;
     if(bet&&!ecoGate({kind:'mesa',entry:bet},()=>realJoin(code,seat))) return;
     NET.bet=bet; NET.betOk=code;
