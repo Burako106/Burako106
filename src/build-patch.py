@@ -43,7 +43,7 @@ rep('<div class="lp-head"><span class="lav big">${lbAv(null,true)}</span>',
     '<div class="lp-head"><button class="lav big lp-av" data-act="pickme" aria-label="Cambiar tu personaje" title="Cambiar tu personaje">${lbAv(null,true)}<i class="lp-edit" aria-hidden="true">✎</i></button>')
 # botón para volver a la partida contra la máquina: con 🤖
 rep('<span class="lplus"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10.2-6.8c.6-.4.6-1.2 0-1.6L9.6 4.4C8.9 3.9 8 4.4 8 5.2z" fill="currentColor"/></svg></span><b>Volver a mi partida</b>',
-    '<span class="lplus">${S.kind===\'online\'?\'👥\':\'🤖\'}</span><b>${S.kind===\'online\'?\'Volver a la mesa\':\'Seguir partida\'}</b>')
+    '<span class="lplus">${S.kind===\'online\'?\'<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10.2-6.8c.6-.4.6-1.2 0-1.6L9.6 4.4C8.9 3.9 8 4.4 8 5.2z" fill="currentColor"/></svg>\':\'🤖\'}</span><b>${S.kind===\'online\'?\'Volver a la mesa\':\'Seguir partida\'}</b>')
 # sacar "Tocá + para sentarte · mismo color, misma pareja" (queda vacío para los avisos de mi mesa)
 rep("<p class=\"lhint\">${t.n===4?LL('Tocá + para sentarte · mismo color, misma pareja','Tap + to sit · same color, same team'):LL('Tocá + para sentarte','Tap + to sit')}</p>",
     '<p class="lhint"></p>')
