@@ -6064,7 +6064,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794668414';</script>
+<script>window.BURAKO_BUILD='1794668653';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6369,7 +6369,7 @@ body.fun .nr-no.btn:hover{background:#141414!important;color:#fff!important}
     }
     if(m.t==='seat'){ if(NET.role==='host'&&!online()&&NET.seats&&!NET.ready){ const i=NET.seats.findIndex(s=>s&&s.pid===m.pid), j=m.seat; if(i>0&&Number.isInteger(j)&&j>0&&j<NET.n&&!NET.seats[j]){ NET.seats[j]=NET.seats[i]; NET.seats[i]=null; sendSeats(); list(); netUI(); } } return; }
     if(m.t==='ready'){ if(NET.role==='host') markReady(m.pid); return; }
-    if(m.t==='readycheck'){ if(NET.role==='guest'&&!online()){ NET.seats=m.seats||NET.seats; NET.n=m.n||NET.n; NET.readyUntil=Date.now()+READY_MS; NET.scrolled=false; NET.readyState=m.ready||{}; NET.meReady=false; readyUI(); try{ bell(); }catch(e){} } return; }
+    if(m.t==='readycheck'){ if(NET.role==='guest'&&!online()){ clearTimeout(NET.selfDrop); NET.selfDrop=setTimeout(()=>{ if(NET.code&&NET.role==='guest'&&!online()&&NET.readyUntil&&!NET.meReady&&!NET.going){ send({t:'bye',pid:myPid()}); const ws=NET.ws; NET.ws=null; setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },300); leaveOnline(); closeReady(); toast('Saliste de la mesa porque no confirmaste.'); lbRefresh(); } },READY_MS+1500); NET.seats=m.seats||NET.seats; NET.n=m.n||NET.n; NET.readyUntil=Date.now()+READY_MS; NET.scrolled=false; NET.readyState=m.ready||{}; NET.meReady=false; readyUI(); try{ bell(); }catch(e){} } return; }
     if(m.t==='readystate'){ if(NET.role==='guest'){ NET.readyState=m.ready||{}; readyUI(); } return; }
     if(m.t==='go'){ if(NET.role==='guest'&&!online()){ NET.readyUntil=0; NET.going=true; closeReady(); goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; },GO_MS+4000); } return; }
     if(m.t==='readycancel'){ if(NET.role==='guest'){ NET.readyUntil=0; readyUI(); if(m.msg) toast(m.msg); netUI(); } return; }
