@@ -47,6 +47,11 @@ rep('<span class="lplus"><svg viewBox="0 0 24 24" width="22" height="22" aria-hi
 # sacar "Tocá + para sentarte · mismo color, misma pareja" (queda vacío para los avisos de mi mesa)
 rep("<p class=\"lhint\">${t.n===4?LL('Tocá + para sentarte · mismo color, misma pareja','Tap + to sit · same color, same team'):LL('Tocá + para sentarte','Tap + to sit')}</p>",
     '<p class="lhint"></p>')
+# al recargar: una partida "vacía" (nunca jugada) no cuenta como partida en curso
+rep("  S=(data&&data.hands&&data.rack)?data:load();\n  if(!S){ newRound({}); abandoned=true; }",
+    "  S=(data&&data.hands&&data.rack)?data:load();\n  if(!S){ newRound({}); abandoned=true; S.blank=true; }\n  else if(S.blank||S.quit||(S.kind!=='online'&&S.turn===0&&S.phase==='draw'&&(S.pozo||[]).length<=1&&S.hands&&S.hands[0]&&S.hands[0].length===11&&!(S.melds||[]).some(m=>m&&m.length)&&(S.round||1)===1)) abandoned=true;")
+rep("  if(a==='quityes'){ if(inGame()) lbRecord('lose'); quitOpen=false; abandoned=true;",
+    "  if(a==='quityes'){ if(inGame()) lbRecord('lose'); quitOpen=false; abandoned=true; if(S){ S.quit=true; try{ save(); }catch(e){} }")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

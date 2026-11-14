@@ -646,7 +646,7 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
     try{ document.querySelectorAll('.sr-ring,.fbanner,.toast-x').forEach(e=>e.remove()); if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
     try{ if(closeFx){ closeFx=false; pendingEndFx=null; } }catch(e){}
     NET.ev=[]; busy=false; paused=false; dealing=false;
-    S=null; newRound({n:2}); S.kind='bot'; abandoned=true;
+    S=null; newRound({n:2}); S.kind='bot'; S.blank=true; abandoned=true;
     lobbyOpen=true; menuOpen=false; setupOpen=false; quitOpen=false;
     try{ save(); renderMenu(); renderPause(); render(); }catch(e){}
   }
