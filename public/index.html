@@ -6122,7 +6122,7 @@ body.lobby #netbadge{display:none}
   const clone=o=>JSON.parse(JSON.stringify(o));
   const NET={role:null,code:null,ws:null,v:0,last:'',ev:[],seat:0,n:2,seats:null,open:false,on:{},retry:0,timer:null,ping:null,ui:null,pub:false,want:null,nextAt:null};
   window.BURAKO_NET=NET;
-  const online=()=>!!(S&&S.kind==='online'&&NET.code);
+  const online=()=>!!(S&&S.kind==='online'&&NET.code&&S.net&&S.net.code===NET.code);
 
   /* ---------- Perspectivas ----------
      En pantalla "vos" sos siempre el asiento 0. El estado que viaja por la red
