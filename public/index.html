@@ -3429,7 +3429,7 @@ function pickCav(n){
 }
 function ensureCav(){ if(!S) return; if(!S.cav||S.cav.length!==S.n||S.cav.some((c,p)=>p>0&&CC_G[c]!==charOf(p).g)) S.cav=pickCav(S.n); }
 function setMyCav(i){ ensureCav(); const k=S.cav.indexOf(i); S.cav[0]=i; if(k>0) S.cav[k]=botCav(k,S.cav); myCav=i; try{ localStorage.setItem('burako-cav',String(i)); }catch(e){} }
-let theme='fun'; try{ theme=localStorage.getItem('burako-theme')||'fun'; }catch(e){}
+let theme='glass'; try{ if(!localStorage.getItem('burako-theme-v2')){ localStorage.setItem('burako-theme','glass'); localStorage.setItem('burako-theme-v2','1'); } theme=localStorage.getItem('burako-theme')||'glass'; }catch(e){}
 function applyTheme(){ document.body.classList.toggle('fun',theme==='fun'); document.body.classList.toggle('glass',theme==='glass'); applyFelt(); }
 function funFace(key){ const purple=key==='purple'; return `<img class="fav${purple?' purple':''}" src="${FUN_AV[purple?'blue':key]}" alt="">`; }
 
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794677909';</script>
+<script>window.BURAKO_BUILD='1794690271';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7162,9 +7162,10 @@ body.clk-discard #mesa{cursor:pointer}
   function seatObj(code,i,s){ const cav=okCav(s.cav)?s.cav:0;
     return {id:'nt-'+code+'-'+i,name:s.name||'Jugador',ini:'',g:CC_G[cav]||'f',cav,fun:LB_FUN[cav%LB_FUN.length],lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1},real:!(s.bot||s.t==='b')}; }
   function applyTables(arr){
+    const keep=LT.filter(t=>!t.net);
     LT=(Array.isArray(arr)?arr:[]).map(t=>{ const mine=NET.role==='host'&&NET.code===t.code, n=[2,3,4].includes(t.n)?t.n:2;
       const raw=Array.isArray(t.seats)&&t.seats.length===n?t.seats:[t.host].concat(Array(n-1).fill(null));
-      return {id:'net:'+t.code,net:t.code,name:t.name||'Mesa',n,timer:t.timer||60,goal:t.goal,rules:t.rules||{},bet:t.bet||0,seats:raw.map((s,i)=>s?(mine&&i===0?'me':seatObj(t.code,i,s)):null),status:'open',hand:1,mine}; });
+      return {id:'net:'+t.code,net:t.code,name:t.name||'Mesa',n,timer:t.timer||60,goal:t.goal,rules:t.rules||{},bet:t.bet||0,seats:raw.map((s,i)=>s?(mine&&i===0?'me':seatObj(t.code,i,s)):null),status:'open',hand:1,mine}; }).concat(keep);
     mergeMine(); if(lobbyOpen) renderLGrid();
   }
   function lbRefresh(){
@@ -7184,8 +7185,35 @@ body.clk-discard #mesa{cursor:pointer}
   }
   ['visibilitychange','focus','online','pageshow'].forEach(ev=>window.addEventListener(ev,()=>{ if(document.hidden) return; lobbyWS(); if(lobbyOpen) lbRefresh(); }));
   LT=[]; try{ clearInterval(lobbyIv); lobbyIv=null; }catch(e){}
-  lbInit=function(){ if(Date.now()-lbAt>3000) lbRefresh(); };
-  lbTick=function(){ if(lobbyOpen) lbRefresh(); };
+  /* ---------- Mesas de la casa: gente que va y viene, con pocos lugares de la máquina ---------- */
+  // mesas de 3: como mucho 1 máquina; mesas de 4: como mucho 2; mesas de 2: como mucho 1
+  const maxBots=t=>t.n===4?2:1;
+  const botCount=t=>t.seats.filter(x=>x&&x!=='me'&&!x.real).length;
+  const _lbPlayer=lbPlayer, _lbTable=lbTable;
+  lbPlayer=function(u){ const p=_lbPlayer(u); p.real=true; return p; };
+  lbTable=function(i,u){ const t=_lbTable(i,u), filled=t.seats.map((x,k)=>x?k:-1).filter(k=>k>=0);
+    let k=Math.floor(Math.random()*(maxBots(t)+1)); while(k>0&&filled.length){ const j=filled.splice(Math.floor(Math.random()*filled.length),1)[0]; t.seats[j].real=false; k--; }
+    return t; };
+  const fakes=()=>LT.filter(t=>!t.net);
+  function fakeFill(min){ const used=new Set(); let i=0; while(fakes().length<min&&i<20){ LT.push(lbTable(i++,used)); } }
+  function fakeTick(){
+    const open=LT.filter(t=>!t.net&&!t.me&&!t.mine&&t.status==='open'&&!t.going);
+    const R=Math.random;
+    for(let n=0;n<2;n++){ if(!open.length||R()<.25) continue;
+      const t=open[Math.floor(R()*open.length)], free=t.seats.filter(x=>!x).length, used=new Set(t.seats.filter(x=>x&&x!=='me').map(x=>x.name));
+      if(free>1&&R()<.55){ const empties=t.seats.map((x,k)=>x?-1:k).filter(k=>k>=0), j=empties[Math.floor(R()*empties.length)]; const p=lbPlayer(used); if(botCount(t)<maxBots(t)&&R()<.2) p.real=false; t.seats[j]=p; }
+      else if(free===1&&R()<.4){ const j=t.seats.indexOf(null), p=lbPlayer(used); t.seats[j]=p; t.going=true; setTimeout(()=>{ LT=LT.filter(x=>x!==t); if(lobbyOpen) renderLGrid(); },2600); }
+      else if(t.n-free>1&&R()<.45){ const full=t.seats.map((x,k)=>x?k:-1).filter(k=>k>0); if(full.length) t.seats[full[Math.floor(R()*full.length)]]=null; }
+    }
+    const f=fakes().length;
+    if(f<7||(f<11&&R()<.25)){ const nt=lbTable(Math.floor(R()*10),new Set()), real=LT.filter(t=>t.net).length; LT.splice(real+Math.floor(R()*(f+1)),0,nt); }
+    if(f>9&&R()<.3){ const c=open.filter(t=>t.seats.filter(Boolean).length<=1); if(c.length){ const t=c[Math.floor(R()*c.length)]; LT=LT.filter(x=>x!==t); } }
+    if(lbCompact&&hvFocus) return; renderLGrid();
+  }
+  fakeFill(8);
+  lbInit=function(){ fakeFill(8); if(Date.now()-lbAt>3000) lbRefresh(); };
+  lbTick=function(){ if(!lobbyOpen) return; try{ fakeTick(); }catch(e){} lbRefresh(); };
+  try{ clearInterval(lobbyIv); }catch(e){} lobbyIv=setInterval(()=>lbTick(),4200);
   lbCreateFromPref=function(){
     if(inPlay()) return;
     const bet=ECO.ENTRIES.includes(pref.bet)?pref.bet:ECO.ENTRIES[0];

@@ -60,6 +60,9 @@ rep("${o.done?'<button class=\"btn primary again-btn\" data-act=\"next\">Jugar o
 # bajar y tirar solo con clics: el texto de la zona lo cuenta
 rep("Elegí fichas y arrastralas acá.","Elegí fichas y arrastralas, o tocá acá.",3)
 rep("Select tiles and drag them here.","Select tiles and drag them here, or tap here.",2)
+# Glass es el diseño inicial para todos (una vez se pasa a Glass a quien ya tenía otro guardado)
+rep("let theme='fun'; try{ theme=localStorage.getItem('burako-theme')||'fun'; }catch(e){}",
+    "let theme='glass'; try{ if(!localStorage.getItem('burako-theme-v2')){ localStorage.setItem('burako-theme','glass'); localStorage.setItem('burako-theme-v2','1'); } theme=localStorage.getItem('burako-theme')||'glass'; }catch(e){}")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
