@@ -12,25 +12,46 @@ const lobby = (env) => env.LOBBY.get(env.LOBBY.idFromName("lobby"));
 
 // Lista de mesas abiertas que se ven en el lobby.
 export class Lobby extends DurableObject {
-  async list() {
+  // Avisa al instante a todos los que están mirando el lobby
+  async fetch(request) {
+    if (request.headers.get("Upgrade") !== "websocket") return new Response("se espera websocket", { status: 426 });
+    const pair = new WebSocketPair();
+    this.ctx.acceptWebSocket(pair[1]);
+    try { pair[1].send(JSON.stringify({ t: "tables", list: await this.list() })); } catch (e) {}
+    return new Response(null, { status: 101, webSocket: pair[0] });
+  }
+  async webSocketMessage(ws, raw) {
+    if (raw === "ping") { try { ws.send("pong"); } catch (e) {} return; }
+    if (raw === "list") { try { ws.send(JSON.stringify({ t: "tables", list: await this.list() })); } catch (e) {} }
+  }
+  async webSocketClose() {}
+  async webSocketError() {}
+  async push() {
+    const socks = this.ctx.getWebSockets(); if (!socks.length) return;
+    const data = JSON.stringify({ t: "tables", list: await this.list(true) });
+    for (const w of socks) { try { w.send(data); } catch (e) {} }
+  }
+  async list(quiet) {
     const all = (await this.ctx.storage.get("tables")) || {};
     const now = Date.now();
     let changed = false;
     for (const [code, t] of Object.entries(all)) {
       if (now - t.seen > LOBBY_TTL) { delete all[code]; changed = true; }
     }
-    if (changed) await this.ctx.storage.put("tables", all);
+    if (changed) { await this.ctx.storage.put("tables", all); if (!quiet) this.push().catch(() => {}); }
     return Object.values(all).sort((a, b) => b.created - a.created);
   }
   async upsert(t) {
     const all = (await this.ctx.storage.get("tables")) || {};
     const old = all[t.code];
+    const same = old && JSON.stringify({ ...old, created: 0, seen: 0 }) === JSON.stringify({ ...t, created: 0, seen: 0 });
     all[t.code] = { ...t, created: old ? old.created : Date.now(), seen: Date.now() };
     await this.ctx.storage.put("tables", all);
+    if (!same) await this.push();
   }
   async remove(code) {
     const all = (await this.ctx.storage.get("tables")) || {};
-    if (all[code]) { delete all[code]; await this.ctx.storage.put("tables", all); }
+    if (all[code]) { delete all[code]; await this.ctx.storage.put("tables", all); await this.push(); }
   }
 }
 
@@ -231,6 +252,7 @@ export default {
       if (request.method === "DELETE") { await lb.remove(code); return new Response("ok"); }
       return new Response("método no permitido", { status: 405 });
     }
+    if (url.pathname === "/ws/lobby") return lobby(env).fetch(request);
     if (url.pathname === "/ws") {
       const code = (url.searchParams.get("mesa") || "").toUpperCase();
       if (!CODE_RE.test(code)) return new Response("mesa inválida", { status: 400 });

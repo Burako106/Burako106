@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794671107';</script>
+<script>window.BURAKO_BUILD='1794671335';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7074,16 +7074,28 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
   let lbAt=0, lbBusy=false;
   function seatObj(code,i,s){ const cav=okCav(s.cav)?s.cav:0;
     return {id:'nt-'+code+'-'+i,name:s.name||'Jugador',ini:'',g:CC_G[cav]||'f',cav,fun:LB_FUN[cav%LB_FUN.length],lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1},real:!(s.bot||s.t==='b')}; }
-  function lbRefresh(){
-    if(lbBusy&&Date.now()-lbAt<8000) return; lbBusy=true; lbAt=Date.now();
-    const ctl=('AbortController' in window)?new AbortController():null; if(ctl) setTimeout(()=>ctl.abort(),7000);
-    fetch('/api/tables',{cache:'no-store',signal:ctl?ctl.signal:undefined}).then(r=>r.ok?r.json():[]).then(arr=>{
-      LT=(Array.isArray(arr)?arr:[]).map(t=>{ const mine=NET.role==='host'&&NET.code===t.code, n=[2,3,4].includes(t.n)?t.n:2;
-        const raw=Array.isArray(t.seats)&&t.seats.length===n?t.seats:[t.host].concat(Array(n-1).fill(null));
-        return {id:'net:'+t.code,net:t.code,name:t.name||'Mesa',n,timer:t.timer||60,goal:t.goal,rules:t.rules||{},bet:t.bet||0,seats:raw.map((s,i)=>s?(mine&&i===0?'me':seatObj(t.code,i,s)):null),status:'open',hand:1,mine}; });
-      mergeMine(); if(lobbyOpen) renderLGrid();
-    },()=>{}).finally(()=>{ lbBusy=false; });
+  function applyTables(arr){
+    LT=(Array.isArray(arr)?arr:[]).map(t=>{ const mine=NET.role==='host'&&NET.code===t.code, n=[2,3,4].includes(t.n)?t.n:2;
+      const raw=Array.isArray(t.seats)&&t.seats.length===n?t.seats:[t.host].concat(Array(n-1).fill(null));
+      return {id:'net:'+t.code,net:t.code,name:t.name||'Mesa',n,timer:t.timer||60,goal:t.goal,rules:t.rules||{},bet:t.bet||0,seats:raw.map((s,i)=>s?(mine&&i===0?'me':seatObj(t.code,i,s)):null),status:'open',hand:1,mine}; });
+    mergeMine(); if(lobbyOpen) renderLGrid();
   }
+  function lbRefresh(){
+    if(lbBusy&&Date.now()-lbAt<8000) return; lbBusy=true; lbAt=Date.now(); lobbyWS();
+    const ctl=('AbortController' in window)?new AbortController():null; if(ctl) setTimeout(()=>ctl.abort(),7000);
+    fetch('/api/tables',{cache:'no-store',signal:ctl?ctl.signal:undefined}).then(r=>r.ok?r.json():null).then(arr=>{ if(arr) applyTables(arr); },()=>{}).finally(()=>{ lbBusy=false; });
+  }
+  // Conexión en vivo con el lobby: las mesas nuevas aparecen solas, al instante
+  let LWS=null, lwsT=null, lwsPing=null;
+  function lobbyWS(){
+    if(LWS&&LWS.readyState<2) return; clearTimeout(lwsT);
+    try{ LWS=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws/lobby'); }catch(e){ lwsT=setTimeout(lobbyWS,4000); return; }
+    LWS.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch(x){ return; } if(m&&m.t==='tables'){ lbAt=Date.now(); applyTables(m.list); } };
+    LWS.onclose=()=>{ clearInterval(lwsPing); LWS=null; lwsT=setTimeout(lobbyWS,3000); };
+    LWS.onerror=()=>{};
+    clearInterval(lwsPing); lwsPing=setInterval(()=>{ try{ if(LWS&&LWS.readyState===1) LWS.send('ping'); }catch(e){} },25000);
+  }
+  ['visibilitychange','focus','online','pageshow'].forEach(ev=>window.addEventListener(ev,()=>{ if(document.hidden) return; lobbyWS(); if(lobbyOpen) lbRefresh(); }));
   LT=[]; try{ clearInterval(lobbyIv); lobbyIv=null; }catch(e){}
   lbInit=function(){ if(Date.now()-lbAt>3000) lbRefresh(); };
   lbTick=function(){ if(lobbyOpen) lbRefresh(); };
