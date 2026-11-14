@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794670228';</script>
+<script>window.BURAKO_BUILD='1794671107';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7075,8 +7075,9 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
   function seatObj(code,i,s){ const cav=okCav(s.cav)?s.cav:0;
     return {id:'nt-'+code+'-'+i,name:s.name||'Jugador',ini:'',g:CC_G[cav]||'f',cav,fun:LB_FUN[cav%LB_FUN.length],lvl:2,tone:'dulce',skin:'#e8b48f',hair:'#5a2a1a',style:1,voice:{pitch:1,rate:1},real:!(s.bot||s.t==='b')}; }
   function lbRefresh(){
-    if(lbBusy) return; lbBusy=true; lbAt=Date.now();
-    fetch('/api/tables',{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(arr=>{
+    if(lbBusy&&Date.now()-lbAt<8000) return; lbBusy=true; lbAt=Date.now();
+    const ctl=('AbortController' in window)?new AbortController():null; if(ctl) setTimeout(()=>ctl.abort(),7000);
+    fetch('/api/tables',{cache:'no-store',signal:ctl?ctl.signal:undefined}).then(r=>r.ok?r.json():[]).then(arr=>{
       LT=(Array.isArray(arr)?arr:[]).map(t=>{ const mine=NET.role==='host'&&NET.code===t.code, n=[2,3,4].includes(t.n)?t.n:2;
         const raw=Array.isArray(t.seats)&&t.seats.length===n?t.seats:[t.host].concat(Array(n-1).fill(null));
         return {id:'net:'+t.code,net:t.code,name:t.name||'Mesa',n,timer:t.timer||60,goal:t.goal,rules:t.rules||{},bet:t.bet||0,seats:raw.map((s,i)=>s?(mine&&i===0?'me':seatObj(t.code,i,s)):null),status:'open',hand:1,mine}; });
