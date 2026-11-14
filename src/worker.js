@@ -138,6 +138,16 @@ export class Room extends DurableObject {
       if (!m.soft) for (const w of this.okSockets()) if (this.info(w).pid === m.pid) this.reject(w);
       return;
     }
+    if (m.t === "handoff") {
+      // El anfitrión no confirmó: la mesa pasa a otro jugador que sí confirmó.
+      if (role !== "host" || typeof m.pid !== "string") return;
+      const room = (await this.ctx.storage.get("room")) || {};
+      if (room.state) return;
+      room.guests = room.guests || {};
+      room.host = room.guests[m.pid] || { pid: m.pid };
+      delete room.guests[m.pid];
+      await this.ctx.storage.put("room", room);
+    }
     if (m.t === "seats") {
       if (role !== "host") return;
       const room = (await this.ctx.storage.get("room")) || {};
