@@ -10,9 +10,6 @@ def rep(old, new, count=1):
 rep("while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen) await botPlay(S.turn);",
     "while(S&&!S.over&&S.turn!==0&&!setupOpen&&!quitOpen&&(S.kind!=='online'||!!(window.BURAKO_NET&&BURAKO_NET.botTurn()))) await botPlay(S.turn);")
 # 2) sin reacciones ni respuestas automáticas de bots en el chat online
-rep("function react(ev,p,x={}){\n  if(!S||S.n<2||chatOff()) return;",
-    "function react(ev,p,x={}){\n  if(!S||S.n<2||chatOff()||S.kind==='online') return;")
-rep("function botReply(kind,text){", "function botReply(kind,text){ if(S&&S.kind==='online') return;")
 # 3) botón para jugar con un amigo en el lobby
 rep('<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button></div>',
     '<button class="lbig lbot" data-act="vsbot"><span class="lplus">🤖</span><b>Jugar contra la máquina</b></button>\n    <button class="lbig lfriend" data-act="netcreate"><span class="lplus">👥</span><b>Jugar con un amigo</b></button></div>')

@@ -3977,7 +3977,7 @@ function postMsg(p,kind,text,extra){
 const chatOff=()=>!!(S&&S.rules&&S.rules.chat===false);
 function botSay(p,line){ if(!S||p>=S.n||chatOff()) return; const v=S.botVoices; postMsg(p,v?'voice':'text',line); if(v) speak(p,line); }
 function react(ev,p,x={}){
-  if(!S||S.n<2||chatOff()||S.kind==='online') return; const now=Date.now(); if(now-lastReact<1600) return;
+  if(!S||S.n<2||chatOff()) return; const now=Date.now(); if(now-lastReact<1600) return;
   const bots=[]; for(let i=1;i<S.n;i++) bots.push(i);
   const opp=q=>bots.filter(b=>team(b)!==team(q)), mates=q=>bots.filter(b=>team(b)===team(q)&&b!==q);
   let sp=null,key=null;
@@ -4024,7 +4024,7 @@ function chatIntent(text){
   if(/\?/.test(t)) return 'ask';
   return 'generic';
 }
-function botReply(kind,text){ if(S&&S.kind==='online') return;
+function botReply(kind,text){
   if(!S||S.n<2||chatOff()) return;
   const bots=[]; for(let i=1;i<S.n;i++) bots.push(i);
   const low=(text||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -6063,7 +6063,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794656105';</script>
+<script>window.BURAKO_BUILD='1794656370';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6270,7 +6270,11 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(m.t==='chat'){
       if(!online()||typeof m.seat!=='number') return; const p=toView(m.seat); if(p===0) return;
       const kind=m.kind==='voice'?'voice':m.kind==='emoji'?'emoji':'text', text=String(m.text||'').slice(0,300);
-      postMsg(p,kind,text); if(kind==='voice'&&S.botVoices!==false) speak(p,text); return;
+      postMsg(p,kind,text);
+      const isBot=infoAt(p)&&infoAt(p).t==='b';
+      if(kind==='voice'&&(isBot?S.botVoices!==false:S.sound!==false)) speak(p,text);
+      if(!isBot&&isBoss()) setTimeout(()=>{ try{ botReply(kind==='voice'?'text':kind,text); }catch(e){} },300);
+      return;
     }
   }
 
@@ -6389,10 +6393,10 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
       const who=nameC(e.s);
       const vp=toView(e.s), col=team(vp)?'red':'blue';
       if(e.k==='draw') say(who+' robó del mazo.');
-      else if(e.k==='pozo'){ say(who+' levantó el pozo ('+e.n+' '+(e.n===1?'ficha':'fichas')+').'); clack(1); if(e.n>7) setTimeout(()=>funBanner('¡SE LLEVÓ TODO!',col),350); }
+      else if(e.k==='pozo'){ say(who+' levantó el pozo ('+e.n+' '+(e.n===1?'ficha':'fichas')+').'); clack(1); if(e.n>7) setTimeout(()=>funBanner('¡SE LLEVÓ TODO!',col),350); if(isBoss()) react('pozo',vp,{k:e.n,from:typeof S.lastDisc==='number'?S.lastDisc:null}); }
       else if(e.k==='meld'){ say(who+' bajó un juego.'); clack(Math.min(e.c||3,5)); }
       else if(e.k==='add'){ say(who+' agregó a un juego.'); clack(Math.min((e.c||1)+1,4)); }
-      else if(e.k==='muerto'){ say(who+' se fue al muerto.'); setTimeout(()=>funBanner('¡AL MUERTO!',col),300); }
+      else if(e.k==='muerto'){ say(who+' se fue al muerto.'); setTimeout(()=>funBanner('¡AL MUERTO!',col),300); if(isBoss()) react('muerto',vp); }
       else if(e.k==='timeout') say(who+' no jugó a tiempo: se tiró una ficha al azar.',true);
       else if(e.k==='out') { say(e.why==='quit'?e.name+' abandonó la partida. Entra la máquina en difícil.':e.name+' no jugó 3 veces. Entra la máquina en difícil.',true); quitSnd(); }
       else if(e.k==='disc'&&e.t){ say(who+' descartó '+tname(e.t)+'.'+(S.turn===0&&!S.over?' Tu turno: robá del mazo o levantá el pozo.':'')); setTimeout(()=>clack(1),260); }
@@ -6402,6 +6406,7 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(S.over&&!prevOver){
       const cl=S.over.closer;
       say(cl===0?'¡Cerraste la mano!':typeof cl==='number'?nm(cl)+' cerró la mano.':'Se terminó el mazo: fin de la mano.');
+      if(isBoss()&&typeof cl==='number') react('close',cl);
       try{ const mx=Math.max(...S.totals.slice(1)), won=S.over.done&&S.totals[0]>mx;
         if(S.over.done) lbRecord(won?'win':S.totals[0]<mx?'lose':'tie');
         if(won){ fanfare(); setTimeout(()=>confetti(true),150); } else if(S.over.done) waWaWaa();
@@ -6562,8 +6567,14 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
   document.addEventListener('pointerup',upH,true); document.addEventListener('pointercancel',upH,true);
   document.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('[data-act="mic"]')) e.preventDefault(); },true);
 
-  /* Chat */
-  const _send=userSend; userSend=function(kind,text){ const r=_send.apply(this,arguments); if(r&&online()) send({t:'chat',kind,text,seat:NET.seat}); return r; };
+  /* Chat: mis mensajes llegan a todos (con voz si la tengo activada) */
+  const _send=userSend; userSend=function(kind,text){ const r=_send.apply(this,arguments); if(r&&online()) send({t:'chat',kind:(kind==='text'&&S.voiceSend)?'voice':kind,text,seat:NET.seat}); return r; };
+  // La máquina también habla online: solo los lugares de la máquina, desde la pantalla de quien la maneja
+  const _botSay=botSay; botSay=function(p,line){
+    if(!online()) return _botSay.apply(this,arguments);
+    const s=infoAt(p); if(!s||s.t!=='b'||!isBoss()) return;
+    _botSay.apply(this,arguments); send({t:'chat',kind:'voice',text:line,seat:toCanon(p),bot:true});
+  };
 
   /* Botones */
   const _onAct=onAct;
