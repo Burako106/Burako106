@@ -52,6 +52,8 @@ rep("  S=(data&&data.hands&&data.rack)?data:load();\n  if(!S){ newRound({}); aba
     "  S=(data&&data.hands&&data.rack)?data:load();\n  if(!S){ newRound({}); abandoned=true; S.blank=true; }\n  else if(S.blank||S.quit||(S.kind!=='online'&&S.turn===0&&S.phase==='draw'&&(S.pozo||[]).length<=1&&S.hands&&S.hands[0]&&S.hands[0].length===11&&!(S.melds||[]).some(m=>m&&m.length)&&(S.round||1)===1)) abandoned=true;")
 rep("  if(a==='quityes'){ if(inGame()) lbRecord('lose'); quitOpen=false; abandoned=true;",
     "  if(a==='quityes'){ if(inGame()) lbRecord('lose'); quitOpen=false; abandoned=true; if(S){ S.quit=true; try{ save(); }catch(e){} }")
+# sin mesas de mentira al cargar (las mesas reales llegan del servidor)
+rep("function lbInit(){ if(LT.length) return; const used=new Set();","function lbInit(){ return; if(LT.length) return; const used=new Set();")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

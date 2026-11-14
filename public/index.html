@@ -5454,7 +5454,7 @@ function lbTable(i,used){
   const tn=new Set(); for(let k=0;k<fill;k++) t.seats[k]=lbPlayer(tn);
   return t;
 }
-function lbInit(){ if(LT.length) return; const used=new Set(); const names=new Set(); for(let i=0;i<10;i++){ const t=lbTable(i,used); let k=0; while(names.has(t.name)&&k<20){ t.name=lpick(LB_CITY); k++; } names.add(t.name); LT.push(t); } }
+function lbInit(){ return; if(LT.length) return; const used=new Set(); const names=new Set(); for(let i=0;i<10;i++){ const t=lbTable(i,used); let k=0; while(names.has(t.name)&&k<20){ t.name=lpick(LB_CITY); k++; } names.add(t.name); LT.push(t); } }
 function lbTick(){
   if(!lobbyOpen) return;
   const used=new Set(), open=LT.filter(t=>t.status==='open'&&!t.mine&&!t.me);
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794669418';</script>
+<script>window.BURAKO_BUILD='1794669622';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
