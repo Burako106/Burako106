@@ -76,6 +76,8 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
 .top-seat .seat.turnring .vfan{z-index:8!important}
 .ringt.sr-ring.tops .n{z-index:9!important;font-size:13px!important;line-height:18px!important;height:20px!important;padding:0 8px!important;box-sizing:border-box!important}
 .top-seat .seat.turnring .seat-info{transform:translateY(4px)}
+#netupd{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483600;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:999px;background:#1d1a16;color:#fff;font:700 14px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
+#netupd button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:8px 14px;background:#ff7a1a;color:#1d1a16;cursor:pointer}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -615,6 +617,19 @@ body:not(.fun) .top-seat .runline rect.b2{animation:runintro 5s linear 1 both;an
     if(myName()==='Jugador'){ joinScreen(code,seat); return; }
     NET.role='guest'; NET.code=code; NET.want=Number.isInteger(seat)?seat:null; NET.bet=bet; NET.betOk=code; joinNow();
   }
+
+  /* ---------- Aviso de versión nueva ---------- */
+  const BUILD=window.BURAKO_BUILD||'';
+  async function checkBuild(){
+    if(!BUILD||document.getElementById('netupd')) return;
+    try{ const t=await (await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'})).text(); const m=t.match(/BURAKO_BUILD='(\d+)'/);
+      if(m&&m[1]!==BUILD){ const d=document.createElement('div'); d.id='netupd'; d.setAttribute('role','status');
+        d.innerHTML='<span>Hay una versión nueva del juego</span><button type="button">Actualizar</button>';
+        d.querySelector('button').onclick=()=>{ try{ save(); }catch(e){} location.reload(); };
+        document.body.appendChild(d); } }catch(e){}
+  }
+  setInterval(checkBuild,60000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkBuild(); });
 
   /* ---------- Al abrir la página ---------- */
   function boot(){
