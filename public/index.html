@@ -5354,7 +5354,7 @@ function renderModal(){
     ${row('Cierre',r=>r.cierre?'+100':0)}${row('Muerto sin levantar',r=>r.muerto)}${row('Fichas en el atril',r=>r.hand?-r.hand:0)}
     <tr class="tot"><td>Total de la mano</td>${TS.map(T=>`<td class="${cc(T)}">${rws[T].total}</td>`).join('')}</tr>
     <tr class="tot acum"><td>Acumulado</td>${TS.map(T=>{ const top=S.totals[T]===Math.max(...S.totals); return `<td class="${cc(T)}"><span class="acum-box${o.done?(top?' win':' lose'):''}">${S.totals[T]}</span></td>`; }).join('')}</tr></table>
-    ${o.done?'<button class="btn primary again-btn" data-act="next">Jugar otra partida</button><button class="btn" data-act="newgame">Cambiar modalidad</button>':`<button class="btn primary next-btn" data-act="next" style="--d:${-(Date.now()-(o.at||Date.now()))}ms"><span>Siguiente mano en <span class="next-n">${Math.max(0,Math.ceil(10-(Date.now()-(o.at||Date.now()))/1000))}</span>s</span></button>`}</div>`;
+    ${o.done?'<button class="btn primary again-btn" data-act="next">Jugar otra partida</button>'+(S.kind==='online'?'<button class="btn" data-act="netexit">Volver a las mesas</button>':'<button class="btn" data-act="newgame">Cambiar modalidad</button>'):`<button class="btn primary next-btn" data-act="next" style="--d:${-(Date.now()-(o.at||Date.now()))}ms"><span>Siguiente mano en <span class="next-n">${Math.max(0,Math.ceil(10-(Date.now()-(o.at||Date.now()))/1000))}</span>s</span></button>`}</div>`;
   m.hidden=false;
   const mxT=Math.max(...rws.map(r=>r.total)), lead=rws.map((r,i)=>r.total===mxT?i:-1).filter(i=>i>=0);
   const hi=o.done?(res==='win'?0:res==='lose'?S.totals.indexOf(Math.max(...S.totals)):null):(o.closer!=null?team(o.closer):(lead.length===1?lead[0]:null));
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794669622';</script>
+<script>window.BURAKO_BUILD='1794670228';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6379,7 +6379,14 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
       }
       badge(); netUI(); render(); return;
     }
-    if(m.t==='bye'){ if(NET.role==='host'&&!online()) unseat(m.pid); return; }
+    if(m.t==='bye'){ if(online()){ (NET.gone=NET.gone||new Set()).add(m.pid); return; } if(NET.role==='host') unseat(m.pid); return; }
+    if(m.t==='again'){ if(NET.role==='host'&&gameOver()) startRematch(m.pid); return; }
+    if(m.t==='newhost'){ NET.hostPid=m.pid; if(m.pid===myPid()){ NET.role='host'; if(NET.wantClaim&&gameOver()){ NET.wantClaim=false; startRematch(myPid()); } } return; }
+    if(m.t==='rematch'){
+      if(!gameOver()) return; const me=myPid();
+      if(!(m.seats||[]).some(x=>x&&x.pid===me)){ exitGame(); return; }
+      NET.seats=m.seats; NET.n=m.n||NET.n; NET.ui='join'; NET.readyUntil=0; NET.meReady=false; NET.hostPid=(m.seats[0]||{}).pid;
+      softExit(); netUI(); return; }
     if(m.t==='hello'){
       const w=m.who||{}; NET.on[w.pid]=true;
       if(NET.role==='host'){
@@ -6391,7 +6398,7 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
     if(m.t==='seat'){ if(NET.role==='host'&&!online()&&NET.seats&&!NET.ready){ const i=NET.seats.findIndex(s=>s&&s.pid===m.pid), j=m.seat; if(i>0&&Number.isInteger(j)&&j>0&&j<NET.n&&!NET.seats[j]){ NET.seats[j]=NET.seats[i]; NET.seats[i]=null; sendSeats(); list(); netUI(); } } return; }
     if(m.t==='ready'){ if(NET.role==='host') markReady(m.pid); return; }
     if(m.t==='readycheck'){ if(NET.role==='guest'&&!online()){ clearTimeout(NET.selfDrop); NET.selfDrop=setTimeout(()=>{ if(NET.code&&NET.role==='guest'&&!online()&&NET.readyUntil&&!NET.meReady&&!NET.going){ send({t:'bye',pid:myPid()}); const ws=NET.ws; NET.ws=null; setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },300); leaveOnline(); closeReady(); toast('Saliste de la mesa porque no confirmaste.'); lbRefresh(); } },READY_MS+1500); NET.seats=m.seats||NET.seats; NET.n=m.n||NET.n; NET.readyUntil=Date.now()+READY_MS; NET.scrolled=false; NET.readyState=m.ready||{}; NET.meReady=false; readyUI(); try{ bell(); }catch(e){} } return; }
-    if(m.t==='readystate'){ if(NET.role==='guest'){ NET.readyState=m.ready||{}; readyUI(); } return; }
+    if(m.t==='readystate'){ if(NET.role==='guest'){ NET.readyState=m.ready||{}; if(NET.readyState[myPid()]) NET.meReady=true; readyUI(); } return; }
     if(m.t==='go'){ if(NET.role==='guest'&&!online()){ NET.readyUntil=0; NET.going=true; goAnim(); readyUI(); setTimeout(()=>{ NET.going=false; },GO_MS+4000); } return; }
     if(m.t==='readycancel'){ if(NET.role==='guest'){ NET.readyUntil=0; readyUI(); if(m.msg) toast(m.msg); netUI(); } return; }
     if(m.t==='handoff'){
@@ -6588,7 +6595,7 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
     const who=info.filter((s,i)=>i>0&&s.t==='g').map(s=>s.name);
     S.msg='¡Empieza la partida'+(who.length?' con '+who.join(' y '):'')+'! Tu turno: robá del mazo o levantá el pozo.';
     chargeEntry();
-    NET.v=0; NET.last=''; beginTurn(); render(); pushNow(true); dealAnim();
+    NET.v=NET.keepV||0; NET.keepV=0; NET.last=''; beginTurn(); render(); pushNow(true); dealAnim();
   }
   function hostNext(){
     if(!S||!S.over) return; try{ if(closeFx) finishClose(); }catch(e){}
@@ -6709,14 +6716,55 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
 
   /* Dejar la mesa del todo: nada de esa partida sigue moviéndose ni sonando */
   function detach(){
-    window.__burakoGen=(window.__burakoGen|0)+1;
     try{ if(NET.ws){ NET.ws.onclose=null; NET.ws.close(); } }catch(e){}
+    softExit();
+  }
+  // Sale de la pantalla de juego sin cortar la conexión con la mesa
+  function softExit(){
+    window.__burakoGen=(window.__burakoGen|0)+1;
     try{ document.querySelectorAll('.sr-ring,.fbanner,.toast-x').forEach(e=>e.remove()); if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
     try{ if(closeFx){ closeFx=false; pendingEndFx=null; } }catch(e){}
     NET.ev=[]; busy=false; paused=false; dealing=false;
     S=null; newRound({n:2}); S.kind='bot'; S.blank=true; abandoned=true;
     lobbyOpen=true; menuOpen=false; setupOpen=false; quitOpen=false;
-    try{ save(); renderMenu(); renderPause(); render(); }catch(e){}
+    try{ sumClosed=false; save(); renderMenu(); renderPause(); render(); }catch(e){}
+  }
+
+  /* ---------- Revancha: «Jugar otra partida» / «Volver a las mesas» ---------- */
+  const gameOver=()=>online()&&S&&S.over&&S.over.done;
+  function hostPidNow(){ return NET.hostPid||((S&&S.seatInfo&&S.seatInfo[0])||{}).pid; }
+  // Lugares para la próxima: se quedan los que siguen conectados; el que pide la revancha queda primero
+  function rematchSeats(me){
+    const si=(S.seatInfo||[]).map(x=>x?Object.assign({},x):null), n=si.length, gone=NET.gone||new Set();
+    const keep=si.map(x=>{ if(!x) return null; if(x.t==='b'){ delete x.was; delete x.strikes; x.lv=3; return x; } if(x.pid!==me&&(gone.has(x.pid)||!NET.on[x.pid])) return null; delete x.strikes; return x; });
+    const j=Math.max(0,keep.findIndex(x=>x&&x.pid===me)); const out=keep.map((_,i)=>keep[(i+j)%n]);
+    if(out[0]) out[0].t='h'; for(let i=1;i<n;i++) if(out[i]&&out[i].t==='h') out[i].t='g';
+    return out;
+  }
+  function again(){
+    if(!gameOver()||NET.againSent) return; NET.againSent=Date.now();
+    if(NET.role==='host') startRematch(myPid());
+    else if(NET.on[hostPidNow()]) send({t:'again',pid:myPid()});
+    else { NET.wantClaim=true; send({t:'claim'}); }
+    setTimeout(()=>{ NET.againSent=0; },4000);
+    try{ say('Preparando otra partida…'); }catch(e){}
+  }
+  function startRematch(who){
+    if(NET.role!=='host'||!gameOver()) return;
+    NET.keepV=Math.max(NET.v||0,(S.net&&S.net.v)||0)+5;
+    const me=myPid(), seats=rematchSeats(me), n=S.n, keep=new Set(seats.filter(Boolean).map(x=>x.pid));
+    send({t:'reset'});
+    (S.seatInfo||[]).forEach(x=>{ if(x&&x.t!=='b'&&x.pid!==me&&!keep.has(x.pid)) send({t:'kick',pid:x.pid,soft:true}); });
+    NET.seats=seats; NET.n=n; NET.ui='wait'; NET.gone=new Set(); NET.ready=null; NET.readyUntil=0; NET.meReady=false; NET.leaving=false;
+    send({t:'rematch',seats,n,bet:NET.bet});
+    softExit(); if(!NET.pub){ NET.pub=true; } sendSeats(); list(); netUI();
+    if(seats.every(Boolean)){ startReady(); if(who&&who!==me) markReady(who); else if(who===me){ NET.meReady=true; markReady(me); } }
+  }
+  function exitGame(){
+    if(!gameOver()) return;
+    send({t:'bye',pid:myPid()}); NET.leaving=true; const ws=NET.ws; NET.ws=null;
+    setTimeout(()=>{ try{ if(ws){ ws.onclose=null; ws.close(); } }catch(e){} },300);
+    leaveOnline(); softExit(); NET.leaving=false; lbRefresh();
   }
 
   /* ---------- Tiempo de turno, abandono y máquina de reemplazo ---------- */
@@ -6861,6 +6909,7 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
     if(a==='netback'){ NET.share=false; shareBox(); return; }
     if(a==='netfill'){ if(NET.role==='host'&&guests()) fillAnim(); return; }
     if(a==='netready'){ iAmReady(); return; }
+    if(a==='netexit'){ exitGame(); return; }
     if(a==='netnoplay'){ noPlay(); return; }
     if(a==='pickme'){ pickMe(el); return; }
     if(a==='mypick'){ setMine(+el.dataset.v); return; }
@@ -6870,6 +6919,7 @@ body.nrfocus #lgrid .lcard:has(.ltable.netready){visibility:hidden}
     if(a==='ljoin'&&el&&el.dataset&&String(el.dataset.id||'').startsWith('net:')){ realJoin(el.dataset.id.slice(4),+el.dataset.seat); return; }
     if(a==='next'&&online()){
       if(!S.over) return;
+      if(S.over.done){ again(); return; }
       if(isBoss()) hostNext(); else { if(NET.nextAt===S.over.at) return; if(send({t:'next'})){ NET.nextAt=S.over.at; say('Esperando que '+nameC(0)+' reparta la próxima mano…'); } else toast('Sin conexión. Probá de nuevo en unos segundos.'); render(); }
       return;
     }

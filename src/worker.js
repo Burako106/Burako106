@@ -91,10 +91,11 @@ export class Room extends DurableObject {
     if (typeof raw !== "string" || raw.length > 600000) return;
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
-    const role = this.ctx.getTags(ws)[0];
+    const tagRole = this.ctx.getTags(ws)[0];
     if (m.t === "ping") { ws.send('{"t":"pong"}'); return; }
 
     if (m.t === "hello") {
+      const role = tagRole;
       const who = m.who || {};
       const pid = typeof who.pid === "string" ? who.pid.slice(0, 40) : "";
       if (!pid) { this.reject(ws); return; }
@@ -126,6 +127,7 @@ export class Room extends DurableObject {
 
     const me = this.info(ws);
     if (!me.ok) return;
+    const role = me.role || tagRole;
 
     if (m.t === "kick") {
       // Solo el anfitrión libera lugares (alguien se fue antes de empezar, o no había lugar).
@@ -136,6 +138,29 @@ export class Room extends DurableObject {
         await this.ctx.storage.put("room", room);
       }
       if (!m.soft) for (const w of this.okSockets()) if (this.info(w).pid === m.pid) this.reject(w);
+      return;
+    }
+    if (m.t === "reset") {
+      // Terminó la partida y se arma la revancha: la mesa vuelve a esperar jugadores.
+      if (role !== "host") return;
+      const room = (await this.ctx.storage.get("room")) || {};
+      room.state = null; room.wait = true;
+      await this.ctx.storage.put("room", room);
+      return;
+    }
+    if (m.t === "claim") {
+      // El anfitrión ya no está: la mesa pasa a quien pide la revancha.
+      const room = (await this.ctx.storage.get("room")) || {};
+      const hostPid = room.host && room.host.pid;
+      if (hostPid && this.okSockets().some((w) => this.info(w).pid === hostPid)) return;
+      room.guests = room.guests || {};
+      room.host = room.guests[me.pid] || { pid: me.pid };
+      delete room.guests[me.pid];
+      await this.ctx.storage.put("room", room);
+      ws.serializeAttachment(Object.assign({}, me, { role: "host" }));
+      const msg = { t: "newhost", pid: me.pid };
+      try { ws.send(JSON.stringify(msg)); } catch (e) {}
+      this.broadcast(ws, msg);
       return;
     }
     if (m.t === "handoff") {
@@ -159,7 +184,9 @@ export class Room extends DurableObject {
     if (m.t === "state") {
       const room = (await this.ctx.storage.get("room")) || {};
       // Se guarda solo si es más nuevo que lo que ya hay.
+      if (room.wait && role !== "host") return;
       if (typeof m.v !== "number" || (room.v && m.v <= room.v)) return;
+      room.wait = false;
       room.state = m.s;
       room.v = m.v;
       await this.ctx.storage.put("room", room);

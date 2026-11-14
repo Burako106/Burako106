@@ -54,6 +54,9 @@ rep("  if(a==='quityes'){ if(inGame()) lbRecord('lose'); quitOpen=false; abandon
     "  if(a==='quityes'){ if(inGame()) lbRecord('lose'); quitOpen=false; abandoned=true; if(S){ S.quit=true; try{ save(); }catch(e){} }")
 # sin mesas de mentira al cargar (las mesas reales llegan del servidor)
 rep("function lbInit(){ if(LT.length) return; const used=new Set();","function lbInit(){ return; if(LT.length) return; const used=new Set();")
+# fin de la partida online: «Volver a las mesas»
+rep("${o.done?'<button class=\"btn primary again-btn\" data-act=\"next\">Jugar otra partida</button><button class=\"btn\" data-act=\"newgame\">Cambiar modalidad</button>'",
+    "${o.done?'<button class=\"btn primary again-btn\" data-act=\"next\">Jugar otra partida</button>'+(S.kind==='online'?'<button class=\"btn\" data-act=\"netexit\">Volver a las mesas</button>':'<button class=\"btn\" data-act=\"newgame\">Cambiar modalidad</button>')")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
