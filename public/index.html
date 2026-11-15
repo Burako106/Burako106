@@ -5847,7 +5847,7 @@ function renderWait(){
 function lbWaitStart(t){
   waitT=t; t.me=true; waitTimers.forEach(clearTimeout); waitTimers=[];
   const step=()=>{ if(waitT!==t) return; const i=t.seats.indexOf(null);
-    if(i<0){ t.cd=4; t.revealAt=Date.now(); const cd=()=>{ if(waitT!==t) return; if(t.cd<=0){ lbLaunch(t); return; } renderLGrid(); tone([520],'triangle'); t.cd--; waitTimers.push(setTimeout(cd,900)); }; cd(); return; }
+    if(i<0){ if(window.BURAKO_NET&&BURAKO_NET.houseReady){ BURAKO_NET.houseReady(t); return; } t.cd=4; t.revealAt=Date.now(); const cd=()=>{ if(waitT!==t) return; if(t.cd<=0){ lbLaunch(t); return; } renderLGrid(); tone([520],'triangle'); t.cd--; waitTimers.push(setTimeout(cd,900)); }; cd(); return; }
     t.seats[i]=lbPlayer(new Set(t.seats.filter(s=>s&&s!=='me').map(s=>s.name))); clack(1); renderLGrid(); waitTimers.push(setTimeout(step,1300+Math.random()*2200)); };
   renderLGrid(); waitTimers.push(setTimeout(step,1400+Math.random()*1800));
 }
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794696693';</script>
+<script>window.BURAKO_BUILD='1794744560';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6558,8 +6558,8 @@ body.clk-discard #mesa{cursor:pointer}
   function iAmReady(){ if(NET.meReady) return; NET.meReady=true; try{ clack(1); }catch(e){} if(NET.role==='host') markReady(myPid()); else { send({t:'ready',pid:myPid()}); readyUI(); } }
   function closeReady(){ const o=document.getElementById('netready'); if(o) o.remove(); const f=document.getElementById('nrfocus'); if(f&&!f.classList.contains('out')){ f.classList.add('out'); setTimeout(()=>f.remove(),320); } document.body.classList.remove('nrfocus'); }
   // La mesa llena pasa al centro, grande, con el fondo desenfocado
-  function focusUI(){
-    const i=LT.findIndex(x=>x.net===NET.code), t=i>=0?LT[i]:myTable(); let html='';
+  function focusUI(tt){
+    const i=LT.findIndex(x=>x.net===NET.code), t=tt||(i>=0?LT[i]:myTable()); let html='';
     try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'</div>'; }catch(e){ return false; }
     let f=document.getElementById('nrfocus');
     if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
@@ -6567,10 +6567,10 @@ body.clk-discard #mesa{cursor:pointer}
     document.body.classList.add('nrfocus'); return true;
   }
   function readyTickFn(){
-    const left=Math.max(0,(NET.readyUntil-Date.now())/1000);
+    const until=HOUSE?HOUSE.until:NET.readyUntil, left=Math.max(0,(until-Date.now())/1000);
     document.querySelectorAll('.nr-count').forEach(el=>{ const b=el.querySelector('b'); if(b) b.textContent=Math.ceil(left); el.classList.toggle('low',left<=3); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
     const b=document.querySelector('#netready .net-left b'); if(b) b.textContent=Math.ceil(left);
-    if(!NET.readyUntil) clearInterval(NET.readyTick);
+    if(!until||(HOUSE&&HOUSE.going)) clearInterval(NET.readyTick);
   }
   function readyUI(){
     if(online()||(!NET.readyUntil&&!NET.going)){ closeReady(); clearInterval(NET.readyTick); try{ if(lobbyOpen&&!online()){ mergeMine(); renderLGrid(); } }catch(e){} return; }
@@ -7005,9 +7005,9 @@ body.clk-discard #mesa{cursor:pointer}
     if(a==='netback'){ NET.share=false; shareBox(); return; }
     if(a==='netfill'){ if(NET.role==='host'&&guests()) fillAnim(); return; }
     if(a==='quityes'&&!online()){ const r=_onAct.apply(this,arguments); cutGame(); return r; }
-    if(a==='netready'){ iAmReady(); return; }
+    if(a==='netready'){ if(HOUSE){ houseMe(); return; } iAmReady(); return; }
     if(a==='netexit'){ exitGame(); return; }
-    if(a==='netnoplay'){ noPlay(); return; }
+    if(a==='netnoplay'){ if(HOUSE){ houseOut('Saliste de la mesa. No se te descontó nada.'); return; } noPlay(); return; }
     if(a==='pickme'){ pickMe(el); return; }
     if(a==='mypick'){ setMine(+el.dataset.v); return; }
     if(a==='netwa'){ const L=link(); window.open('https://wa.me/?text='+encodeURIComponent('¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)'),'_blank'); return; }
@@ -7096,6 +7096,43 @@ body.clk-discard #mesa{cursor:pointer}
     mergeMine(); try{ renderLobby(); renderLGrid(); }catch(e){} shareBox();
   }
   // Botones y borde de mi mesa
+  // Confirmación «¡Mesa completa! ¿Listo para jugar?» sobre la tarjeta de una mesa (mesas de gente y de la casa)
+  function rdDecor(s,R){
+    const seen=NET.stamped||new Set(), list=R.list, done=list.filter(x=>x&&x.ok).length, tot=R.tot;
+    s=s.replace('<div class="ltable','<div class="ltable netmine netready');
+    s=s.replace(/(<span class="lseat[^"]*" data-si="(\d)"[^>]*>)/g,(all,open,i)=>{ const x=list[+i]; return x&&x.ok?open+'<i class="nstamp'+(seen.has(x.key)?' old':'')+'"><b>✓</b>Listo</i>':all; });
+    const left=Math.max(0,Math.ceil((R.until-Date.now())/1000));
+    const ring='<span class="nr-count" style="--p:100" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
+    const big=R.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':R.me?'<span class="nr-done"><b>✓</b> Listo'+ring+'</span>':'<button class="btn primary nr-play" data-act="netready"><span>Jugar</span>'+ring+'</button>';
+    s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt"><span class="nr-t1">¡Mesa completa!</span><span class="nr-t2">'+(R.going?'Empieza la partida…':R.me?'Esperando a los demás…':'¿Listo para jugar?')+'</span></div>');
+    s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=list[i]; return '<i class="'+(x&&x.ok?'on'+(seen.has(x.key)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
+    if(R.going) return s;
+    return s.replace(/<\/div>\s*$/,'<div class="lnet-acts">'+(R.me?'':'<button class="btn nr-no" data-act="netnoplay">No jugar</button>')+'</div></div>');
+  }
+  /* ---------- Mesas de la casa: la misma confirmación (los personajes confirman solos y rápido) ---------- */
+  let HOUSE=null;
+  const houseList=H=>H.t.seats.map((x,i)=>x?{i,key:x==='me'?'me':'h:'+x.name,ok:x==='me'?(H.me||H.going):(H.ready.has(i)||H.going)}:null);
+  function houseReady(t){
+    if(HOUSE) return; HOUSE={t,until:Date.now()+READY_MS,ready:new Set(),me:false,going:false,timers:[]}; NET.stamped=new Set();
+    t.seats.forEach((x,i)=>{ if(x&&x!=='me') HOUSE.timers.push(setTimeout(()=>{ if(!HOUSE||HOUSE.t!==t) return; HOUSE.ready.add(i); try{ softPop(); }catch(e){} houseUI(); houseCheck(); },350+Math.random()*1700)); });
+    HOUSE.timers.push(setTimeout(houseTimeout,READY_MS+200)); houseUI();
+  }
+  function houseUI(){
+    if(!HOUSE){ closeReady(); return; }
+    try{ if(lobbyOpen) renderLGrid(); }catch(e){}
+    focusUI(HOUSE.t);
+    clearInterval(NET.readyTick); if(!HOUSE.going){ NET.readyTick=setInterval(readyTickFn,200); readyTickFn(); }
+    setTimeout(()=>{ if(HOUSE) houseList(HOUSE).forEach(x=>{ if(x&&x.ok) NET.stamped.add(x.key); }); },700);
+  }
+  function houseCheck(){
+    const H=HOUSE; if(!H||H.going||!H.me) return; if(houseList(H).some(x=>x&&!x.ok)) return;
+    H.going=true; H.timers.forEach(clearTimeout); clearInterval(NET.readyTick); goAnim(); houseUI();
+    setTimeout(()=>{ if(HOUSE!==H) return; HOUSE=null; closeReady(); lbLaunch(H.t); },GO_MS);
+  }
+  function houseMe(){ if(!HOUSE||HOUSE.me) return; HOUSE.me=true; try{ clack(1); }catch(e){} houseUI(); houseCheck(); }
+  function houseOut(msg){ const H=HOUSE; if(!H) return; H.timers.forEach(clearTimeout); HOUSE=null; clearInterval(NET.readyTick); closeReady(); try{ lbLeave(); }catch(e){} if(msg) toast(msg); }
+  function houseTimeout(){ if(HOUSE&&!HOUSE.me&&!HOUSE.going) houseOut('Saliste de la mesa porque no confirmaste.'); }
+  NET.houseReady=houseReady;
   function decor(s,t){
     const host=t.mine, f=t.seats.filter(Boolean).length, h0=(NET.seats&&NET.seats[0])||{};
     const offHost=!host&&h0.pid&&!NET.on[h0.pid];
@@ -7106,22 +7143,13 @@ body.clk-discard #mesa{cursor:pointer}
     const hint=!NET.open?'Conectando…':host?(f>=2&&f<t.n?'Esperando jugadores · o tocá 🤖 para empezar con la máquina':'Esperando que se sienten jugadores…'):offHost?esc(h0.name||'')+' no está conectado':'Esperando que '+esc(h0.name||'el anfitrión')+' empiece…';
     s=s.replace('<div class="ltable','<div class="ltable netmine'+((NET.readyUntil||NET.going)&&!online()?' netready':''));
     if((NET.readyUntil||NET.going)&&!online()){
-      const st=NET.readyState||{}, seen=NET.stamped||new Set(), seats=NET.seats||[];
-      const done=seats.filter(x=>x&&(x.t==='b'||st[x.pid]||NET.going)).length, tot=NET.n||seats.length;
-      s=s.replace(/(<span class="lseat[^"]*" data-si="(\d)"[^>]*>)/g,(all,open,i)=>{ const x=seats[+i]; if(!x) return all; const ok=x.t==='b'||st[x.pid]||NET.going; return ok?open+'<i class="nstamp'+(seen.has(x.pid||x.id)?' old':'')+'"><b>✓</b>Listo</i>':open; });
-      const left=Math.max(0,Math.ceil((NET.readyUntil-Date.now())/1000));
-      const ring='<span class="nr-count" style="--p:100" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
-      const big=NET.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':
-        NET.meReady?'<span class="nr-done"><b>✓</b> Listo'+ring+'</span>':'<button class="btn primary nr-play" data-act="netready"><span>Jugar</span>'+ring+'</button>';
-      s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt"><span class="nr-t1">¡Mesa completa!</span><span class="nr-t2">'+(NET.going?'Empieza la partida…':NET.meReady?'Esperando a los demás…':'¿Listo para jugar?')+'</span></div>');
-      s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=seats[i], on=x&&(x.t==='b'||st[x.pid]||NET.going); return '<i class="'+(on?'on'+(seen.has(x.pid||x.id)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
-      if(NET.going) return s;
-      return s.replace(/<\/div>\s*$/,'<div class="lnet-acts">'+(NET.meReady?'':'<button class="btn nr-no" data-act="netnoplay">No jugar</button>')+'</div></div>');
+      const st=NET.readyState||{}, seats=NET.seats||[];
+      return rdDecor(s,{list:seats.map((x,i)=>x?{i,key:x.pid||x.id,ok:!!(x.t==='b'||st[x.pid]||NET.going)}:null),tot:NET.n||seats.length,me:NET.meReady,going:NET.going,until:NET.readyUntil});
     }
     s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint">'+hint+'</p>');
     return s.replace(/<\/div>\s*$/,acts+'</div>');
   }
-  const _lth=lbTableH; lbTableH=function(t,big){ const s=_lth.apply(this,arguments); return t&&t.net&&!big&&t.joined?decor(s,t):s; };
+  const _lth=lbTableH; lbTableH=function(t,big){ const s=_lth.apply(this,arguments); if(HOUSE&&t===HOUSE.t&&!big) return rdDecor(s,{list:houseList(HOUSE),tot:t.n,me:HOUSE.me,going:HOUSE.going,until:HOUSE.until}); return t&&t.net&&!big&&t.joined?decor(s,t):s; };
   const _lbb=lbBubH; lbBubH=function(t){ const s=_lbb.apply(this,arguments); return t&&t.net&&t.joined?s.replace('<div class="hb ','<div class="hb netmine '):s; };
   // Cuadro para compartir (con el estilo del modo elegido)
   function shareBox(){

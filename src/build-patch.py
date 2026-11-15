@@ -69,6 +69,8 @@ rep('<button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class
 rep(".el-fb .el-ic{background:#fff;color:#1877f2;border-radius:50%;font-size:18px;padding-top:4px}",".el-fb .el-ic{background:none;border-radius:50%;padding:0;overflow:hidden}.el-fb .el-ic svg{width:24px;height:24px;display:block}")
 # chat del club: ya hay personas
 rep("'¡Bienvenido al club! Por ahora juegan robots, pronto llegan las personas.',","'¡Bienvenidos al club! 👋',")
+# mesas de la casa: al llenarse, confirmación con «Jugar» (en vez de la cuenta 4-3-2-1)
+rep("    if(i<0){ t.cd=4; t.revealAt=Date.now();","    if(i<0){ if(window.BURAKO_NET&&BURAKO_NET.houseReady){ BURAKO_NET.houseReady(t); return; } t.cd=4; t.revealAt=Date.now();")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
