@@ -23,7 +23,7 @@ rep("function seatKind(p){ return !S||S.kind!=='mesa'?'':isGone(p)?' robo-seat':
 rep('data-seat="${p}">${avH(p)}\n    <div class="seat-info"><b>${nm(p)}</b><span>${role}</span>',
     'data-seat="${p}" title="${esc(nm(p))} · ${role}">${avH(p)}\n    <div class="seat-info"><b>${nm(p)}</b>')
 # personas: misma forma de ficha que la máquina (sin nivel ni robot, pero ocupando su lugar)
-rep(".seat.human .lvlrow{display:none!important}",".seat.human .lvlrow{visibility:hidden!important}")
+rep(".seat.human .lvlrow{display:none!important}","body.netgame .seat.human .lvlrow{visibility:hidden!important}")
 # cortar en seco las jugadas en curso de la máquina cuando dejo una mesa online
 rep("const think=async(a,b)=>{ await sleep(a+Math.random()*(b-a)); await waitPause(); };",
     "const think=async(a,b)=>{ const g=window.__burakoGen|0; await sleep(a+Math.random()*(b-a)); await waitPause(); if((window.__burakoGen|0)!==g) throw new Error('mesa abandonada'); };")
