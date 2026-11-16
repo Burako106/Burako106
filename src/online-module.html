@@ -296,8 +296,13 @@ body.glass .toast .warn-ic{background:#ff453a;color:#fff;box-shadow:0 0 0 4px rg
 body.fun .toast{background:#fff!important;color:#141414!important;outline:2px solid #141414!important;outline-offset:-2px;box-shadow:4px 4px 0 #141414!important;border-radius:16px!important}
 body:not(.fun):not(.glass) .toast{background:#2a1517!important;color:var(--ink,#f6efe2)!important;border:1.5px solid rgba(230,182,63,.55)!important;border-radius:14px!important;box-shadow:0 18px 40px rgba(0,0,0,.45)!important}
 body:not(.fun):not(.glass) .toast .warn-ic{background:#e6b63f;color:#2a1517}
-.nr-match{width:100%;margin-bottom:2px}
-.nr-match .lmatch{font-size:15px;min-height:0}
+.nr-match{width:100%;padding:34px 4px 10px;margin:-12px 0 14px;border-bottom:1px solid rgba(20,20,30,.12)}
+body:not(.fun):not(.glass) .nr-match{border-bottom-color:rgba(246,239,226,.16)}
+body.fun .nr-match{border-bottom:1.5px solid #141414}
+.nr-match .lmatch{font-size:13px;min-height:0;flex-wrap:wrap;gap:4px 7px;margin:0}
+.nr-match .lm-side{white-space:nowrap}
+.nr-match .lm-vs{font-size:11px;letter-spacing:.06em}
+.nr-match .lm-note{display:none!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -1137,14 +1142,15 @@ body:not(.fun):not(.glass) .toast .warn-ic{background:#e6b63f;color:#2a1517}
     const ring='<span class="nr-count" style="--p:100" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
     const big=R.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':R.me?'<span class="nr-done"><b>✓</b> Listo'+ring+'</span>':'<button class="btn primary nr-play" data-act="netready"><span>Jugar</span>'+ring+'</button>';
     s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt"><span class="nr-t1">¡Mesa completa!</span><span class="nr-t2">'+(R.going?'Empieza la partida…':R.me?'Esperando a los demás…':'¿Listo para jugar?')+'</span></div>');
-    s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+(R.match||'')+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=list[i]; return '<i class="'+(x&&x.ok?'on'+(seen.has(x.key)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
+    if(R.match) s=s.replace(/(<div class="ltable[^>]*>)/,'$1'+R.match);
+    s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=list[i]; return '<i class="'+(x&&x.ok?'on'+(seen.has(x.key)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
     if(R.going) return s;
     return s.replace(/<\/div>\s*$/,'<div class="lnet-acts">'+(R.me?'':'<button class="btn nr-no" data-act="netnoplay">No jugar</button>')+'</div></div>');
   }
   /* ---------- Mesas de la casa: la misma confirmación (los personajes confirman solos y rápido) ---------- */
   let HOUSE=null;
   // quiénes juegan, en la misma ventana de confirmación
-  function matchH(t){ try{ const r=t.revealAt; t.revealAt=null; const s=lbMatchH(t); t.revealAt=r; return '<div class="nr-match">'+s+'</div>'; }catch(e){ return ''; } }
+  function matchH(t){ try{ const r=t.revealAt; t.revealAt=null; const s=lbMatchH(t).replace(/>(contra|vs)</g,'>VS<'); t.revealAt=r; return '<div class="nr-match">'+s+'</div>'; }catch(e){ return ''; } }
   // mesas de la casa: sin ventana de espera; se completa y pasa directo a confirmar
   const _lbWaitStart=lbWaitStart;
   lbWaitStart=function(t){
