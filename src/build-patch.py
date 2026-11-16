@@ -93,6 +93,8 @@ rep("  setTimeout(()=>b.remove(),3600);\n}","  setTimeout(()=>b.remove(),5600);\
 rep('data-act="quityes" style="background:var(--op);border-color:var(--op);color:#3d0d08"','data-act="quityes" style="background:var(--op);border-color:var(--op);color:#fff"')
 # avisos: duran según el largo del texto (mínimo 3,2 s)
 rep("  document.body.appendChild(t); setTimeout(()=>t.remove(),2300);\n  tone([330,262],'square');","  document.body.appendChild(t); setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),260); },Math.max(3200,String(msg).length*65));\n  tone([330,262],'square');")
+# de a tres: «Jimmy contra Graciela contra Gladys»
+rep("<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"${d(2200)}>${LL('y','&')}</span><span class=\"lm-side y\"","<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"${d(2200)}>${LL('contra','vs')}</span><span class=\"lm-side y\"")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

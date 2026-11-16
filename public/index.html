@@ -5492,7 +5492,7 @@ function lbMatchH(t){ const el=t.revealAt?Date.now()-t.revealAt:-1, d=ms=>el>=0?
   if(t.n===4){ const a=[mi,(mi+2)%4], b=[(mi+1)%4,(mi+3)%4];
     return `<div class="lmatch${el>=0?' go':''}"><span class="lm-side b"${d(1500)}>${nm(a[0])} <i>${LL('y','&')}</i> ${nm(a[1])}</span><span class="lm-vs"${d(1900)}>${LL('contra','vs')}</span><span class="lm-side r"${d(2100)}>${nm(b[0])} <i>${LL('y','&')}</i> ${nm(b[1])}</span></div>`; }
   if(t.n===3){ const o=[1,2].map(k=>(mi+k)%3);
-    return `<div class="lmatch${el>=0?' go':''}"><span class="lm-side b"${d(1500)}>${nm(mi)}</span><span class="lm-vs"${d(1800)}>${LL('contra','vs')}</span><span class="lm-side r"${d(2000)}>${nm(o[0])}</span><span class="lm-vs"${d(2200)}>${LL('y','&')}</span><span class="lm-side y"${d(2350)}>${nm(o[1])}</span><small class="lm-note"${d(2600)}>${LL('Todos contra todos: cada uno por su cuenta','Free for all: each on their own')}</small></div>`; }
+    return `<div class="lmatch${el>=0?' go':''}"><span class="lm-side b"${d(1500)}>${nm(mi)}</span><span class="lm-vs"${d(1800)}>${LL('contra','vs')}</span><span class="lm-side r"${d(2000)}>${nm(o[0])}</span><span class="lm-vs"${d(2200)}>${LL('contra','vs')}</span><span class="lm-side y"${d(2350)}>${nm(o[1])}</span><small class="lm-note"${d(2600)}>${LL('Todos contra todos: cada uno por su cuenta','Free for all: each on their own')}</small></div>`; }
   const o=(mi+1)%2; return `<div class="lmatch${el>=0?' go':''}"><span class="lm-side b"${d(1500)}>${nm(mi)}</span><span class="lm-vs"${d(1800)}>${LL('contra','vs')}</span><span class="lm-side r"${d(2000)}>${nm(o)}</span></div>`; }
 function lbTableH(t,big){
   const pos=lbSeatPos(t.n);
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794863715';</script>
+<script>window.BURAKO_BUILD='1794864078';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6364,6 +6364,8 @@ body.glass .toast .warn-ic{background:#ff453a;color:#fff;box-shadow:0 0 0 4px rg
 body.fun .toast{background:#fff!important;color:#141414!important;outline:2px solid #141414!important;outline-offset:-2px;box-shadow:4px 4px 0 #141414!important;border-radius:16px!important}
 body:not(.fun):not(.glass) .toast{background:#2a1517!important;color:var(--ink,#f6efe2)!important;border:1.5px solid rgba(230,182,63,.55)!important;border-radius:14px!important;box-shadow:0 18px 40px rgba(0,0,0,.45)!important}
 body:not(.fun):not(.glass) .toast .warn-ic{background:#e6b63f;color:#2a1517}
+.nr-match{width:100%;margin-bottom:2px}
+.nr-match .lmatch{font-size:15px;min-height:0}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7203,12 +7205,23 @@ body:not(.fun):not(.glass) .toast .warn-ic{background:#e6b63f;color:#2a1517}
     const ring='<span class="nr-count" style="--p:100" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
     const big=R.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':R.me?'<span class="nr-done"><b>✓</b> Listo'+ring+'</span>':'<button class="btn primary nr-play" data-act="netready"><span>Jugar</span>'+ring+'</button>';
     s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt"><span class="nr-t1">¡Mesa completa!</span><span class="nr-t2">'+(R.going?'Empieza la partida…':R.me?'Esperando a los demás…':'¿Listo para jugar?')+'</span></div>');
-    s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=list[i]; return '<i class="'+(x&&x.ok?'on'+(seen.has(x.key)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
+    s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<div class="nr-box">'+(R.match||'')+big+'<span class="nr-dots" aria-hidden="true">'+Array.from({length:tot},(_,i)=>{ const x=list[i]; return '<i class="'+(x&&x.ok?'on'+(seen.has(x.key)?' old':''):'')+'"></i>'; }).join('')+'</span><small class="nr-n">'+done+' de '+tot+' confirmados</small></div>');
     if(R.going) return s;
     return s.replace(/<\/div>\s*$/,'<div class="lnet-acts">'+(R.me?'':'<button class="btn nr-no" data-act="netnoplay">No jugar</button>')+'</div></div>');
   }
   /* ---------- Mesas de la casa: la misma confirmación (los personajes confirman solos y rápido) ---------- */
   let HOUSE=null;
+  // quiénes juegan, en la misma ventana de confirmación
+  function matchH(t){ try{ const r=t.revealAt; t.revealAt=null; const s=lbMatchH(t); t.revealAt=r; return '<div class="nr-match">'+s+'</div>'; }catch(e){ return ''; } }
+  // mesas de la casa: sin ventana de espera; se completa y pasa directo a confirmar
+  const _lbWaitStart=lbWaitStart;
+  lbWaitStart=function(t){
+    if(t&&!t.net&&!t.mine){ waitT=t; t.me=true; waitTimers.forEach(clearTimeout); waitTimers=[];
+      const used=new Set(t.seats.filter(x=>x&&x!=='me').map(x=>x.name)); for(let i=0;i<t.n;i++) if(!t.seats[i]){ const p=lbPlayer(used); used.add(p.name); t.seats[i]=p; }
+      try{ clack(1); }catch(e){} houseReady(t); return; }
+    return _lbWaitStart.apply(this,arguments);
+  };
+  const _renderWait=renderWait; renderWait=function(){ if(HOUSE&&waitT===HOUSE.t){ const box=document.getElementById('lwaitbox'); if(box&&box._h){ box.innerHTML=''; box._h=''; } return; } return _renderWait.apply(this,arguments); };
   const houseList=H=>H.t.seats.map((x,i)=>x?{i,key:x==='me'?'me':'h:'+x.name,ok:x==='me'?(H.me||H.going):(H.ready.has(i)||H.going)}:null);
   function houseReady(t){
     if(HOUSE) return; HOUSE={t,until:Date.now()+READY_MS,ready:new Set(),me:false,going:false,timers:[]}; NET.stamped=new Set();
@@ -7242,12 +7255,12 @@ body:not(.fun):not(.glass) .toast .warn-ic{background:#e6b63f;color:#2a1517}
     s=s.replace('<div class="ltable','<div class="ltable netmine'+((NET.readyUntil||NET.going)&&!online()?' netready':''));
     if((NET.readyUntil||NET.going)&&!online()){
       const st=NET.readyState||{}, seats=NET.seats||[];
-      return rdDecor(s,{list:seats.map((x,i)=>x?{i,key:x.pid||x.id,ok:!!(x.t==='b'||st[x.pid]||NET.going)}:null),tot:NET.n||seats.length,me:NET.meReady,going:NET.going,until:NET.readyUntil});
+      return rdDecor(s,{list:seats.map((x,i)=>x?{i,key:x.pid||x.id,ok:!!(x.t==='b'||st[x.pid]||NET.going)}:null),tot:NET.n||seats.length,me:NET.meReady,going:NET.going,until:NET.readyUntil,match:matchH({n:NET.n||seats.length,seats:seats.map(x=>x?(x.pid===myPid()?'me':{name:x.name}):null)})});
     }
     s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint">'+hint+'</p>');
     return s.replace(/<\/div>\s*$/,acts+'</div>');
   }
-  const _lth=lbTableH; lbTableH=function(t,big){ const s=_lth.apply(this,arguments); if(HOUSE&&t===HOUSE.t&&!big) return rdDecor(s,{list:houseList(HOUSE),tot:t.n,me:HOUSE.me,going:HOUSE.going,until:HOUSE.until}); return t&&t.net&&!big&&t.joined?decor(s,t):s; };
+  const _lth=lbTableH; lbTableH=function(t,big){ const s=_lth.apply(this,arguments); if(HOUSE&&t===HOUSE.t&&!big) return rdDecor(s,{list:houseList(HOUSE),tot:t.n,me:HOUSE.me,going:HOUSE.going,until:HOUSE.until,match:matchH(t)}); return t&&t.net&&!big&&t.joined?decor(s,t):s; };
   const _lbb=lbBubH; lbBubH=function(t){ const s=_lbb.apply(this,arguments); return t&&t.net&&t.joined?s.replace('<div class="hb ','<div class="hb netmine '):s; };
   // Cuadro para compartir (con el estilo del modo elegido)
   function shareBox(){
