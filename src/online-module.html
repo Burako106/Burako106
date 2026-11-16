@@ -234,6 +234,22 @@ body:is(.fun,:not(.fun)) .bar .top-seat .seat::after{right:calc(-10*var(--u))!im
 /* de a tres: la línea de turno del tercer jugador va en amarillo, como su color */
 .seat.y3.turnring.rc-op{--rc:242,182,50}
 body.fun .seat.y3.turnring.rc-op{--rc:233,160,0}
+/* Logo: BURAKO y el 106 en tres fichitas */
+.llogo .ll-w{text-transform:uppercase;letter-spacing:-.01em}
+.llogo .ll-t{display:inline-flex!important;gap:3px;padding:0!important;background:none!important;box-shadow:none!important;outline:none!important;transform:none!important;border-radius:0!important}
+.llogo .ll-t i{display:grid;place-items:center;width:.78em;height:1.08em;font:900 1em/1 var(--f-tile);font-style:normal;font-size:26px;border-radius:5px;
+  background:linear-gradient(180deg,#fff,#eef0f4);border:1px solid rgba(30,32,48,.18);box-shadow:0 2px 0 rgba(30,32,48,.18),0 4px 8px rgba(30,32,48,.12);
+  transition:transform .28s cubic-bezier(.2,1.4,.4,1),box-shadow .28s}
+.llogo .ll-t .lt1{color:#e0483e} .llogo .ll-t .lt0{color:#3b6fd8} .llogo .ll-t .lt6{color:#1d1a16}
+.llogo:hover .ll-t i{transform:translateY(-4px);box-shadow:0 6px 0 rgba(30,32,48,.12),0 10px 14px rgba(30,32,48,.16)}
+.llogo:hover .ll-t .lt0{transition-delay:.05s} .llogo:hover .ll-t .lt6{transition-delay:.1s}
+body.fun .llogo .ll-t i{background:#fff;border:0;outline:1.5px solid #141414;outline-offset:-1.5px;box-shadow:2px 2px 0 #141414}
+body.fun .llogo:hover .ll-t i{box-shadow:2px 6px 0 #141414}
+body:not(.fun):not(.glass) .llogo .ll-t i{background:var(--ivory,#f6efe2);border:0;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.glass) .llogo .ll-t .lt0{color:#2d5bb5}
+/* menú contraído: el 106 debajo, centrado y cerca de BURAKO */
+.lwrap2.slim .lhead-logo .llogo{flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important}
+@media (prefers-reduced-motion:reduce){.llogo .ll-t i{transition:none}}
 </style>
 <script id="net-js">
 /* ==========================================================================
