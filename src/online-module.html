@@ -231,6 +231,9 @@ body.clk-discard #mesa{cursor:pointer}
 @media (prefers-reduced-motion:reduce){.lbig.lcreate::after{display:none}}
 /* jugador de arriba: la cápsula llega hasta después del contador de fichas (no queda nada afuera) */
 body:is(.fun,:not(.fun)) .bar .top-seat .seat::after{right:calc(-10*var(--u))!important}
+/* de a tres: la línea de turno del tercer jugador va en amarillo, como su color */
+.seat.y3.turnring.rc-op{--rc:242,182,50}
+body.fun .seat.y3.turnring.rc-op{--rc:233,160,0}
 </style>
 <script id="net-js">
 /* ==========================================================================
