@@ -87,6 +87,8 @@ rep("""  const all=[].concat(...S.muertos); S.muertos=S.muertos.map(()=>[]);
 # logo: BURAKO + 1·0·6 en fichitas
 rep('function lbLogo(){ return `<div class="llogo" aria-label="Burako 106"><span class="ll-w">Burako</span><span class="ll-t">106</span></div>`; }',
     'function lbLogo(){ return `<div class="llogo" aria-label="Burako 106"><span class="ll-w">BURAKO</span><span class="ll-t" aria-hidden="true"><i class="lt1">1</i><i class="lt0">0</i><i class="lt6">6</i></span></div>`; }')
+# los mensajes escritos sobre los jugadores duran 2 segundos más
+rep("  setTimeout(()=>b.remove(),3600);\n}","  setTimeout(()=>b.remove(),5600);\n}")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

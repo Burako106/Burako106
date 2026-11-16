@@ -112,8 +112,12 @@ body.fun .lp-av{background:#fff3c4!important}
 .lp-edit{position:absolute;right:-4px;bottom:-2px;z-index:2;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;background:#161618;color:#fff;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.25);pointer-events:none}
 body:not(.fun):not(.glass) .lp-edit{border-color:#2a1517;background:#e6b63f;color:#2a1517}
 body.fun .lp-edit{border-color:#141414;box-shadow:2px 2px 0 #141414}
-.cav-it.cav-add{display:grid;place-items:center;font:900 26px/1 var(--f-ui);color:currentColor;background:transparent;border:2px dashed currentColor;opacity:.75}
-.cav-it.cav-add:hover{opacity:1}
+.cav-it.cav-add{display:grid!important;place-items:center;padding:0;font:700 28px/1 var(--f-ui);color:#161618!important;background:#e6e8ee!important;border:0!important;outline:0!important;box-shadow:inset 0 0 0 1px rgba(20,20,30,.08)!important;transition:transform .2s,background .2s}
+.cav-it.cav-add:hover{background:#161618!important;color:#fff!important;transform:scale(1.06)}
+body.fun .cav-it.cav-add{background:#fff!important;color:#141414!important;box-shadow:0 0 0 1.5px #141414,2px 2px 0 #141414!important}
+body.fun .cav-it.cav-add:hover{background:#ffe02a!important;color:#141414!important}
+body:not(.fun):not(.glass) .cav-it.cav-add{background:rgba(255,255,255,.08)!important;color:var(--ink,#f6efe2)!important;box-shadow:inset 0 0 0 1.5px rgba(230,182,63,.55)!important}
+body:not(.fun):not(.glass) .cav-it.cav-add:hover{background:#e6b63f!important;color:#2a1517!important}
 .cavpop.netcav{z-index:2147480000}
 /* confirmación dentro de la mesa (usa los botones de cada diseño) */
 .ltable.netready .lfelt.nr-felt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;line-height:1.15}
@@ -257,6 +261,17 @@ body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.
 /* menú contraído: el 106 debajo, centrado y cerca de BURAKO */
 .lwrap2.slim .lhead-logo .llogo{flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important}
 @media (prefers-reduced-motion:reduce){.llogo .ll-t i{transition:none}}
+/* nota de voz en el globito del jugador */
+.bubble.vnbub{pointer-events:auto;padding:6px 8px}
+.vnb{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border:0;border-radius:999px;background:rgba(0,0,0,.06);color:inherit;cursor:pointer;font:inherit}
+.vnb-ic{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#161618;color:#fff;flex:0 0 28px}
+body.fun .vnb-ic{background:#141414;color:#ffe02a}
+body:not(.fun):not(.glass) .vnb-ic{background:#e6b63f;color:#2a1517}
+.vnb-w{display:flex;align-items:center;gap:2px;height:18px}
+.vnb-w i{display:block;width:3px;height:var(--h);border-radius:2px;background:currentColor;opacity:.55}
+.vnbub.playing .vnb-w i{opacity:.9;animation:vnbw .7s var(--d) ease-in-out infinite alternate}
+@keyframes vnbw{to{transform:scaleY(.35)}}
+@media (prefers-reduced-motion:reduce){.vnbub.playing .vnb-w i{animation:none}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -845,6 +860,30 @@ body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.
   }
   const _psr=placeSeatRings; placeSeatRings=function(){ const r=_psr.apply(this,arguments); try{ topRunline(); topTimer(); }catch(e){} return r; };
 
+  /* ---------- Nota de voz: se puede escuchar desde el globito que sale arriba del jugador ---------- */
+  let vnBubUrl=null;
+  const _postMsg=postMsg; postMsg=function(p,kind,text,extra){ if(kind==='audio') vnBubUrl=extra&&extra.url; return _postMsg.apply(this,arguments); };
+  const _bubble=bubble; bubble=function(p,kind,text){
+    if(kind!=='audio'||!vnBubUrl) return _bubble.apply(this,arguments);
+    const url=vnBubUrl; vnBubUrl=null;
+    const a=document.querySelector('[data-av="'+p+'"]'); if(!a) return; const r=a.getBoundingClientRect(); if(!r.width) return;
+    document.querySelectorAll('.bubble[data-p="'+p+'"]').forEach(x=>x.remove());
+    const b=document.createElement('div'); b.className='bubble vnbub t'+team(p); b.dataset.p=p;
+    const bars=[5,9,14,8,12,16,10,6,13,9,15,7,11,6];
+    b.innerHTML='<button class="vnb" aria-label="Escuchar nota de voz"><span class="vnb-ic"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path class="vp" d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span><span class="vnb-w" aria-hidden="true">'+bars.map((x,i)=>'<i style="--h:'+x+'px;--d:'+(i*60)+'ms"></i>').join('')+'</span></button>';
+    document.body.appendChild(b);
+    const bw=b.offsetWidth, bh=b.offsetHeight; let x=r.left+r.width/2-bw/2; x=Math.max(8,Math.min(innerWidth-bw-8,x));
+    let y=r.top-bh-10; if(y<8){ y=r.bottom+10; b.classList.add('below'); }
+    b.style.left=x+'px'; b.style.top=y+'px'; b.style.setProperty('--tx',(r.left+r.width/2-x)+'px');
+    let au=null, t=setTimeout(()=>b.remove(),9000);
+    const ic=b.querySelector('.vp');
+    b.querySelector('.vnb').addEventListener('click',e=>{ e.stopPropagation(); clearTimeout(t);
+      if(au&&!au.paused){ au.pause(); return; }
+      if(!au){ au=new Audio(url); au.onplay=()=>{ b.classList.add('playing'); ic.setAttribute('d','M7 5h3.5v14H7zM13.5 5H17v14h-3.5z'); };
+        const stop=()=>{ b.classList.remove('playing'); ic.setAttribute('d','M8 5.5v13l10.5-6.5z'); clearTimeout(t); t=setTimeout(()=>b.remove(),4000); };
+        au.onpause=stop; au.onended=stop; }
+      try{ au.currentTime=au.ended?0:au.currentTime; au.play(); }catch(x){} });
+  };
   /* ---------- Bajar y tirar solo con clics: elegís fichas y tocás tu zona (bajar) o el centro de la mesa (tirar) ---------- */
   let cp=null;
   document.addEventListener('pointerdown',e=>{ cp={x:e.clientX,y:e.clientY,t:e.target,drag:!!drag}; },true);
