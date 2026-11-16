@@ -40,7 +40,7 @@ rep("${me?'':'<i class=\"lbot\" title=\"Robot\">🤖</i>'}", "${me||s.real?'':'<
 rep("${x==='me'?'':'<i class=\"hbot\">🤖</i>'}", "${x==='me'||x.real?'':'<i class=\"hbot\">🤖</i>'}")
 # perfil: tocar tu imagen para elegir tu personaje
 rep('<div class="lp-head"><span class="lav big">${lbAv(null,true)}</span>',
-    '<div class="lp-head"><button class="lav big lp-av" data-act="pickme" aria-label="Cambiar tu personaje" title="Cambiar tu personaje">${lbAv(null,true)}<i class="lp-edit" aria-hidden="true">✎</i></button>')
+    '<div class="lp-head"><span class="lp-avw" data-act="pickme"><button class="lav big lp-av" data-act="pickme" aria-label="Cambiar tu personaje" title="Cambiar tu personaje">${lbAv(null,true)}</button><i class="lp-edit" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></i></span>')
 # botón para volver a la partida contra la máquina: con 🤖
 rep('<span class="lplus"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10.2-6.8c.6-.4.6-1.2 0-1.6L9.6 4.4C8.9 3.9 8 4.4 8 5.2z" fill="currentColor"/></svg></span><b>Volver a mi partida</b>',
     '<span class="lplus">${S.kind===\'online\'?\'<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10.2-6.8c.6-.4.6-1.2 0-1.6L9.6 4.4C8.9 3.9 8 4.4 8 5.2z" fill="currentColor"/></svg>\':\'🤖\'}</span><b>${S.kind===\'online\'?\'Volver a la mesa\':\'Seguir partida\'}</b>')

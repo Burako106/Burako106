@@ -104,9 +104,16 @@ body.fun .top-seat .seat .seat-info,body.fun .top-seat .seat.turnring .seat-info
 .net-play{font-size:22px!important;padding:16px 18px!important;font-weight:900!important;animation:netpop 1.4s ease-in-out infinite}
 .net-left{margin:0;font-size:14px;opacity:.75}
 #netready .btn{width:100%}
-.lp-av{position:relative;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;flex:0 0 auto}
-.lp-av:hover{transform:scale(1.04)}
-.lp-edit{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:14px;background:#fff;color:#1d1a16;border:2px solid #1d1a16;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.lp-avw{position:relative;display:inline-block;flex:0 0 auto;cursor:pointer}
+.lp-av{position:relative;padding:0;border:0;cursor:pointer;border-radius:50%;background:#dcdfe6!important;transition:transform .2s}
+.lp-avw:hover .lp-av{transform:scale(1.04)}
+body:not(.fun):not(.glass) .lp-av{background:#5a4441!important}
+body.fun .lp-av{background:#fff3c4!important}
+.lp-edit{position:absolute;right:-4px;bottom:-2px;z-index:2;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-style:normal;background:#161618;color:#fff;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.25);pointer-events:none}
+body:not(.fun):not(.glass) .lp-edit{border-color:#2a1517;background:#e6b63f;color:#2a1517}
+body.fun .lp-edit{border-color:#141414;box-shadow:2px 2px 0 #141414}
+.cav-it.cav-add{display:grid;place-items:center;font:900 26px/1 var(--f-ui);color:currentColor;background:transparent;border:2px dashed currentColor;opacity:.75}
+.cav-it.cav-add:hover{opacity:1}
 .cavpop.netcav{z-index:2147480000}
 /* confirmación dentro de la mesa (usa los botones de cada diseño) */
 .ltable.netready .lfelt.nr-felt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;line-height:1.15}
@@ -309,7 +316,7 @@ body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.
   function pickMe(el){
     const old=document.getElementById('cavpop'); if(old){ old.remove(); return; }
     const cur=ensureMyCav(), d=document.createElement('div'); d.id='cavpop'; d.className='cavpop netcav'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Elegí tu personaje');
-    d.innerHTML='<span class="label">Elegí tu personaje</span><div class="cav-grid">'+CC_AV.b.map((src,i)=>'<button class="cav-it'+(i===cur?' on':'')+'" data-act="mypick" data-v="'+i+'" style="--d:'+(i*28)+'ms" aria-label="Personaje '+(i+1)+'"><img src="'+src+'" alt=""></button>').join('')+'</div>';
+    d.innerHTML='<span class="label">Elegí tu personaje</span><div class="cav-grid">'+CC_AV.b.map((src,i)=>'<button class="cav-it'+(i===cur?' on':'')+'" data-act="mypick" data-v="'+i+'" style="--d:'+(i*28)+'ms" aria-label="Personaje '+(i+1)+'"><img src="'+src+'" alt=""></button>').join('')+'<button class="cav-it cav-add" data-act="myphoto" aria-label="Elegir mi propia foto" title="Elegir mi propia foto">+</button></div>';
     document.body.appendChild(d);
     const r=el.getBoundingClientRect(), w=d.offsetWidth, hh=d.offsetHeight;
     d.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left))+'px';
@@ -318,6 +325,8 @@ body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.
   function setMine(i){
     myCav=i; try{ localStorage.setItem('burako-cav',String(i)); localStorage.removeItem('burako-photo'); }catch(e){} try{ photo=null; }catch(e){}
     if(S&&S.cav&&!online()){ try{ setMyCav(i); }catch(e){} }
+    // en medio de una partida online: los demás ven el cambio al instante
+    if(online()&&S.seatInfo){ const c=S.seatInfo.findIndex(s=>s&&s.pid===myPid()); if(c>=0){ S.seatInfo[c].cav=i; applySeats(); render(); pushNow(true); } }
     // si estoy sentado esperando en una mesa, que los demás vean el cambio
     if(NET.code&&!online()&&NET.seats){ const s=NET.seats.find(x=>x&&x.pid===myPid()); if(s){ s.cav=i; if(NET.role==='host'){ sendSeats(); list(); } else send({t:'hello',...myWho()}); } }
     const c=document.getElementById('cavpop'); if(c) c.remove();
@@ -964,6 +973,7 @@ body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.
     if(a==='netnoplay'){ if(HOUSE){ houseOut('Saliste de la mesa. No se te descontó nada.'); return; } noPlay(); return; }
     if(a==='pickme'){ pickMe(el); return; }
     if(a==='mypick'){ setMine(+el.dataset.v); return; }
+    if(a==='myphoto'){ const c=document.getElementById('cavpop'); if(c) c.remove(); try{ pickPhoto(); }catch(e){} return; }
     if(a==='netwa'){ const L=link(); window.open('https://wa.me/?text='+encodeURIComponent('¡Vení a jugar al Burako conmigo! Entrá acá: '+L+' (la clave es la que te pasé)'),'_blank'); return; }
     if(a==='netcopy'){ const L=link(), b=el; const done=()=>{ if(b){ b.textContent='¡Link copiado!'; setTimeout(()=>{ b.textContent='Copiar link'; },1800); } };
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(L).then(done,()=>prompt('Copiá este link:',L)); else prompt('Copiá este link:',L); return; }
@@ -1266,6 +1276,7 @@ body:not(.fun):not(.glass) .llogo .ll-t .lt1{color:#c8392f} body:not(.fun):not(.
 
   /* ---------- Al abrir la página ---------- */
   function boot(){
+    try{ ensureMyCav(); }catch(e){}
     const q=new URLSearchParams(location.search), code=(q.get('mesa')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
     // Volver a una partida online que estaba en curso (recargó la página)
     if(S&&S.kind==='online'&&S.net&&S.net.code&&S.seatInfo&&(!code||code===S.net.code)){
