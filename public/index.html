@@ -5286,7 +5286,7 @@ function renderModal(){
   if(quitOpen){
     m.innerHTML=`<div class="card" role="dialog" aria-label="Abandonar partida"><h2>¿Abandonar la partida?</h2>
       <p>Se pierde la mano en curso y el puntaje acumulado. Después podés empezar una partida nueva.</p>
-      <div class="controls"><button class="btn primary" data-act="quityes" style="background:var(--op);border-color:var(--op);color:#3d0d08">Abandonar</button><button class="btn" data-act="quitno">Seguir jugando</button></div></div>`;
+      <div class="controls"><button class="btn primary" data-act="quityes" style="background:var(--op);border-color:var(--op);color:#fff">Abandonar</button><button class="btn" data-act="quitno">Seguir jugando</button></div></div>`;
     m.hidden=false; return;
   }
   if(setupOpen){
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794861890';</script>
+<script>window.BURAKO_BUILD='1794862924';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6340,6 +6340,11 @@ body:not(.fun):not(.glass) .vnb-ic{background:#e6b63f;color:#2a1517}
 .vnbub.playing .vnb-w i{opacity:.9;animation:vnbw .7s var(--d) ease-in-out infinite alternate}
 @keyframes vnbw{to{transform:scaleY(.35)}}
 @media (prefers-reduced-motion:reduce){.vnbub.playing .vnb-w i{animation:none}}
+/* «Abandonar»: rojo un poco más intenso para que el texto blanco se lea bien */
+body:not(.fun) [data-act="quityes"]{background:#d93a2f!important;border-color:#d93a2f!important;color:#fff!important}
+body:not(.fun) [data-act="quityes"]:hover{background:#c22f25!important;border-color:#c22f25!important}
+/* Classic: «¡Tu turno!» con texto oscuro sobre el celeste */
+body:not(.fun):not(.glass) .turn-cue{color:#0b1f3d!important;text-shadow:none!important}
 </style>
 <script id="net-js">
 /* ==========================================================================

@@ -89,6 +89,8 @@ rep('function lbLogo(){ return `<div class="llogo" aria-label="Burako 106"><span
     'function lbLogo(){ return `<div class="llogo" aria-label="Burako 106"><span class="ll-w">BURAKO</span><span class="ll-t" aria-hidden="true"><i class="lt1">1</i><i class="lt0">0</i><i class="lt6">6</i></span></div>`; }')
 # los mensajes escritos sobre los jugadores duran 2 segundos más
 rep("  setTimeout(()=>b.remove(),3600);\n}","  setTimeout(()=>b.remove(),5600);\n}")
+# «Abandonar»: texto blanco sobre el rojo para que se lea bien
+rep('data-act="quityes" style="background:var(--op);border-color:var(--op);color:#3d0d08"','data-act="quityes" style="background:var(--op);border-color:var(--op);color:#fff"')
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
