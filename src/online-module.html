@@ -439,7 +439,7 @@ body:not(.fun):not(.glass) .turn-cue{color:#0b1f3d!important;text-shadow:none!im
       if(!online()||typeof m.seat!=='number'||typeof m.data!=='string') return; const p=toView(m.seat); if(p===0) return;
       try{ const bin=atob(m.data), u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
         const url=URL.createObjectURL(new Blob([u8],{type:String(m.mime||'audio/webm')}));
-        postMsg(p,'audio','',{url,dur:m.dur||1}); vnPlay(url); }catch(e){}
+        NET.vnAuto=url; postMsg(p,'audio','',{url,dur:m.dur||1}); if(NET.vnAuto===url){ NET.vnAuto=null; vnPlay(url); } }catch(e){}
       return;
     }
     if(m.t==='chat'){
@@ -880,14 +880,15 @@ body:not(.fun):not(.glass) .turn-cue{color:#0b1f3d!important;text-shadow:none!im
     const bw=b.offsetWidth, bh=b.offsetHeight; let x=r.left+r.width/2-bw/2; x=Math.max(8,Math.min(innerWidth-bw-8,x));
     let y=r.top-bh-10; if(y<8){ y=r.bottom+10; b.classList.add('below'); }
     b.style.left=x+'px'; b.style.top=y+'px'; b.style.setProperty('--tx',(r.left+r.width/2-x)+'px');
-    let au=null, t=setTimeout(()=>b.remove(),9000);
-    const ic=b.querySelector('.vp');
-    b.querySelector('.vnb').addEventListener('click',e=>{ e.stopPropagation(); clearTimeout(t);
-      if(au&&!au.paused){ au.pause(); return; }
-      if(!au){ au=new Audio(url); au.onplay=()=>{ b.classList.add('playing'); ic.setAttribute('d','M7 5h3.5v14H7zM13.5 5H17v14h-3.5z'); };
-        const stop=()=>{ b.classList.remove('playing'); ic.setAttribute('d','M8 5.5v13l10.5-6.5z'); clearTimeout(t); t=setTimeout(()=>b.remove(),4000); };
-        au.onpause=stop; au.onended=stop; }
-      try{ au.currentTime=au.ended?0:au.currentTime; au.play(); }catch(x){} });
+    // el globito queda hasta que termina la nota de voz y 2 segundos más
+    let t=null; const later=ms=>{ clearTimeout(t); t=setTimeout(()=>b.remove(),ms); };
+    const ic=b.querySelector('.vp'), au=new Audio(url);
+    au.onplay=()=>{ clearTimeout(t); b.classList.add('playing'); ic.setAttribute('d','M7 5h3.5v14H7zM13.5 5H17v14h-3.5z'); };
+    au.onpause=()=>{ b.classList.remove('playing'); ic.setAttribute('d','M8 5.5v13l10.5-6.5z'); if(!au.ended) later(8000); };
+    au.onended=()=>{ b.classList.remove('playing'); ic.setAttribute('d','M8 5.5v13l10.5-6.5z'); later(2000); };
+    b.querySelector('.vnb').addEventListener('click',ev=>{ ev.stopPropagation(); if(!au.paused){ au.pause(); return; } if(au.ended) au.currentTime=0; au.play().catch(()=>{}); });
+    if(NET.vnAuto===url&&!(S&&S.sound===false)){ NET.vnAuto=null; au.play().catch(()=>later(12000)); }
+    else later(12000);
   };
   /* ---------- Bajar y tirar solo con clics: elegís fichas y tocás tu zona (bajar) o el centro de la mesa (tirar) ---------- */
   let cp=null;
