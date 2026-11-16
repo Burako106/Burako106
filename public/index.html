@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794869907';</script>
+<script>window.BURAKO_BUILD='1794871362';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6374,8 +6374,18 @@ body.fun .nr-match{border-bottom:1.5px solid #141414}
 /* confirmación al centro: avatares 25% más grandes */
 #nrfocus .lseat .lav{transform:scale(1.25);transform-origin:50% 80%}
 /* confirmación al centro: el modo («2 vs 2») bien grande, un poco menos que «Jugar» */
-#nrfocus .lbadge{font-size:23px;padding:9px 28px;top:-6px}
-#nrfocus .nr-match{padding-top:48px}
+#nrfocus .lbadge{font-size:23px;padding:9px 28px;transform:translate(-50%,-50%)!important;z-index:8!important}
+#nrfocus .nr-match{padding-top:20px}
+/* confirmación al centro: sin saltos al confirmar, más aire a los costados y borde que corre con la cuenta */
+#nrfocus .lcard{animation:none!important;padding-left:34px!important;padding-right:34px!important;padding-top:30px!important}
+#nrfocus .nrf-in{animation:nrfin .5s cubic-bezier(.2,1.3,.4,1) both}
+#nrfocus.out .nrf-in{animation:nrfout .28s ease-in both}
+#nrfocus .lcard::after{content:""!important;position:absolute;inset:-3px!important;padding:5px!important;border-radius:inherit!important;pointer-events:none;z-index:6;
+  background:conic-gradient(from 0deg,#161618 calc(var(--bp,100)*1%),transparent 0)!important;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:none!important;filter:none!important}
+body.fun #nrfocus .lcard::after{background:conic-gradient(from 0deg,#141414 calc(var(--bp,100)*1%),transparent 0)!important}
+body:not(.fun):not(.glass) #nrfocus .lcard::after{background:conic-gradient(from 0deg,#e6b63f calc(var(--bp,100)*1%),transparent 0)!important}
+@media (prefers-reduced-motion:reduce){#nrfocus .nrf-in{animation:none!important}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -6644,21 +6654,27 @@ body.fun .nr-match{border-bottom:1.5px solid #141414}
     const i=LT.findIndex(x=>x.net===NET.code), t=tt||(i>=0?LT[i]:myTable()); let html='';
     try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'</div>'; }catch(e){ return false; }
     let f=document.getElementById('nrfocus');
-    if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
-    const w=f.querySelector('.nrf-wrap'); if(w._h!==html){ w.innerHTML=html; w._h=html; }
+    if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"><div class="nrf-in"></div></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
+    const w=f.querySelector('.nrf-in'); if(w._h!==html){ w.innerHTML=html; w._h=html; placeBadge(w); readyTickFn(); }
     document.body.classList.add('nrfocus'); return true;
   }
+  // la etiqueta del modo va centrada sobre el borde de arriba del contenedor
+  function placeBadge(w){ try{ const card=w.querySelector('.lcard'), b=card&&card.querySelector('.lbadge'), lt=card&&card.querySelector('.ltable'); if(!b||!lt) return;
+    const k=card.getBoundingClientRect().width/card.offsetWidth||1; b.style.top=(-(lt.getBoundingClientRect().top-card.getBoundingClientRect().top)/k)+'px'; }catch(e){} }
   function readyTickFn(){
     const until=HOUSE?HOUSE.until:NET.readyUntil, left=Math.max(0,(until-Date.now())/1000);
     document.querySelectorAll('.nr-count').forEach(el=>{ const b=el.querySelector('b'); if(b) b.textContent=Math.ceil(left); el.classList.toggle('low',left<=3); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
     const b=document.querySelector('#netready .net-left b'); if(b) b.textContent=Math.ceil(left);
+    const going=HOUSE?HOUSE.going:NET.going, pct=going?100:(left/(READY_MS/1000)*100);
+    document.querySelectorAll('#nrfocus .lcard').forEach(el=>el.style.setProperty('--bp',pct.toFixed(2)));
     if(!until||(HOUSE&&HOUSE.going)) clearInterval(NET.readyTick);
   }
   function readyUI(){
+    if(HOUSE) return; // la mesa de la casa maneja su propia confirmación
     if(online()||(!NET.readyUntil&&!NET.going)){ closeReady(); clearInterval(NET.readyTick); try{ if(lobbyOpen&&!online()){ mergeMine(); renderLGrid(); } }catch(e){} return; }
     try{ if(lobbyOpen){ mergeMine(); renderLGrid(); } }catch(e){}
     if(!focusUI()) readyModal();
-    clearInterval(NET.readyTick); if(NET.readyUntil){ NET.readyTick=setInterval(readyTickFn,200); readyTickFn(); }
+    clearInterval(NET.readyTick); if(NET.readyUntil){ NET.readyTick=setInterval(readyTickFn,50); readyTickFn(); }
     setTimeout(()=>{ (NET.seats||[]).forEach(s=>{ if(s&&(s.t==='b'||(NET.readyState||{})[s.pid])) (NET.stamped=NET.stamped||new Set()).add(s.pid||s.id); }); },700);
   }
   function readyModal(){
@@ -7212,7 +7228,7 @@ body.fun .nr-match{border-bottom:1.5px solid #141414}
     s=s.replace('<div class="ltable','<div class="ltable netmine netready');
     s=s.replace(/(<span class="lseat[^"]*" data-si="(\d)"[^>]*>)/g,(all,open,i)=>{ const x=list[+i]; return x&&x.ok?open+'<i class="nstamp'+(seen.has(x.key)?' old':'')+'"><b>✓</b>Listo</i>':all; });
     const left=Math.max(0,Math.ceil((R.until-Date.now())/1000));
-    const ring='<span class="nr-count" style="--p:100" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
+    const ring='<span class="nr-count" style="--p:'+Math.max(0,Math.min(100,(R.until-Date.now())/READY_MS*100)).toFixed(1)+'" aria-label="Segundos restantes"><i class="nr-trk"></i><i class="nr-arc"></i><b>'+left+'</b></span>';
     const big=R.going?'<span class="nr-go"><b>✓</b> Todos listos</span>':R.me?'<span class="nr-done"><b>✓</b> Listo'+ring+'</span>':'<button class="btn primary nr-play" data-act="netready"><span>Jugar</span>'+ring+'</button>';
     s=s.replace(/<div class="lfelt">[\s\S]*?<\/div>/,'<div class="lfelt nr-felt"><span class="nr-t1">¡Mesa completa!</span><span class="nr-t2">'+(R.going?'Empieza la partida…':R.me?'Esperando a los demás…':'¿Listo para jugar?')+'</span></div>');
     if(R.match) s=s.replace(/(<div class="ltable[^>]*>)/,'$1'+R.match);
@@ -7243,7 +7259,7 @@ body.fun .nr-match{border-bottom:1.5px solid #141414}
     if(!HOUSE){ closeReady(); return; }
     try{ if(lobbyOpen) renderLGrid(); }catch(e){}
     focusUI(HOUSE.t);
-    clearInterval(NET.readyTick); if(!HOUSE.going){ NET.readyTick=setInterval(readyTickFn,200); readyTickFn(); }
+    clearInterval(NET.readyTick); if(!HOUSE.going){ NET.readyTick=setInterval(readyTickFn,50); readyTickFn(); }
     setTimeout(()=>{ if(HOUSE) houseList(HOUSE).forEach(x=>{ if(x&&x.ok) NET.stamped.add(x.key); }); },700);
   }
   function houseCheck(){
