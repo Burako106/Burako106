@@ -71,6 +71,19 @@ rep(".el-fb .el-ic{background:#fff;color:#1877f2;border-radius:50%;font-size:18p
 rep("'¡Bienvenido al club! Por ahora juegan robots, pronto llegan las personas.',","'¡Bienvenidos al club! 👋',")
 # mesas de la casa: al llenarse, confirmación con «Jugar» (en vez de la cuenta 4-3-2-1)
 rep("    if(i<0){ t.cd=4; t.revealAt=Date.now();","    if(i<0){ if(window.BURAKO_NET&&BURAKO_NET.houseReady){ BURAKO_NET.houseReady(t); return; } t.cd=4; t.revealAt=Date.now();")
+# de a tres: cuando se acaba el mazo, pasa UN muerto por vez (no todos juntos)
+rep("""  const all=[].concat(...S.muertos); S.muertos=S.muertos.map(()=>[]);
+  for(let i=all.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]]; }
+  S.mazo=all; S.muertoMazo=true;
+  const src=[...document.querySelectorAll('.muertos-col .stack.neu')].map(e=>e.getBoundingClientRect());
+  requestAnimationFrame(()=>requestAnimationFrame(()=>muertoToMazo(src)));
+  setTimeout(()=>{ say('Se acabó el mazo: los muertos que quedaban pasan a ser el mazo.',false); toast('Se acabó el mazo: los muertos pasan al mazo'); },50);""",
+"""  const idx=S.muertos.map((m,i)=>m.length?i:-1).filter(i=>i>=0), k=idx[Math.floor(Math.random()*idx.length)], els=[...document.querySelectorAll('.muertos-col .stack.neu')];
+  const e=els[idx.indexOf(k)]||els[k], src=e?[e.getBoundingClientRect()]:[];
+  S.mazo=S.muertos[k]; S.muertos[k]=[]; S.muertoMazo=true;
+  const left=idx.length-1;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>muertoToMazo(src)));
+  setTimeout(()=>{ const msg=left?'Se acabó el mazo: un muerto pasa a ser el mazo'+(left===1?' (queda 1 muerto).':' (quedan '+left+' muertos).'):'Se acabó el mazo: el último muerto pasa a ser el mazo.'; say(msg,false); toast(msg.replace('Se acabó el mazo: ','')); },50);""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

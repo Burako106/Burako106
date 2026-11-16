@@ -4306,12 +4306,12 @@ function refill3(){
     return true;
   }
   if(!S.muertos.some(m=>m.length)) return false;
-  const all=[].concat(...S.muertos); S.muertos=S.muertos.map(()=>[]);
-  for(let i=all.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]]; }
-  S.mazo=all; S.muertoMazo=true;
-  const src=[...document.querySelectorAll('.muertos-col .stack.neu')].map(e=>e.getBoundingClientRect());
+  const idx=S.muertos.map((m,i)=>m.length?i:-1).filter(i=>i>=0), k=idx[Math.floor(Math.random()*idx.length)], els=[...document.querySelectorAll('.muertos-col .stack.neu')];
+  const e=els[idx.indexOf(k)]||els[k], src=e?[e.getBoundingClientRect()]:[];
+  S.mazo=S.muertos[k]; S.muertos[k]=[]; S.muertoMazo=true;
+  const left=idx.length-1;
   requestAnimationFrame(()=>requestAnimationFrame(()=>muertoToMazo(src)));
-  setTimeout(()=>{ say('Se acabó el mazo: los muertos que quedaban pasan a ser el mazo.',false); toast('Se acabó el mazo: los muertos pasan al mazo'); },50);
+  setTimeout(()=>{ const msg=left?'Se acabó el mazo: un muerto pasa a ser el mazo'+(left===1?' (queda 1 muerto).':' (quedan '+left+' muertos).'):'Se acabó el mazo: el último muerto pasa a ser el mazo.'; say(msg,false); toast(msg.replace('Se acabó el mazo: ','')); },50);
   return true;
 }
 function muertoToMazo(src){
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794851726';</script>
+<script>window.BURAKO_BUILD='1794854044';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
