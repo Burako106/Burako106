@@ -91,6 +91,8 @@ rep('function lbLogo(){ return `<div class="llogo" aria-label="Burako 106"><span
 rep("  setTimeout(()=>b.remove(),3600);\n}","  setTimeout(()=>b.remove(),5600);\n}")
 # «Abandonar»: texto blanco sobre el rojo para que se lea bien
 rep('data-act="quityes" style="background:var(--op);border-color:var(--op);color:#3d0d08"','data-act="quityes" style="background:var(--op);border-color:var(--op);color:#fff"')
+# avisos: duran según el largo del texto (mínimo 3,2 s)
+rep("  document.body.appendChild(t); setTimeout(()=>t.remove(),2300);\n  tone([330,262],'square');","  document.body.appendChild(t); setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),260); },Math.max(3200,String(msg).length*65));\n  tone([330,262],'square');")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
