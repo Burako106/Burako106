@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794875224';</script>
+<script>window.BURAKO_BUILD='1794876089';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7023,19 +7023,27 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
   };
   /* ---------- Mantener apretada una ficha: se eligen solas las que siguen (escalera o trío) ---------- */
   const LP={t:null,fired:0};
+  // sigue hacia la derecha: escalera (mismo color, número siguiente) o trío (mismo número); acepta un comodín (★ o 2) por serie
   function runFrom(id){
     const row=(S.rack||[]).find(r=>r.includes(id)); if(!row) return [id];
     const T=x=>S.hands[0].find(t=>t.id===x), first=T(id); if(!first) return [id];
-    const out=[id]; let mode=null, prev=first;
-    for(let k=row.indexOf(id)+1;k<row.length;k++){
-      const x=row[k]; if(x==null) break; const t=T(x); if(!t) break;
-      const isTrio=t.n===prev.n&&t.n!==0, isRun=t.c===first.c&&t.n===prev.n+1&&t.n!==0;
-      if(!mode) mode=isTrio?'trio':isRun?'run':null;
-      if(mode==='trio'&&isTrio){ out.push(x); prev=t; continue; }
-      if(mode==='run'&&isRun){ out.push(x); prev=t; continue; }
-      break;
-    }
-    return out;
+    const wild=t=>t.n===0||t.n===2;
+    const seq=[]; for(let k=row.indexOf(id)+1;k<row.length;k++){ const x=row[k]; if(x==null) break; const t=T(x); if(!t) break; seq.push(t); }
+    if(wild(first)) return [id];
+    const tryMode=mode=>{
+      const out=[id]; let val=first.n, wilds=0;
+      for(const t of seq){
+        const want=mode==='run'?val+1:val;
+        const natural=mode==='run'?(t.n===want&&t.c===first.c&&t.n!==0):(t.n===first.n);
+        if(natural){ out.push(t.id); val=want; continue; }
+        if(wild(t)&&wilds<1&&(mode==='trio'||want<=13)){ wilds++; out.push(t.id); val=want; continue; }
+        break;
+      }
+      // un comodín suelto al final de un par no alcanza para decidir; se queda igual
+      return out;
+    };
+    const a=tryMode('run'), b=tryMode('trio');
+    return b.length>a.length?b:a;
   }
   document.addEventListener('pointerdown',e=>{
     clearTimeout(LP.t); const el=e.target.closest&&e.target.closest('.htile'); if(!el||e.button>0||!S||lobbyOpen) return;
