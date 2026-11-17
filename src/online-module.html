@@ -441,6 +441,34 @@ html body.fun .icon-btn.off::after{content:"";position:absolute;left:50%;top:50%
 /* Fun: 123 centrado y chat con aire en los botones de la fila */
 html body.fun .icon-btn .ico-num.fi-host{margin:0!important;line-height:0!important;align-self:center;transform:translateY(-3px)!important}
 html body.fun button.chat-btn2>svg.fi{width:62%!important;height:62%!important}
+/* Chat: botón "+" de emojis y selector */
+.chat-react .emo-more{font:800 20px/1 var(--f-ui,system-ui);width:34px;height:34px;padding:0!important;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line)!important;color:var(--ink);background:transparent}
+.chat-react .emo-more:hover,.chat-react .emo-more.on{transform:none!important;background:rgba(127,127,127,.14)}
+.emo-pick{border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:6px;animation:emoIn .18s ease}
+@keyframes emoIn{from{opacity:0;transform:translateY(-4px)}}
+.emo-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.emo-tab{flex:1;font-size:18px;line-height:1;padding:5px 0;border-radius:8px;border:0;background:transparent;opacity:.55;cursor:pointer}
+.emo-tab.on{opacity:1;background:rgba(127,127,127,.16)}
+.emo-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;max-height:148px;overflow-y:auto;overscroll-behavior:contain}
+.emo-grid button{font-size:21px;line-height:1;padding:5px 0;border:0;border-radius:8px;background:transparent;cursor:pointer;transition:transform .12s,background .12s}
+.emo-grid button:hover{transform:scale(1.18);background:rgba(127,127,127,.14)}
+body.glass .emo-pick{background:rgba(255,255,255,.55);border-color:rgba(20,20,30,.1)}
+body.glass .chat-react .emo-more{border-color:rgba(20,20,30,.14)!important;color:#161618}
+body:not(.fun):not(.glass) .emo-pick{background:rgba(0,0,0,.25);border-color:rgba(230,182,63,.35)}
+body:not(.fun):not(.glass) .chat-react .emo-more{border-color:rgba(230,182,63,.5)!important;color:#e6b63f}
+html body.fun .emo-pick{background:#fff6d6;border:0;outline:1.5px solid #141414;outline-offset:-1.5px}
+html body.fun .emo-tabs{border-bottom:1.5px solid #141414}
+html body.fun .emo-tab.on{background:#ffe02a;outline:1.5px solid #141414;outline-offset:-1.5px}
+html body.fun .drawer.chat .chat-react button.emo-more,html body.fun .chat-react button.emo-more{background:#fff!important;outline:1.5px solid #141414!important;outline-offset:-1.5px;border:0!important;color:#141414}
+html body.fun .drawer.chat .chat-react button.emo-more:hover,html body.fun .drawer.chat .chat-react button.emo-more.on,html body.fun .chat-react button.emo-more:hover{background:#ffe02a!important;transform:none}
+/* Chat: borde de arriba para cambiar el alto */
+.drawer.chat .chat-rsz{position:absolute;left:24px;right:24px;top:0;height:12px;cursor:ns-resize;z-index:5;touch-action:none}
+.drawer.chat .chat-rsz::before{content:"";position:absolute;left:50%;top:4px;width:44px;height:4px;border-radius:4px;background:currentColor;opacity:0;transform:translateX(-50%);transition:opacity .15s,width .15s}
+.drawer.chat .chat-rsz:hover::before,.drawer.chat.rsz-on .chat-rsz::before{opacity:.45;width:60px}
+html body.fun .drawer.chat .chat-rsz::before{background:#141414}
+.drawer.chat.sized{max-height:none!important}
+.drawer.chat.sized .chat-log{max-height:none!important;flex:1 1 auto;min-height:80px}
+.drawer.chat.rsz-on{transition:none!important;user-select:none}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -1788,5 +1816,49 @@ html body.fun button.chat-btn2>svg.fi{width:62%!important;height:62%!important}
   new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(()=>{ pend=0; apply(); }); })
     .observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-label']});
   window.fiApply=apply; apply(); addEventListener('resize',()=>{ if(!pend) pend=requestAnimationFrame(()=>{ pend=0; apply(); }); });
+})();
+
+/* ===== Chat: selector con todos los emojis + cambiar el alto arrastrando el borde de arriba ===== */
+(function(){
+  const CATS=[
+    ['😀','😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬😮‍💨🤥😌😔😪🤤😴😷🤒🤕🤢🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈💀💩🤡👻👽🤖😺😹😻😼🙀😿😾'],
+    ['👍','👋🤚✋🖖👌🤌🤏✌️🤞🤟🤘🤙👈👉👆👇☝️👍👎✊👊🤛🤜👏🙌👐🤲🤝🙏💪🦾🧠👀👁️👅👄💋🫶🙋🙅🙆🤷🤦💁🙇🧏'],
+    ['❤️','❤️🧡💛💚💙💜🖤🤍🤎💔❣️💕💞💓💗💖💘💝💯💢💥💫💦💨🕳️💬💭💤✨⭐🌟🔥⚡🌈☀️🌙'],
+    ['🎉','🎉🎊🎈🎁🏆🥇🥈🥉🏅🎯🎲🧩♟️🃏🀄🎮🎰🍀🪄🔮🎵🎶🎤🎧📣📢🔔⏰⏳⌛🕐💰💸💵🪙💎👑🎩🧉☕🍵🍺🍷🥂🍾🍕🍔🍟🌭🌮🥟🥐🍩🍪🎂🍰🧁🍫🍿🧀🥩🍎🍓🍉🍋'],
+    ['🐶','🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐔🐧🐦🦆🦉🦄🐝🐛🦋🐌🐢🐍🐙🦀🐬🐳🦈🐊🦒🦘🐘🦥🐾🌵🌲🌴🌸🌻🌹🍄🌊']];
+  const split=s=>{ try{ return [...new Intl.Segmenter('es',{granularity:'grapheme'}).segment(s)].map(x=>x.segment); }catch(e){ return Array.from(s); } };
+  const ALL=CATS.map(([ic,s])=>[ic,split(s)]);
+  let cat=0;
+  const grid=()=>ALL[cat][1].map(e=>`<button type="button" data-act="emoji" data-v="${e}" aria-label="Mandar ${e}">${e}</button>`).join('');
+  function pickerH(){ return `<div class="emo-pick" role="dialog" aria-label="Emojis"><div class="emo-tabs">${ALL.map(([ic],i)=>`<button type="button" class="emo-tab${i===cat?' on':''}" data-ecat="${i}" aria-label="Categoría">${ic}</button>`).join('')}</div><div class="emo-grid">${grid()}</div></div>`; }
+  function close(root){ (root||document).querySelectorAll('.emo-pick').forEach(p=>p.remove()); document.querySelectorAll('.emo-more').forEach(b=>{ b.classList.remove('on'); b.setAttribute('aria-expanded','false'); }); }
+  document.addEventListener('click',e=>{
+    const more=e.target.closest&&e.target.closest('.emo-more');
+    if(more){ e.preventDefault(); e.stopPropagation(); const row=more.closest('.chat-react'); const open=row.nextElementSibling&&row.nextElementSibling.classList.contains('emo-pick');
+      close(); if(!open){ row.insertAdjacentHTML('afterend',pickerH()); more.classList.add('on'); more.setAttribute('aria-expanded','true'); } return; }
+    const tab=e.target.closest&&e.target.closest('.emo-tab');
+    if(tab){ e.preventDefault(); e.stopPropagation(); cat=+tab.dataset.ecat; const p=tab.closest('.emo-pick'); p.querySelectorAll('.emo-tab').forEach((t,i)=>t.classList.toggle('on',i===cat)); p.querySelector('.emo-grid').innerHTML=grid(); p.querySelector('.emo-grid').scrollTop=0; return; }
+    const em=e.target.closest&&e.target.closest('.emo-pick [data-act="emoji"]');
+    if(em){ setTimeout(()=>close(),0); return; }
+    if(!(e.target.closest&&e.target.closest('.emo-pick'))) close();
+  },true);
+  addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.querySelector('.emo-pick')) close(); });
+
+  /* alto del chat: se arrastra la línea de arriba */
+  const KEY='burako-chath'; let H=0; try{ H=+localStorage.getItem(KEY)||0; }catch(e){}
+  const maxH=d=>{ const b=parseFloat(d.style.bottom)||16; return Math.max(260,innerHeight-b-8); };
+  function setH(d,h){ if(!h){ d.style.height=''; d.classList.remove('sized'); return; } h=Math.round(Math.min(maxH(d),Math.max(300,h))); d.style.height=h+'px'; d.classList.add('sized'); }
+  function hook(){ const d=document.querySelector('.drawer.chat'); if(!d) return;
+    if(!d.querySelector(':scope>.chat-rsz')){ const r=document.createElement('div'); r.className='chat-rsz'; r.title='Arrastrá para agrandar o achicar'; r.setAttribute('aria-hidden','true'); d.prepend(r);
+      r.addEventListener('pointerdown',ev=>{ ev.preventDefault(); const sy=ev.clientY, sh=d.getBoundingClientRect().height; r.setPointerCapture(ev.pointerId); d.classList.add('rsz-on');
+        const mv=e2=>setH(d,sh+(sy-e2.clientY));
+        const up=()=>{ r.removeEventListener('pointermove',mv); r.removeEventListener('pointerup',up); r.removeEventListener('pointercancel',up); d.classList.remove('rsz-on'); H=Math.round(d.getBoundingClientRect().height); try{ localStorage.setItem(KEY,H); }catch(e){} };
+        r.addEventListener('pointermove',mv); r.addEventListener('pointerup',up); r.addEventListener('pointercancel',up); });
+      r.addEventListener('dblclick',()=>{ H=0; try{ localStorage.removeItem(KEY); }catch(e){} setH(d,0); });
+    }
+    if(H&&!d.classList.contains('rsz-on')&&d.style.height!==Math.round(Math.min(maxH(d),Math.max(300,H)))+'px') setH(d,H);
+  }
+  let pd=0; new MutationObserver(()=>{ if(!pd) pd=requestAnimationFrame(()=>{ pd=0; hook(); }); }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+  addEventListener('resize',hook); hook();
 })();
 </script>

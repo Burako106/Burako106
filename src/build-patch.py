@@ -101,6 +101,8 @@ rep("""data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="t
 # saludo del lobby: saludo con nombre y después un mensaje según el momento
 rep('<h1 class="lgreet">¡Hola, <span>${esc(lbMyName())}</span>!</h1>','<h1 class="lgreet">${window.lgH?lgH():\'¡Hola, <span>\'+esc(lbMyName())+\'</span>!\'}</h1>')
 rep('<small class="set-note">Así te ven en las mesas.</small>','<small class="set-note">Así te ven en las mesas.</small>${window.lgBdayH?lgBdayH():\'\'}')
+# chat: el último emoji es un "+" que abre todos los emojis
+rep("""${EMOJIS.map(e=>`<button data-act="emoji" data-v="${e}" aria-label="Mandar ${e}">${e}</button>`).join('')}""","""${EMOJIS.slice(0,-1).map(e=>`<button data-act="emoji" data-v="${e}" aria-label="Mandar ${e}">${e}</button>`).join('')}<button type="button" class="emo-more" aria-label="Más emojis" aria-expanded="false">+</button>""",2)
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
