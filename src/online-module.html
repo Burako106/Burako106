@@ -330,6 +330,10 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
 #nrfocus .nrf-in{border-radius:28px}
 #nrfocus .lcard.nrf-run{box-shadow:0 30px 70px rgba(0,0,0,.4),0 0 0 0 rgba(255,255,255,0)}
 @media (prefers-reduced-motion:reduce){#nrfocus .nrf-spark{animation:none!important}}
+/* fichas elegidas manteniendo apretado: se levantan una a una */
+.htile.lp-pop{animation:lppop .32s cubic-bezier(.2,1.6,.4,1)}
+@keyframes lppop{0%{translate:0 0}55%{translate:0 -7px}100%{translate:0 0}}
+@media (prefers-reduced-motion:reduce){.htile.lp-pop{animation:none}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -949,6 +953,35 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
     if(NET.vnAuto===url&&!(S&&S.sound===false)){ NET.vnAuto=null; au.play().catch(()=>later(12000)); }
     else later(12000);
   };
+  /* ---------- Mantener apretada una ficha: se eligen solas las que siguen (escalera o trío) ---------- */
+  const LP={t:null,fired:0};
+  function runFrom(id){
+    const row=(S.rack||[]).find(r=>r.includes(id)); if(!row) return [id];
+    const T=x=>S.hands[0].find(t=>t.id===x), first=T(id); if(!first) return [id];
+    const out=[id]; let mode=null, prev=first;
+    for(let k=row.indexOf(id)+1;k<row.length;k++){
+      const x=row[k]; if(x==null) break; const t=T(x); if(!t) break;
+      const isTrio=t.n===prev.n&&t.n!==0, isRun=t.c===first.c&&t.n===prev.n+1&&t.n!==0;
+      if(!mode) mode=isTrio?'trio':isRun?'run':null;
+      if(mode==='trio'&&isTrio){ out.push(x); prev=t; continue; }
+      if(mode==='run'&&isRun){ out.push(x); prev=t; continue; }
+      break;
+    }
+    return out;
+  }
+  document.addEventListener('pointerdown',e=>{
+    clearTimeout(LP.t); const el=e.target.closest&&e.target.closest('.htile'); if(!el||e.button>0||!S||lobbyOpen) return;
+    const id=+el.dataset.id, x=e.clientX, y=e.clientY;
+    LP.x=x; LP.y=y; LP.t=setTimeout(()=>{ if(drag&&drag.active) return;
+      const ids=runFrom(id); if(ids.length<2) return; LP.hold=true;
+      S.sel=[]; ids.forEach((tid,k)=>setTimeout(()=>{ if(!S.sel.includes(tid)) S.sel=[...S.sel,tid]; render(); const t=document.querySelector('.htile[data-id="'+tid+'"]'); if(t){ t.classList.remove('lp-pop'); void t.offsetWidth; t.classList.add('lp-pop'); } try{ softPop(); }catch(x){} },k*85));
+      try{ navigator.vibrate&&navigator.vibrate(12); }catch(x){}
+    },430);
+  },true);
+  document.addEventListener('pointermove',e=>{ if(LP.t&&Math.hypot(e.clientX-LP.x,e.clientY-LP.y)>7){ clearTimeout(LP.t); LP.t=null; } },true);
+  ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{ clearTimeout(LP.t); LP.t=null; if(LP.hold){ LP.hold=false; LP.eatClick=Date.now(); if(drag&&!drag.active) drag=null; } },true));
+  // después de mantener apretado, el clic de soltar no deselecciona
+  document.addEventListener('click',e=>{ if(LP.eatClick&&Date.now()-LP.eatClick<500&&e.target.closest&&e.target.closest('.htile')){ e.stopPropagation(); e.preventDefault(); } LP.eatClick=0; },true);
   /* ---------- Bajar y tirar solo con clics: elegís fichas y tocás tu zona (bajar) o el centro de la mesa (tirar) ---------- */
   let cp=null;
   document.addEventListener('pointerdown',e=>{ cp={x:e.clientX,y:e.clientY,t:e.target,drag:!!drag}; },true);
