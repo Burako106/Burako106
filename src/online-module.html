@@ -343,6 +343,18 @@ body.fun #nrfocus .lcard::after{inset:-6px!important;padding:11px!important;back
 body.fun #nrfocus .nrf-spark{inset:-3px!important;padding:5px!important;filter:none!important;animation:none!important;opacity:1!important;
   background:conic-gradient(from 0deg,var(--f-pink,#f7a6d4) calc(var(--bp,100)*1% - .45%),transparent 0)!important}
 body.fun .lseat:has(.nstamp) .lav{box-shadow:none!important}
+/* Glass: línea negra lisa, sin chispa ni degradado */
+body.glass #nrfocus .nrf-spark{display:none!important}
+/* línea del tiempo con puntas redondeadas: reemplaza al borde anterior */
+#nrfocus .lcard::after,#nrfocus .nrf-spark{display:none!important}
+#nrfocus .nrf-ring{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:6}
+#nrfocus .nrf-ring path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#nrfocus .nrf-ring .r-out{display:none}
+#nrfocus .nrf-ring .r-in{stroke:#161618;stroke-width:7}
+body.fun #nrfocus .nrf-ring .r-out{display:block;stroke:#141414;stroke-width:12}
+body.fun #nrfocus .nrf-ring .r-in{stroke:var(--f-pink,#f7a6d4);stroke-width:6}
+body:not(.fun):not(.glass) #nrfocus .nrf-ring .r-in{stroke:#e6b63f}
+#nrfocus .lcard.nrf-zero .nrf-ring{opacity:0}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -612,18 +624,24 @@ body.fun .lseat:has(.nstamp) .lav{box-shadow:none!important}
     try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'<i class="nrf-spark" aria-hidden="true"></i></div>'; }catch(e){ return false; }
     let f=document.getElementById('nrfocus');
     if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"><div class="nrf-in"></div></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
-    const w=f.querySelector('.nrf-in'); if(w._h!==html){ w.innerHTML=html; w._h=html; placeBadge(w); readyTickFn(); }
+    const w=f.querySelector('.nrf-in'); if(w._h!==html){ w.innerHTML=html; w._h=html; placeBadge(w); buildRing(w); readyTickFn(); }
     document.body.classList.add('nrfocus'); return true;
   }
   // la etiqueta del modo va centrada sobre el borde de arriba del contenedor
   function placeBadge(w){ try{ const card=w.querySelector('.lcard'), b=card&&card.querySelector('.lbadge'), lt=card&&card.querySelector('.ltable'); if(!b||!lt) return;
     const k=card.getBoundingClientRect().width/card.offsetWidth||1; b.style.top=(-(lt.getBoundingClientRect().top-card.getBoundingClientRect().top)/k)+'px'; }catch(e){} }
+  // línea del tiempo alrededor del contenedor, con puntas redondeadas (SVG)
+  function buildRing(w){ try{ const card=w.querySelector('.lcard'); if(!card) return; const W=card.offsetWidth, H=card.offsetHeight, r=Math.min(parseFloat(getComputedStyle(card).borderTopLeftRadius)||24,W/2,H/2);
+    const d='M'+W/2+' 0H'+(W-r)+'A'+r+' '+r+' 0 0 1 '+W+' '+r+'V'+(H-r)+'A'+r+' '+r+' 0 0 1 '+(W-r)+' '+H+'H'+r+'A'+r+' '+r+' 0 0 1 0 '+(H-r)+'V'+r+'A'+r+' '+r+' 0 0 1 '+r+' 0Z';
+    const s=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('class','nrf-ring'); s.setAttribute('width',W); s.setAttribute('height',H); s.setAttribute('viewBox','0 0 '+W+' '+H); s.setAttribute('aria-hidden','true');
+    s.innerHTML='<path class="r-out" pathLength="100" d="'+d+'"/><path class="r-in" pathLength="100" d="'+d+'"/>';
+    card.appendChild(s); }catch(e){} }
   function readyTickFn(){
     const until=HOUSE?HOUSE.until:NET.readyUntil, left=Math.max(0,(until-Date.now())/1000);
     document.querySelectorAll('.nr-count').forEach(el=>{ const b=el.querySelector('b'); if(b) b.textContent=Math.ceil(left); el.classList.toggle('low',left<=3); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
     const b=document.querySelector('#netready .net-left b'); if(b) b.textContent=Math.ceil(left);
     const going=HOUSE?HOUSE.going:NET.going, pct=going?100:(left/(READY_MS/1000)*100);
-    document.querySelectorAll('#nrfocus .lcard').forEach(el=>{ el.style.setProperty('--bp',pct.toFixed(2)); el.classList.toggle('nrf-run',!going&&pct>0.5); });
+    document.querySelectorAll('#nrfocus .lcard').forEach(el=>{ el.style.setProperty('--bp',pct.toFixed(2)); el.classList.toggle('nrf-run',!going&&pct>0.5); el.classList.toggle('nrf-zero',pct<0.6); el.querySelectorAll('.nrf-ring path').forEach(pa=>pa.setAttribute('stroke-dasharray',Math.max(0,pct).toFixed(2)+' 200')); });
     if(!until||(HOUSE&&HOUSE.going)) clearInterval(NET.readyTick);
   }
   function readyUI(){
