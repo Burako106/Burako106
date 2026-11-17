@@ -337,6 +337,12 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
 /* Glass: sin degradado en la línea; la chispa es un punto de luz corto y nítido */
 body.glass #nrfocus .nrf-spark{background:conic-gradient(from 0deg,transparent 0,transparent calc(var(--bp,100)*1% - 1.2%),#fff calc(var(--bp,100)*1% - 1.2%),#fff calc(var(--bp,100)*1% - .2%),transparent calc(var(--bp,100)*1% - .2%))!important;filter:none!important;animation:nrspark2 1.2s ease-in-out infinite!important}
 @keyframes nrspark2{50%{opacity:.55}}
+/* Fun: todo plano. La cuenta es una línea rosa con contorno negro; sin brillos, degradados ni sombra */
+body.fun #nrfocus .lcard{box-shadow:none!important}
+body.fun #nrfocus .lcard::after{inset:-6px!important;padding:11px!important;background:conic-gradient(from 0deg,#141414 calc(var(--bp,100)*1%),transparent 0)!important}
+body.fun #nrfocus .nrf-spark{inset:-3px!important;padding:5px!important;filter:none!important;animation:none!important;opacity:1!important;
+  background:conic-gradient(from 0deg,var(--f-pink,#f7a6d4) calc(var(--bp,100)*1% - .45%),transparent 0)!important}
+body.fun .lseat:has(.nstamp) .lav{box-shadow:none!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
