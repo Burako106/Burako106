@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794922553';</script>
+<script>window.BURAKO_BUILD='1794922907';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6477,6 +6477,27 @@ body.fun .lbig .lplus svg.fi{width:68%;height:68%}
 html body.fun .icon-btn :is(.ico-num,.dots).fi-host.fi-host{display:grid!important;place-items:center;background:none!important;padding:0!important;width:30px!important;height:24px!important;min-width:0!important;gap:0!important;border:0!important;box-shadow:none!important;grid-template-columns:1fr!important;grid-template-rows:1fr!important}
 body.fun :is(.ico-num,.dots).fi-host svg.fi{width:100%!important;height:100%!important;max-width:none!important}
 body.fun :is(.ico-num,.dots).fi-host>i{display:none}
+/* Fun: ordenar por color = 4 puntos con contorno fino */
+html body.fun button[data-act="sortcolor"] .dots i{box-shadow:0 0 0 1.25px #fff!important}
+html body.fun button.icon-btn[data-act="sortcolor"] span.dots.dots{display:grid!important;grid-template-columns:repeat(2,8px)!important;grid-template-rows:repeat(2,8px)!important;gap:4px!important;align-content:center;justify-content:center}
+html body.fun button.icon-btn[data-act="sortcolor"] span.dots.dots>i{width:8px!important;height:8px!important}
+/* Fun: textos blancos en Partida a / ¡A jugar! / cuenta regresiva */
+html body.fun .goal-pill,html body.fun .goal-pill *{color:#fff!important}
+html body.fun #netgo b,html body.fun #netgo b.go{color:#fff!important}
+/* Fun: chat de la partida más claro, con contornos y estados visibles */
+html body.fun .drawer.chat{background:#fff!important;outline:1.5px solid #141414!important;outline-offset:-1.5px;box-shadow:0 6px 0 #141414!important}
+html body.fun .drawer.chat .chat-log{background:#fff6d6!important;outline:1.5px solid #141414!important;outline-offset:-1.5px}
+html body.fun .drawer.chat .chat-x{background:#fff!important;outline:1.5px solid #141414!important;outline-offset:-1.5px}
+html body.fun .drawer.chat .chat-x:hover{background:#ffe02a!important}
+html body.fun .drawer.chat .chat-react button{border-radius:12px!important;outline:1.5px solid transparent;outline-offset:-1.5px;background:transparent!important;transition:background .15s,border-color .15s,transform .15s}
+html body.fun .drawer.chat .chat-react button:hover{background:#fff6d6!important;outline-color:#141414;transform:translateY(-2px)}
+html body.fun .drawer.chat .chat-presets button{background:#fff!important;outline:1.5px solid #141414!important;outline-offset:-1.5px;border-radius:999px!important;box-shadow:0 2px 0 #141414!important;color:#141414!important;transition:background .15s,transform .15s,box-shadow .15s}
+html body.fun .drawer.chat .chat-presets button:hover{background:#ffe02a!important;transform:translateY(-2px);box-shadow:0 4px 0 #141414!important}
+html body.fun .drawer.chat .chat-presets button:active{transform:none;box-shadow:0 0 0 #141414!important}
+html body.fun .drawer.chat .chat-form input,html body.fun .drawer.chat .chat-form textarea{background:#fff!important;outline:1.5px solid #141414!important;outline-offset:-1.5px;box-shadow:none!important}
+html body.fun .drawer.chat .chat-form input:focus,html body.fun .drawer.chat .chat-form textarea:focus{box-shadow:0 0 0 3px #f7a6d4!important}
+html body.fun .drawer.chat .chat-form .mic{background:#fff!important;outline:1.5px solid #141414!important;outline-offset:-1.5px;border-radius:12px!important}
+html body.fun .drawer.chat .chat-form .mic:hover{background:#fff6d6!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7795,7 +7816,7 @@ body.fun :is(.ico-num,.dots).fi-host>i{display:none}
     ['.eco-play>svg','video'],['svg.lbuy-ic','cart'],['svg.tki','ticket'],
     ['button[data-act="netshare"]>svg','link']];
   const INNER=[
-    ['button[data-act="sortnum"] .ico-num','n123'],['button[data-act="sortcolor"] .dots','palette'],
+    ['button[data-act="sortnum"] .ico-num','n123'],
     ['.lbig.lbot .lplus','robot'],['.lbig.lfriend .lplus','users'],
     ['.lbig.lresume .lplus',e=>/Volver/.test(e.closest('.lbig').textContent)?'play':'robot2'],
     ['button[aria-label="Cerrar"]',e=>/^[✕×]$/.test(e.textContent.trim())?'x':null]];
