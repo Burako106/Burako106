@@ -318,6 +318,18 @@ body.fun .nr-match{border-bottom:1.5px solid #141414}
 body.fun #nrfocus .lcard::after{background:conic-gradient(from 0deg,#141414 calc(var(--bp,100)*1%),transparent 0)!important}
 body:not(.fun):not(.glass) #nrfocus .lcard::after{background:conic-gradient(from 0deg,#e6b63f calc(var(--bp,100)*1%),transparent 0)!important}
 @media (prefers-reduced-motion:reduce){#nrfocus .nrf-in{animation:none!important}}
+/* chispa que va en la punta del borde mientras corre la cuenta */
+#nrfocus .nrf-spark{position:absolute;inset:-3px;padding:5px;border-radius:inherit;pointer-events:none;z-index:7;opacity:0;transition:opacity .3s;
+  background:conic-gradient(from 0deg,transparent 0,transparent calc(var(--bp,100)*1% - 7%),rgba(255,255,255,.15) calc(var(--bp,100)*1% - 5%),rgba(255,255,255,.95) calc(var(--bp,100)*1% - .4%),transparent calc(var(--bp,100)*1%));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:blur(.6px)}
+#nrfocus .lcard.nrf-run .nrf-spark{opacity:1;animation:nrspark 1.2s ease-in-out infinite}
+@keyframes nrspark{50%{filter:blur(1.4px) brightness(1.4)}}
+body.fun #nrfocus .nrf-spark{background:conic-gradient(from 0deg,transparent 0,transparent calc(var(--bp,100)*1% - 6%),rgba(255,224,42,.35) calc(var(--bp,100)*1% - 4%),#ffe02a calc(var(--bp,100)*1% - .4%),transparent calc(var(--bp,100)*1%))}
+body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0deg,transparent 0,transparent calc(var(--bp,100)*1% - 7%),rgba(255,248,225,.2) calc(var(--bp,100)*1% - 5%),#fff8e1 calc(var(--bp,100)*1% - .4%),transparent calc(var(--bp,100)*1%))}
+/* respiración suave de la sombra mientras se espera */
+#nrfocus .nrf-in{border-radius:28px}
+#nrfocus .lcard.nrf-run{box-shadow:0 30px 70px rgba(0,0,0,.4),0 0 0 0 rgba(255,255,255,0)}
+@media (prefers-reduced-motion:reduce){#nrfocus .nrf-spark{animation:none!important}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -584,7 +596,7 @@ body:not(.fun):not(.glass) #nrfocus .lcard::after{background:conic-gradient(from
   // La mesa llena pasa al centro, grande, con el fondo desenfocado
   function focusUI(tt){
     const i=LT.findIndex(x=>x.net===NET.code), t=tt||(i>=0?LT[i]:myTable()); let html='';
-    try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'</div>'; }catch(e){ return false; }
+    try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'<i class="nrf-spark" aria-hidden="true"></i></div>'; }catch(e){ return false; }
     let f=document.getElementById('nrfocus');
     if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"><div class="nrf-in"></div></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
     const w=f.querySelector('.nrf-in'); if(w._h!==html){ w.innerHTML=html; w._h=html; placeBadge(w); readyTickFn(); }
@@ -598,7 +610,7 @@ body:not(.fun):not(.glass) #nrfocus .lcard::after{background:conic-gradient(from
     document.querySelectorAll('.nr-count').forEach(el=>{ const b=el.querySelector('b'); if(b) b.textContent=Math.ceil(left); el.classList.toggle('low',left<=3); el.style.setProperty('--p',(left/(READY_MS/1000)*100).toFixed(1)); });
     const b=document.querySelector('#netready .net-left b'); if(b) b.textContent=Math.ceil(left);
     const going=HOUSE?HOUSE.going:NET.going, pct=going?100:(left/(READY_MS/1000)*100);
-    document.querySelectorAll('#nrfocus .lcard').forEach(el=>el.style.setProperty('--bp',pct.toFixed(2)));
+    document.querySelectorAll('#nrfocus .lcard').forEach(el=>{ el.style.setProperty('--bp',pct.toFixed(2)); el.classList.toggle('nrf-run',!going&&pct>0.5); });
     if(!until||(HOUSE&&HOUSE.going)) clearInterval(NET.readyTick);
   }
   function readyUI(){
