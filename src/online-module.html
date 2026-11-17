@@ -312,14 +312,14 @@ body.fun .nr-match{border-bottom:1.5px solid #141414}
 #nrfocus .lcard{animation:none!important;padding-left:34px!important;padding-right:34px!important;padding-top:30px!important}
 #nrfocus .nrf-in{animation:nrfin .5s cubic-bezier(.2,1.3,.4,1) both}
 #nrfocus.out .nrf-in{animation:nrfout .28s ease-in both}
-#nrfocus .lcard::after{content:""!important;position:absolute;inset:-3px!important;padding:5px!important;border-radius:inherit!important;pointer-events:none;z-index:6;
+#nrfocus .lcard::after{content:""!important;position:absolute;inset:-4px!important;padding:7px!important;border-radius:inherit!important;pointer-events:none;z-index:6;
   background:conic-gradient(from 0deg,#161618 calc(var(--bp,100)*1%),transparent 0)!important;
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:none!important;filter:none!important}
 body.fun #nrfocus .lcard::after{background:conic-gradient(from 0deg,#141414 calc(var(--bp,100)*1%),transparent 0)!important}
 body:not(.fun):not(.glass) #nrfocus .lcard::after{background:conic-gradient(from 0deg,#e6b63f calc(var(--bp,100)*1%),transparent 0)!important}
 @media (prefers-reduced-motion:reduce){#nrfocus .nrf-in{animation:none!important}}
 /* chispa que va en la punta del borde mientras corre la cuenta */
-#nrfocus .nrf-spark{position:absolute;inset:-3px;padding:5px;border-radius:inherit;pointer-events:none;z-index:7;opacity:0;transition:opacity .3s;
+#nrfocus .nrf-spark{position:absolute;inset:-4px;padding:7px;border-radius:inherit;pointer-events:none;z-index:7;opacity:0;transition:opacity .3s;
   background:conic-gradient(from 0deg,transparent 0,transparent calc(var(--bp,100)*1% - 7%),rgba(255,255,255,.15) calc(var(--bp,100)*1% - 5%),rgba(255,255,255,.95) calc(var(--bp,100)*1% - .4%),transparent calc(var(--bp,100)*1%));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:blur(.6px)}
 #nrfocus .lcard.nrf-run .nrf-spark{opacity:1;animation:nrspark 1.2s ease-in-out infinite}
@@ -334,6 +334,9 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
 .htile.lp-pop{animation:lppop .32s cubic-bezier(.2,1.6,.4,1)}
 @keyframes lppop{0%{translate:0 0}55%{translate:0 -7px}100%{translate:0 0}}
 @media (prefers-reduced-motion:reduce){.htile.lp-pop{animation:none}}
+/* Glass: sin degradado en la línea; la chispa es un punto de luz corto y nítido */
+body.glass #nrfocus .nrf-spark{background:conic-gradient(from 0deg,transparent 0,transparent calc(var(--bp,100)*1% - 1.2%),#fff calc(var(--bp,100)*1% - 1.2%),#fff calc(var(--bp,100)*1% - .2%),transparent calc(var(--bp,100)*1% - .2%))!important;filter:none!important;animation:nrspark2 1.2s ease-in-out infinite!important}
+@keyframes nrspark2{50%{opacity:.55}}
 </style>
 <script id="net-js">
 /* ==========================================================================
