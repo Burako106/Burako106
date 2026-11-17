@@ -382,16 +382,18 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
 .lhead .lgreet{flex:1 1 auto;min-width:0}
 .lg-win{position:relative}
 .lg-b{position:absolute;left:0;top:0}
-.lg-a{transform:none;opacity:1}
 .lg-b{pointer-events:none}
-.lg-w{font-style:inherit;display:inline-block;opacity:0;transform:translateY(-.6em) rotate(-4deg)}
+.lg-a,.lg-b .lg-w{opacity:0;transform:translateY(-.6em) rotate(-4deg)}
+.lg-w{font-style:inherit;display:inline-block}
 .lg-w span{font-style:inherit}
 body.fun .lg-w span{font-style:italic}
-.lg-win.s1 .lg-a{opacity:0;transform:translateY(.55em) rotate(2deg)}
-.lg-win.s1 .lg-w{opacity:1;transform:none}
-.lg-win.anim .lg-a{transition:transform .5s cubic-bezier(.5,0,.75,0),opacity .4s ease-in}
-.lg-win.anim .lg-w{transition:transform .62s cubic-bezier(.3,1.6,.5,1),opacity .35s ease-out;transition-delay:calc(.28s + var(--i)*70ms)}
-@media (prefers-reduced-motion:reduce){.lg-win.anim .lg-a,.lg-win.anim .lg-w{transition:opacity .3s!important;transform:none!important}}
+.lg-a.on,.lg-b.on .lg-w{opacity:1;transform:none}
+.lg-a.off,.lg-b.off .lg-w{opacity:0;transform:translateY(.55em) rotate(2deg)}
+.lg-win.anim .lg-a,.lg-win.anim .lg-w{transition:transform .5s cubic-bezier(.5,0,.75,0),opacity .4s ease-in;transition-delay:0s}
+.lg-win.anim .lg-a.on{transition:transform .62s cubic-bezier(.3,1.6,.5,1),opacity .35s ease-out;transition-delay:.28s}
+.lg-win.anim .lg-b.off .lg-w{transition-delay:calc(var(--i)*35ms)}
+.lg-win.anim .lg-b.on .lg-w{transition:transform .62s cubic-bezier(.3,1.6,.5,1),opacity .35s ease-out;transition-delay:calc(.28s + var(--i)*70ms)}
+@media (prefers-reduced-motion:reduce){.lg-a,.lg-b .lg-w{transform:none!important}.lg-win.anim .lg-a,.lg-win.anim .lg-w{transition:opacity .3s!important}}
 .lg-bd{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .lg-bd span{display:flex;gap:8px}
 .lg-bd select{font:600 14px var(--f-ui);padding:7px 10px;border-radius:10px;border:1.5px solid var(--line,rgba(0,0,0,.15));background:transparent;color:inherit}
@@ -1648,18 +1650,33 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
     const g=h>=5&&h<12?[['Buen día','Morning'],['Hola','Hi']]:[['Buenas','Hey'],['Hola','Hi']];
     return pick(g); }
 
-  const LGS={st:0,a:'',b:'',tm:0};
-  function compose(){ const now=new Date(), sp=special(now);
-    const a=greet(now,sp&&sp.bday);
-    const b=(sp&&sp.bday&&sp.m)||holiday(now)||(sp&&sp.m)||(Math.random()<.6&&streak())||timeMsg(now);
-    LGS.a=a; LGS.b=b; const g=ld(); if(!g.first) g.first=Date.now(); g.last=Date.now(); sv(g); }
-  window.lgDbg={holiday,streak,timeMsg,special,greet,set:(a,b)=>{LGS.a=a;LGS.b=b;}};
+  const LGS={st:0,a:'',b:'',bAt:0,tm:0,iv:0};
+  const SWAP_MS=60000, NEWMSG_MS=30*60000;
+  function compose(onlyB){ const now=new Date(), sp=special(now);
+    if(!onlyB) LGS.a=greet(now,sp&&sp.bday);
+    let b, tries=0, prev=LGS.b&&L(LGS.b);
+    do{ b=(sp&&sp.bday&&sp.m)||holiday(now)||(!onlyB&&sp&&sp.m)||(Math.random()<.6&&streak())||timeMsg(now); }while(onlyB&&L(b)===prev&&++tries<6);
+    LGS.b=b; LGS.bAt=Date.now(); const g=ld(); if(!g.first) g.first=Date.now(); g.last=Date.now(); sv(g); }
+  window.lgDbg={holiday,streak,timeMsg,special,greet,set:(a,b)=>{LGS.a=a;LGS.b=b;},S:LGS,swap:()=>swap()};
+  const aH=()=>`${en()?'':'¡'}${esc(L(LGS.a))}, <span>${esc(lbMyName())}</span>!`;
+  function bH(){ let k=0; return L(LGS.b).split('*').map((seg,j)=>seg.split(' ').filter(Boolean).map(w=>{ const t=esc(w); return `<i class="lg-w" style="--i:${k++}">${j%2?'<span>'+t+'</span>':t}</i>`; }).join(' ')).filter(Boolean).join(' ').replace(/<\/i> ?(<i class="lg-w" style="--i:\d+">[.,:!?…])/g,'</i>$1'); }
+  /* alterna saludo ⇄ mensaje; todo cae hacia abajo */
+  function swap(){
+    const w=document.querySelector('.lg-win'); const to=LGS.st?0:1;
+    if(to===1&&Date.now()-LGS.bAt>NEWMSG_MS) compose(true);
+    if(to===0){ const now=new Date(), sp=special(now); LGS.a=greet(now,sp&&sp.bday); }
+    LGS.st=to; if(!w) return;
+    const A=w.querySelector('.lg-a'), B=w.querySelector('.lg-b'), inc=to?B:A, out=to?A:B;
+    if(to) B.innerHTML=bH(); else A.innerHTML=aH();
+    w.classList.remove('anim'); inc.classList.remove('on','off'); void w.offsetWidth;
+    w.classList.add('anim'); out.classList.remove('on'); out.classList.add('off'); inc.classList.add('on');
+    clearTimeout(w._t); w._t=setTimeout(()=>{ w.classList.remove('anim'); out.classList.remove('off'); },1600);
+  }
   window.lgH=function(){
     const old=document.querySelector('.lgreet'); const fresh=!old||!old.offsetWidth||!LGS.a;
-    if(fresh){ compose(); LGS.st=0; clearTimeout(LGS.tm); LGS.tm=setTimeout(()=>{ LGS.st=1; const w=document.querySelector('.lg-win'); if(w){ w.classList.add('anim'); w.classList.add('s1'); setTimeout(()=>w.classList.remove('anim'),1400); } },3400); }
-    const nm=esc(lbMyName()); let k=0;
-    const b=L(LGS.b).split('*').map((seg,j)=>seg.split(' ').filter(Boolean).map(w=>{ const t=esc(w); return `<i class="lg-w" style="--i:${k++}">${j%2?'<span>'+t+'</span>':t}</i>`; }).join(' ')).filter(Boolean).join(' ').replace(/<\/i> ?(<i class="lg-w" style="--i:\d+">[.,:!?…])/g,'</i>$1');
-    return `<span class="lg-win${LGS.st?' s1':''}"><span class="lg-l lg-a">${en()?'':'¡'}${L(LGS.a)}, <span>${nm}</span>!</span><span class="lg-l lg-b" aria-live="polite">${b}</span></span>`;
+    if(fresh){ compose(); LGS.st=0; clearTimeout(LGS.tm); clearInterval(LGS.iv);
+      LGS.tm=setTimeout(()=>{ swap(); LGS.iv=setInterval(swap,SWAP_MS); },3400); }
+    return `<span class="lg-win"><span class="lg-l lg-a${LGS.st?'':' on'}">${aH()}</span><span class="lg-l lg-b${LGS.st?' on':''}" aria-live="polite">${bH()}</span></span>`;
   };
   /* racha de derrotas para los mensajes */
   try{ const orig=window.lbRecord; if(typeof orig==='function') window.lbRecord=function(res){ const had=S&&S.recorded; const r=orig.apply(this,arguments); if(!had&&S&&S.recorded){ const g=ld(); g.ls=res==='lose'?(g.ls||0)+1:res==='win'?0:(g.ls||0); sv(g); } return r; }; }catch(e){}
