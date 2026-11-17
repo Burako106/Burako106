@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794920389';</script>
+<script>window.BURAKO_BUILD='1794922553';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6470,12 +6470,8 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
 .lg-b.two{white-space:normal;line-height:1.02;top:50%;translate:0 -50%}
 /* Íconos Fun: blancos con contorno negro; se colorean al pasar el mouse o cuando están activos */
 body.fun svg.fi{display:block;overflow:visible}
-body.fun svg.fi .k{fill:#141414}
-body.fun svg.fi .c{fill:#fff;transition:fill .18s ease}
-body.fun :is(button,a,label,[role="tab"]):hover svg.fi .c,
-body.fun :is(.on,[aria-current="page"],[aria-selected="true"]) > svg.fi .c,
-body.fun :is(.lcoin,.tk-row,.econote,em,b,.pz-h,.lcp-ic) > svg.fi .c,
-body.fun .lbig:hover .lplus svg.fi .c{fill:var(--c)}
+body.fun svg.fi .k{fill:#141414;stroke:#141414;stroke-width:var(--fis,0px);stroke-linejoin:round;vector-effect:non-scaling-stroke}
+body.fun svg.fi .c{fill:var(--c)}
 body.fun .lbig .lplus.fi-host{display:grid;place-items:center}
 body.fun .lbig .lplus svg.fi{width:68%;height:68%}
 html body.fun .icon-btn :is(.ico-num,.dots).fi-host.fi-host{display:grid!important;place-items:center;background:none!important;padding:0!important;width:30px!important;height:24px!important;min-width:0!important;gap:0!important;border:0!important;box-shadow:none!important;grid-template-columns:1fr!important;grid-template-rows:1fr!important}
@@ -7817,12 +7813,15 @@ body.fun :is(.ico-num,.dots).fi-host>i{display:none}
         if(e.firstElementChild&&e.firstElementChild.classList&&e.firstElementChild.classList.contains('fi-'+name)) return;
         if(!e.hasAttribute('data-fio')) e.setAttribute('data-fio',e.innerHTML);
         e.innerHTML=svg(name); e.classList.add('fi-host'); }));
+      /* grosor parejo: el contorno de cada ícono queda en 1.5px en pantalla, sin importar su tamaño */
+      document.querySelectorAll('svg.fi').forEach(s=>{ const w=s.getBoundingClientRect().width; if(!w) return; const k=Math.round(w*4)/4; if(s._fw===k) return; s._fw=k;
+        const vb=(s.getAttribute('viewBox')||'0 0 1 1').split(' ').map(Number), cur=6*w/vb[2]; s.style.setProperty('--fis',Math.max(0,1.5-cur).toFixed(2)+'px'); });
     }catch(err){} finally{ busy=false; }
   }
   let pend=0;
   new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(()=>{ pend=0; apply(); }); })
     .observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-label']});
-  window.fiApply=apply; apply();
+  window.fiApply=apply; apply(); addEventListener('resize',()=>{ if(!pend) pend=requestAnimationFrame(()=>{ pend=0; apply(); }); });
 })();
 </script>
 
