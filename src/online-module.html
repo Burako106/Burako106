@@ -961,12 +961,15 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
     const T=x=>S.hands[0].find(t=>t.id===x), first=T(id); if(!first) return [id];
     const wild=t=>t.n===0||t.n===2;
     const seq=[]; for(let k=row.indexOf(id)+1;k<row.length;k++){ const x=row[k]; if(x==null) break; const t=T(x); if(!t) break; seq.push(t); }
-    if(wild(first)) return [id];
+    // si empieza con comodín, manda la ficha que tiene al lado
+    let base=first, startW=0;
+    if(wild(first)){ const nx=seq[0]; if(!nx||wild(nx)) return [id]; startW=1; base={n:nx.n,c:nx.c}; }
     const tryMode=mode=>{
-      const out=[id]; let val=first.n, wilds=0;
+      const out=[id]; let val=startW?(mode==='run'?base.n-1:base.n):base.n, wilds=startW;
+      if(startW&&mode==='run'&&val<1) return [id];
       for(const t of seq){
         const want=mode==='run'?val+1:val;
-        const natural=mode==='run'?(t.n===want&&t.c===first.c&&t.n!==0):(t.n===first.n);
+        const natural=mode==='run'?(t.n===want&&t.c===base.c&&t.n!==0):(t.n===base.n);
         if(natural){ out.push(t.id); val=want; continue; }
         if(wild(t)&&wilds<1&&(mode==='trio'||want<=13)){ wilds++; out.push(t.id); val=want; continue; }
         break;
@@ -974,8 +977,8 @@ body:not(.fun):not(.glass) #nrfocus .nrf-spark{background:conic-gradient(from 0d
       // un comodín suelto al final de un par no alcanza para decidir; se queda igual
       return out;
     };
-    const a=tryMode('run'), b=tryMode('trio');
-    return b.length>a.length?b:a;
+    const a=tryMode('run'), b=tryMode('trio'), r=b.length>a.length?b:a;
+    return startW&&r.length<3?[id]:r;
   }
   document.addEventListener('pointerdown',e=>{
     clearTimeout(LP.t); const el=e.target.closest&&e.target.closest('.htile'); if(!el||e.button>0||!S||lobbyOpen) return;
