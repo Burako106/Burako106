@@ -743,9 +743,10 @@ html body.fun #vnrec .vn-x:hover{background:#e8443a!important}
   function iAmReady(){ if(NET.meReady) return; NET.meReady=true; try{ clack(1); }catch(e){} if(NET.role==='host') markReady(myPid()); else { send({t:'ready',pid:myPid()}); readyUI(); } }
   function closeReady(){ const o=document.getElementById('netready'); if(o) o.remove(); const f=document.getElementById('nrfocus'); if(f&&!f.classList.contains('out')){ f.classList.add('out'); setTimeout(()=>f.remove(),320); } document.body.classList.remove('nrfocus'); }
   // La mesa llena pasa al centro, grande, con el fondo desenfocado
+  let FOCUSB=false; // la confirmación solo se dibuja en la mesa del frente; las de atrás no cambian de tamaño
   function focusUI(tt){
     const i=LT.findIndex(x=>x.net===NET.code), t=tt||(i>=0?LT[i]:myTable()); let html='';
-    try{ html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'<i class="nrf-spark" aria-hidden="true"></i></div>'; }catch(e){ return false; }
+    try{ FOCUSB=true; html='<div class="lcard m'+t.n+' nrf-card">'+lbTableH(t)+'<i class="nrf-spark" aria-hidden="true"></i></div>'; }catch(e){ return false; }finally{ FOCUSB=false; }
     let f=document.getElementById('nrfocus');
     if(!f||f.classList.contains('out')){ if(f) f.remove(); f=document.createElement('div'); f.id='nrfocus'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true'); f.setAttribute('aria-label','Mesa completa'); f.innerHTML='<div class="nrf-wrap"><div class="nrf-in"></div></div>'; document.body.appendChild(f); try{ bell(); }catch(e){} }
     const w=f.querySelector('.nrf-in'); if(w._h!==html){ w.innerHTML=html; w._h=html; placeBadge(w); buildRing(w); readyTickFn(); }
@@ -1418,15 +1419,17 @@ html body.fun #vnrec .vn-x:hover{background:#e8443a!important}
       (host&&f>=2&&f<t.n?'<button class="lnet-ic lnet-bot" data-act="netfill" data-tip="Completar con la máquina y empezar" aria-label="Completar con la máquina y empezar">🤖</button>':'')+
       '<button class="lnet-ic lnet-x" data-act="netleave" data-tip="'+(host?'Cerrar la mesa':'Salir de la mesa')+'" aria-label="'+(host?'Cerrar la mesa':'Salir de la mesa')+'">✕</button></div>';
     const hint=!NET.open?'Conectando…':host?(f>=2&&f<t.n?'Esperando jugadores · o tocá 🤖 para empezar con la máquina':'Esperando que se sienten jugadores…'):offHost?esc(h0.name||'')+' no está conectado':'Esperando que '+esc(h0.name||'el anfitrión')+' empiece…';
-    s=s.replace('<div class="ltable','<div class="ltable netmine'+((NET.readyUntil||NET.going)&&!online()?' netready':''));
-    if((NET.readyUntil||NET.going)&&!online()){
+    const rdy=(NET.readyUntil||NET.going)&&!online();
+    if(rdy&&!FOCUSB) return s.replace('<div class="ltable','<div class="ltable netmine').replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint">¡Mesa completa!</p>');
+    s=s.replace('<div class="ltable','<div class="ltable netmine'+(rdy?' netready':''));
+    if(rdy){
       const st=NET.readyState||{}, seats=NET.seats||[];
       return rdDecor(s,{list:seats.map((x,i)=>x?{i,key:x.pid||x.id,ok:!!(x.t==='b'||st[x.pid]||NET.going)}:null),tot:NET.n||seats.length,me:NET.meReady,going:NET.going,until:NET.readyUntil,match:matchH({n:NET.n||seats.length,seats:seats.map(x=>x?(x.pid===myPid()?'me':{name:x.name}):null)})});
     }
     s=s.replace(/<p class="lhint">[\s\S]*?<\/p>/,'<p class="lhint lnet-hint">'+hint+'</p>');
     return s.replace(/<\/div>\s*$/,acts+'</div>');
   }
-  const _lth=lbTableH; lbTableH=function(t,big){ const s=_lth.apply(this,arguments); if(HOUSE&&t===HOUSE.t&&!big) return rdDecor(s,{list:houseList(HOUSE),tot:t.n,me:HOUSE.me,going:HOUSE.going,until:HOUSE.until,match:matchH(t)}); return t&&t.net&&!big&&t.joined?decor(s,t):s; };
+  const _lth=lbTableH; lbTableH=function(t,big){ const s=_lth.apply(this,arguments); if(HOUSE&&t===HOUSE.t&&!big&&FOCUSB) return rdDecor(s,{list:houseList(HOUSE),tot:t.n,me:HOUSE.me,going:HOUSE.going,until:HOUSE.until,match:matchH(t)}); return t&&t.net&&!big&&t.joined?decor(s,t):s; };
   const _lbb=lbBubH; lbBubH=function(t){ const s=_lbb.apply(this,arguments); return t&&t.net&&t.joined?s.replace('<div class="hb ','<div class="hb netmine '):s; };
   // Cuadro para compartir (con el estilo del modo elegido)
   function shareBox(){
