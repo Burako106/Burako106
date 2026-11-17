@@ -5722,7 +5722,7 @@ function renderLobby(){
   if(!lobbyIv) lobbyIv=setInterval(lbTick,4200);
   const st=lbStats(), tot=st.w+st.l, pct=tot?Math.round(st.w/tot*100):0;
   lf.st='all';
-  const head=`<header class="lhead"><div class="lhead-logo">${lbLogo()}</div><h1 class="lgreet">¡Hola, <span>${esc(lbMyName())}</span>!</h1>
+  const head=`<header class="lhead"><div class="lhead-logo">${lbLogo()}</div><h1 class="lgreet">${window.lgH?lgH():'¡Hola, <span>'+esc(lbMyName())+'</span>!'}</h1>
     <div class="lhead-r"><button class="lcoins" data-act="lbuy" title="Tus tickets"><i class="lcoin tk">${TKI}</i><b id="lecobal">${ecoIsSub()?'∞':ecoN(E.bal)}</b></button><button class="btn lvideo" data-act="lvideo" title="Mirá un video con anuncio y ganá 100 tickets"><span class="eco-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 7.2v9.6c0 .6.6.9 1.1.6l7.3-4.8a.7.7 0 0 0 0-1.2l-7.3-4.8c-.5-.3-1.1 0-1.1.6z" fill="currentColor"/></svg></span>Ganá +${ECO.VIDEO} ${TKI}</button><button class="btn lbuy" data-act="lbuy"><svg class="lbuy-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 10V7a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Tienda</button>
     ${lbMeH(st,tot,pct)}
     <button class="icon-btn lmenu-btn lfs-btn" data-act="fs" aria-label="${isFs()?'Salir de pantalla completa':'Pantalla completa'}" title="${isFs()?'Salir de pantalla completa':'Pantalla completa'}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${isFs()?'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>':'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'}</svg></button></div></header>`;
@@ -5747,7 +5747,7 @@ function lbProfileH(st){
   const row=(l,[w,lo])=>{ const t=w+lo; return `<tr><td>${l}</td><td>${w}</td><td>${lo}</td><td>${t?Math.round(w/t*100)+'%':'—'}</td></tr>`; };
   return `<div class="lmodal lprof-bg"><div class="card lprof" role="dialog" aria-label="Mi perfil" data-stop="1">
     <button class="icon-btn sm lx" data-act="lprofile" aria-label="Cerrar">✕</button>
-    <div class="lp-head"><span class="lp-avw" data-act="pickme"><button class="lav big lp-av" data-act="pickme" aria-label="Cambiar tu personaje" title="Cambiar tu personaje">${lbAv(null,true)}</button><i class="lp-edit" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></i></span><div><label class="label" for="lname">Tu nombre</label><input id="lname" maxlength="18" value="${esc(lbMyName())}"><small class="set-note">Así te ven en las mesas.</small></div></div>
+    <div class="lp-head"><span class="lp-avw" data-act="pickme"><button class="lav big lp-av" data-act="pickme" aria-label="Cambiar tu personaje" title="Cambiar tu personaje">${lbAv(null,true)}</button><i class="lp-edit" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></i></span><div><label class="label" for="lname">Tu nombre</label><input id="lname" maxlength="18" value="${esc(lbMyName())}"><small class="set-note">Así te ven en las mesas.</small>${window.lgBdayH?lgBdayH():''}</div></div>
     <div class="lp-kpis"><span><b>${st.w+st.l+st.t}</b>partidas</span><span><b>${st.w}</b>ganadas</span><span><b>${st.l}</b>perdidas</span><span><b>${st.best}</b>mejor racha</span></div>
     <table class="lp-tab"><tr><th></th><th>Ganadas</th><th>Perdidas</th><th>%</th></tr>${row('1 vs 1',st.m[2])}${row('2 vs 2',st.m[4])}${row('1 vs 1 vs 1',st.m[3])}${row('Contra la máquina',st.bot)}${row('En mesas',st.mesa)}</table>
     <p class="set-note">Las partidas abandonadas cuentan como perdidas. Si alguien abandona a mitad de partida, la pierde y entra la máquina en difícil a reemplazarlo.</p></div></div>`;
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794879139';</script>
+<script>window.BURAKO_BUILD='1794880579';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6443,6 +6443,28 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
   .lwrap2.slim .lhead-logo .llogo{width:max-content;flex:none;transform:scale(var(--lsc,.8));transform-origin:50% 50%}
   .lwrap2.slim .lhead-logo{align-self:center}
 }
+/* Saludo del lobby en dos tiempos */
+.lgreet{text-overflow:clip!important}
+.lg-win{display:inline-grid;vertical-align:top;max-width:100%}
+.lg-l{grid-area:1/1;white-space:nowrap;min-width:0;justify-self:start}
+.lhead .lgreet{flex:1 1 auto;min-width:0}
+.lg-win{position:relative}
+.lg-b{position:absolute;left:0;top:0}
+.lg-a{transform:none;opacity:1}
+.lg-b{pointer-events:none}
+.lg-w{font-style:inherit;display:inline-block;opacity:0;transform:translateY(-.6em) rotate(-4deg)}
+.lg-w span{font-style:inherit}
+body.fun .lg-w span{font-style:italic}
+.lg-win.s1 .lg-a{opacity:0;transform:translateY(.55em) rotate(2deg)}
+.lg-win.s1 .lg-w{opacity:1;transform:none}
+.lg-win.anim .lg-a{transition:transform .5s cubic-bezier(.5,0,.75,0),opacity .4s ease-in}
+.lg-win.anim .lg-w{transition:transform .62s cubic-bezier(.3,1.6,.5,1),opacity .35s ease-out;transition-delay:calc(.28s + var(--i)*70ms)}
+@media (prefers-reduced-motion:reduce){.lg-win.anim .lg-a,.lg-win.anim .lg-w{transition:opacity .3s!important;transform:none!important}}
+.lg-bd{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.lg-bd span{display:flex;gap:8px}
+.lg-bd select{font:600 14px var(--f-ui);padding:7px 10px;border-radius:10px;border:1.5px solid var(--line,rgba(0,0,0,.15));background:transparent;color:inherit}
+body.fun .lg-bd select{border-color:#141414;background:#fff}
+body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:rgba(230,182,63,.5);color:#f6efe2}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7581,8 +7603,10 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
     const s=Math.min(1,max/Math.max(1,nat)).toFixed(3);
     if(l.style.getPropertyValue('--lsc')!==s) l.style.setProperty('--lsc',s);
   }catch(e){} }
-  new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(fit); }).observe(document.body,{childList:true,subtree:true});
-  addEventListener('resize',fit); if(document.fonts) document.fonts.ready.then(fit);
+  function lgFit(){ try{ const g=document.querySelector('.lgreet'); if(!g) return; g.querySelectorAll('.lg-l').forEach(b=>{ b.style.fontSize=''; const cw=g.clientWidth-4; if(cw>0&&b.scrollWidth>cw) b.style.fontSize=Math.max(.6,cw/b.scrollWidth).toFixed(3)+'em'; }); }catch(e){} }
+  window.lgFit=lgFit;
+  new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(()=>{ fit(); lgFit(); }); }).observe(document.body,{childList:true,subtree:true});
+  addEventListener('resize',()=>{ fit(); lgFit(); }); if(document.fonts) document.fonts.ready.then(fit);
 })();
 
 /* Ventanas: tocar afuera las cierra (crear mesa / jugar contra la máquina, abandonar, pausa) */
@@ -7599,6 +7623,118 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
       if(setupOpen&&!(window.BURAKO_NET&&BURAKO_NET.code&&!lobbyOpen)){ e.stopPropagation(); onAct('cancelsetup',t); return; }
     }catch(err){}
   },true);
+})();
+/* ===== Saludo del lobby: saludo con nombre → mensaje según el momento ===== */
+(function(){
+  const LS='burako-lg';
+  const ld=()=>{ try{ return JSON.parse(localStorage.getItem(LS)||'{}'); }catch(e){ return {}; } };
+  const sv=o=>{ try{ localStorage.setItem(LS,JSON.stringify(o)); }catch(e){} };
+  const en=()=>typeof LANG!=='undefined'&&LANG==='en';
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  const L=x=>Array.isArray(x)?(en()?x[1]:x[0]):x;
+
+  /* país aproximado por zona horaria */
+  function country(){ let z=''; try{ z=Intl.DateTimeFormat().resolvedOptions().timeZone||''; }catch(e){}
+    if(/Argentina|Buenos_Aires|Cordoba|Mendoza|Salta|Jujuy|Catamarca|Ushuaia/.test(z)) return 'AR';
+    if(/Montevideo/.test(z)) return 'UY'; if(/Santiago/.test(z)) return 'CL';
+    if(/Mexico|Cancun|Monterrey|Merida|Tijuana|Chihuahua|Hermosillo|Mazatlan|Matamoros/.test(z)) return 'MX';
+    if(/Madrid|Canary|Ceuta/.test(z)) return 'ES'; if(/Asuncion/.test(z)) return 'PY'; if(/Bogota/.test(z)) return 'CO';
+    if(/^America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit|Indiana)|Honolulu/.test(z)) return 'US';
+    return 'AR'; }
+  function easter(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return new Date(y,mo-1,da); }
+  const nthDow=(y,mo,dow,n)=>{ const d=new Date(y,mo,1); const off=(dow-d.getDay()+7)%7; return 1+off+(n-1)*7; };
+  const lastDow=(y,mo,dow)=>{ const d=new Date(y,mo+1,0); return d.getDate()-((d.getDay()-dow+7)%7); };
+  const same=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+
+  /* feriados y fechas especiales: devuelve [es,en] o null */
+  function holiday(now){
+    const y=now.getFullYear(), m=now.getMonth()+1, d=now.getDate(), md=m*100+d, c=country();
+    const E=easter(y), off=k=>{ const x=new Date(E); x.setDate(x.getDate()+k); return x; };
+    if(same(now,off(-48))||same(now,off(-47))) return ['Carnaval de *comodines*.','Joker *carnival*.'];
+    if(same(now,off(-2))) return ['Mesa *tranquila* hoy.','*Calm* table today.'];
+    if(same(now,E)) return ['¡Felices *Pascuas*!','Happy *Easter*!'];
+    const fixed={101:['¡Feliz *año nuevo*!','Happy *new year*!'],106:['Comodines de *Reyes*.','*Epiphany* jokers.'],
+      214:['Amor a primera *canasta*.','Love at first *canasta*.'],308:['¡Feliz *8M*!','Happy *Women’s Day*!'],
+      1031:['Comodines *disfrazados*.','Jokers in *costume*.'],1224:['Nochebuena con *fichas*.','Christmas Eve *tiles*.'],
+      1225:['¡Feliz *Navidad*!','Merry *Christmas*!'],1231:['La última del *año*.','Last one of the *year*.']};
+    const loc={
+      AR:{324:['Memoria, verdad y *justicia*.','Memory, truth and *justice*.'],402:['Honor a *Malvinas*.','Honoring *Malvinas*.'],
+          501:['Descanso con *fichas*.','Rest day, *tiles* on.'],525:['¡Feliz *25 de Mayo*!','Happy *May 25th*!'],
+          620:['¡Feliz día, *Bandera*!','Happy *Flag Day*!'],709:['¡Feliz *9 de Julio*!','Happy *Independence Day*!'],
+          720:['Día de la *amistad*.','*Friendship* Day.'],921:['Llegó la *primavera*.','Spring is *here*.'],
+          1208:['Arbolito y *fichas*.','Tree up, *tiles* out.']},
+      UY:{718:['¡Feliz día de la *Jura*!','Happy *Constitution Day*!'],825:['¡Feliz *Independencia*!','Happy *Independence Day*!']},
+      CL:{918:['¡Felices *Fiestas Patrias*!','Happy *Fiestas Patrias*!'],919:['Empanadas y *fichas*.','Empanadas and *tiles*.']},
+      MX:{916:['¡Viva *México*!','¡Viva *México*!'],1102:['Fichas *bien vivas*.','Very *lively* tiles.']},
+      ES:{1012:['¡Feliz *Fiesta Nacional*!','Happy *National Day*!'],1206:['Puente largo, *partida larga*.','Long weekend, *long game*.']},
+      PY:{515:['¡Feliz *Independencia*!','Happy *Independence Day*!']},CO:{720:['¡Feliz *Independencia*!','Happy *Independence Day*!']},
+      US:{704:['¡Feliz *4 de julio*!','Happy *Fourth*!']}};
+    if(loc[c]&&loc[c][md]) return loc[c][md];
+    if(fixed[md]) return fixed[md];
+    if(c==='AR'||c==='UY'||c==='PY'){ if(m===10&&d===nthDow(y,9,0,3)) return ['Feliz día, *mamás*.','Happy *Mother’s Day*.']; }
+    if(c==='AR'&&m===6&&d===nthDow(y,5,0,3)) return ['Feliz día, *papás*.','Happy *Father’s Day*.'];
+    if(c==='AR'&&m===8&&d===nthDow(y,7,0,3)) return ['Feliz día, *infancias*.','Happy *Children’s Day*.'];
+    if((c==='MX'||c==='US'||c==='CL'||c==='CO'||c==='ES')&&m===5&&(c==='MX'?d===10:d===nthDow(y,4,0,c==='ES'?1:2))) return ['Feliz día, *mamás*.','Happy *Mother’s Day*.'];
+    if(c==='US'&&m===11&&d===nthDow(y,10,4,4)) return ['¡Feliz *Thanksgiving*!','Happy *Thanksgiving*!'];
+    if(now.getDay()===5&&d===13) return ['Viernes 13. *Ojo*.','Friday 13th. *Careful*.'];
+    if(m===2&&d===29) return ['Un día de *regalo*.','A *bonus* day.'];
+    return null;
+  }
+
+  function streak(){ let st=null; try{ st=lbStats(); }catch(e){} if(!st) return null; const g=ld(), played=(st.w||0)+(st.l||0)+(st.t||0);
+    if(!played) return pick([['Tu primera *canasta*.','Your first *canasta*.'],['Cero presión, *a jugar*.','No pressure, *let’s play*.']]);
+    if(st.streak>=3&&st.streak>=st.best) return [`Racha *récord*: ${st.streak}.`,`*Record* streak: ${st.streak}.`];
+    if(st.streak>=3) return [`Racha de *${st.streak}*. ¿Más?`,`*${st.streak}* in a row. More?`];
+    if(st.streak===2) return pick([['Dos al hilo. *Ojo*.','Two in a row. *Watch out*.'],['Venís *on fire*.','You’re *on fire*.']]);
+    if((g.ls||0)>=3) return pick([['Hoy se da *vuelta*.','Today it *turns*.'],['Te deben *una*.','They owe you *one*.']]);
+    if((g.ls||0)>=2) return ['Hora de *revancha*.','*Revenge* time.'];
+    return null; }
+
+  function special(now){ const g=ld();
+    if(g.bd){ const [bd,bm]=g.bd.split('-').map(Number); if(bd===now.getDate()&&bm===now.getMonth()+1) return {bday:1,m:pick([['Las fichas *te festejan*.','The tiles *celebrate you*.'],['¡A soplar *velitas*!','Make a *wish*!']])}; }
+    if(g.first){ const f=new Date(g.first); if(f.getDate()===now.getDate()&&f.getMonth()===now.getMonth()&&now.getFullYear()>f.getFullYear()){ const n=now.getFullYear()-f.getFullYear(); return {m:[`${n===1?'Un año':n+' años'} de *burako*.`,`${n} year${n>1?'s':''} of *burako*.`]}; } }
+    if(g.last&&Date.now()-g.last>7*864e5) return {m:pick([['Las fichas *te extrañaban*.','The tiles *missed you*.'],['Mirá quién *volvió*.','Look who’s *back*.']])};
+    return null; }
+
+  function timeMsg(now){ const h=now.getHours(), dw=now.getDay();
+    const T=h<6?[['Fichas *sin sueño*.','Tiles *never sleep*.'],['Una más y *a dormir*.','One more, then *bed*.'],['Modo *búho* activado.','*Night owl* mode.']]
+      :h<12?[['Café y *fichas*.','Coffee and *tiles*.'],['Arrancá con *escalera*.','Start with a *run*.'],['Mañana de *canastas*.','A morning of *canastas*.']]
+      :h<15?[['Burako de *sobremesa*.','After-lunch *burako*.'],['Sobremesa con *fichas*.','*Tiles* after lunch.']]
+      :h<20?[['Mate y *burako*.','Tea and *burako*.'],['Tarde de *revancha*.','*Revenge* afternoon.'],['Merienda y *canasta*.','Snacks and *canasta*.']]
+      :[['Noche de *canastas*.','*Canasta* night.'],['Cerrá el día *ganando*.','End the day *winning*.'],['¿La última? *Ajá*.','Last one? *Sure*.']];
+    const W={0:[['Domingo de *fichas*.','Sunday *tiles*.'],['Domingo de *revancha*.','*Revenge* Sunday.']],
+      1:[['Lunes con *fichas*.','Monday, with *tiles*.'],['Arrancá *ganando*.','Start *winning*.']],
+      2:[['Martes de *remontada*.','*Comeback* Tuesday.']],3:[['Miércoles *sin apuro*.','Wednesday, *no rush*.']],
+      4:[['Jueves, casi *viernes*.','Thursday, almost *Friday*.']],
+      5:[['Viernes de *canasta*.','*Canasta* Friday.'],['El viernes pide *pura*.','Friday wants a *clean* one.']],
+      6:[['Sábado *sin reloj*.','Saturday, *no clock*.'],['Sábado de *mesa larga*.','Long-table *Saturday*.']]};
+    if(dw===0&&h>=20) return ['Domingo, *la última*.','Sunday, *last one*.'];
+    return pick(Math.random()<.5?T:W[dw]); }
+
+  function greet(now,bday){ const h=now.getHours();
+    if(bday) return ['Feliz cumple','Happy bday'];
+    const g=h>=5&&h<12?[['Buen día','Morning'],['Hola','Hi']]:[['Buenas','Hey'],['Hola','Hi']];
+    return pick(g); }
+
+  const LGS={st:0,a:'',b:'',tm:0};
+  function compose(){ const now=new Date(), sp=special(now);
+    const a=greet(now,sp&&sp.bday);
+    const b=(sp&&sp.bday&&sp.m)||holiday(now)||(sp&&sp.m)||(Math.random()<.6&&streak())||timeMsg(now);
+    LGS.a=a; LGS.b=b; const g=ld(); if(!g.first) g.first=Date.now(); g.last=Date.now(); sv(g); }
+  window.lgDbg={holiday,streak,timeMsg,special,greet,set:(a,b)=>{LGS.a=a;LGS.b=b;}};
+  window.lgH=function(){
+    const old=document.querySelector('.lgreet'); const fresh=!old||!old.offsetWidth||!LGS.a;
+    if(fresh){ compose(); LGS.st=0; clearTimeout(LGS.tm); LGS.tm=setTimeout(()=>{ LGS.st=1; const w=document.querySelector('.lg-win'); if(w){ w.classList.add('anim'); w.classList.add('s1'); setTimeout(()=>w.classList.remove('anim'),1400); } },3400); }
+    const nm=esc(lbMyName()); let k=0;
+    const b=L(LGS.b).split('*').map((seg,j)=>seg.split(' ').filter(Boolean).map(w=>{ const t=esc(w); return `<i class="lg-w" style="--i:${k++}">${j%2?'<span>'+t+'</span>':t}</i>`; }).join(' ')).filter(Boolean).join(' ').replace(/<\/i> ?(<i class="lg-w" style="--i:\d+">[.,:!?…])/g,'</i>$1');
+    return `<span class="lg-win${LGS.st?' s1':''}"><span class="lg-l lg-a">${en()?'':'¡'}${L(LGS.a)}, <span>${nm}</span>!</span><span class="lg-l lg-b" aria-live="polite">${b}</span></span>`;
+  };
+  /* racha de derrotas para los mensajes */
+  try{ const orig=window.lbRecord; if(typeof orig==='function') window.lbRecord=function(res){ const had=S&&S.recorded; const r=orig.apply(this,arguments); if(!had&&S&&S.recorded){ const g=ld(); g.ls=res==='lose'?(g.ls||0)+1:res==='win'?0:(g.ls||0); sv(g); } return r; }; }catch(e){}
+  /* cumpleaños en el perfil */
+  window.lgBdayH=function(){ const g=ld(); const [d,m]=(g.bd||'').split('-'); const ms=en()?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return `<div class="lg-bd"><label class="label">${en()?'Your birthday':'Tu cumple'}</label><span><select data-lgbd="d" aria-label="Día"><option value="">—</option>${Array.from({length:31},(_,i)=>`<option${+d===i+1?' selected':''}>${i+1}</option>`).join('')}</select><select data-lgbd="m" aria-label="Mes"><option value="">—</option>${ms.map((x,i)=>`<option value="${i+1}"${+m===i+1?' selected':''}>${x}</option>`).join('')}</select></span></div>`; };
+  document.addEventListener('change',e=>{ const s=e.target.closest&&e.target.closest('[data-lgbd]'); if(!s) return; const w=s.parentElement; const d=w.querySelector('[data-lgbd="d"]').value, m=w.querySelector('[data-lgbd="m"]').value; const g=ld(); if(d&&m) g.bd=d+'-'+m; else delete g.bd; sv(g); });
 })();
 </script>
 

@@ -98,6 +98,9 @@ rep("<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"
 # orden de diseños en el menú: Glass, Classic, Fun
 rep("['fun','classic','glass'].map","['glass','classic','fun'].map",2)
 rep("""data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button>""","""data-v="glass" aria-selected="${theme==='glass'}">Glass</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button>""",2)
+# saludo del lobby: saludo con nombre y después un mensaje según el momento
+rep('<h1 class="lgreet">¡Hola, <span>${esc(lbMyName())}</span>!</h1>','<h1 class="lgreet">${window.lgH?lgH():\'¡Hola, <span>\'+esc(lbMyName())+\'</span>!\'}</h1>')
+rep('<small class="set-note">Así te ven en las mesas.</small>','<small class="set-note">Así te ven en las mesas.</small>${window.lgBdayH?lgBdayH():\'\'}')
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
