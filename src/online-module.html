@@ -369,6 +369,11 @@ html body:not(.fun):not(.glass) .lbig .lplus{background:rgba(255,255,255,.14)!im
 html body:not(.fun):not(.glass) .lbig.lcreate .lplus{background:rgba(0,0,0,.18)!important}
 /* Fun: línea negra también alrededor de la foto, dentro del aro de color */
 html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*{border-radius:50%;outline:1.5px solid #141414;outline-offset:-1.5px}
+/* Menú colapsado: el logo queda centrado sobre la barra */
+@media (min-width:901px){
+  .lwrap2.slim .lhead-logo{width:var(--lnw,76px)!important;margin-left:-106px!important;margin-right:30px!important;display:flex!important;justify-content:center}
+  .lwrap2.slim .lhead-logo .llogo{width:max-content;flex:none;transform:scale(var(--lsc,.8));transform-origin:50% 0}
+}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -1495,5 +1500,19 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
     lbRefresh();
   }
   setTimeout(boot,0);
+})();
+
+/* Menú colapsado: achica el logo para que entre centrado sobre la barra */
+(function(){
+  let pend=0;
+  function fit(){ pend=0; try{
+    const w=document.querySelector('.lwrap2.slim .lhead-logo'); if(!w) return;
+    const l=w.querySelector('.llogo'), n=document.querySelector('.lnav.slim'); if(!l||!n) return;
+    const nat=l.scrollWidth, max=n.offsetWidth+20;
+    const s=Math.min(1,max/Math.max(1,nat)).toFixed(3);
+    if(l.style.getPropertyValue('--lsc')!==s) l.style.setProperty('--lsc',s);
+  }catch(e){} }
+  new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(fit); }).observe(document.body,{childList:true,subtree:true});
+  addEventListener('resize',fit); if(document.fonts) document.fonts.ready.then(fit);
 })();
 </script>
