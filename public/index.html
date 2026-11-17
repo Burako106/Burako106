@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794914626';</script>
+<script>window.BURAKO_BUILD='1794916913';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7732,7 +7732,7 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
     return pick(g); }
 
   const LGS={st:0,a:'',b:'',bAt:0,tm:0,iv:0};
-  const SWAP_MS=60000, NEWMSG_MS=30*60000;
+  const FIRST_MS=6000, MSG_MS=12000, NAME_MS=60000, NEWMSG_MS=30*60000;
   function compose(onlyB){ const now=new Date(), sp=special(now);
     if(!onlyB) LGS.a=greet(now,sp&&sp.bday);
     let b, tries=0, prev=LGS.b&&L(LGS.b);
@@ -7756,7 +7756,8 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
   window.lgH=function(){
     const old=document.querySelector('.lgreet'); const fresh=!old||!old.offsetWidth||!LGS.a;
     if(fresh){ compose(); LGS.st=0; clearTimeout(LGS.tm); clearInterval(LGS.iv);
-      LGS.tm=setTimeout(()=>{ swap(); LGS.iv=setInterval(swap,SWAP_MS); },3400); }
+      const step=()=>{ swap(); LGS.tm=setTimeout(step,LGS.st?MSG_MS:NAME_MS); };
+      LGS.tm=setTimeout(step,FIRST_MS); }
     return `<span class="lg-win"><span class="lg-l lg-a${LGS.st?'':' on'}">${aH()}</span><span class="lg-l lg-b${LGS.st?' on':''}" aria-live="polite">${bH()}</span></span>`;
   };
   /* racha de derrotas para los mensajes */
