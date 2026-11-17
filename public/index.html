@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794881520';</script>
+<script>window.BURAKO_BUILD='1794914626';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6467,6 +6467,7 @@ body.fun .lg-w span{font-style:italic}
 .lg-bd select{font:600 14px var(--f-ui);padding:7px 10px;border-radius:10px;border:1.5px solid var(--line,rgba(0,0,0,.15));background:transparent;color:inherit}
 body.fun .lg-bd select{border-color:#141414;background:#fff}
 body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:rgba(230,182,63,.5);color:#f6efe2}
+.lg-b.two{white-space:normal;line-height:1.02;top:50%;translate:0 -50%}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7605,7 +7606,12 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
     const s=Math.min(1,max/Math.max(1,nat)).toFixed(3);
     if(l.style.getPropertyValue('--lsc')!==s) l.style.setProperty('--lsc',s);
   }catch(e){} }
-  function lgFit(){ try{ const g=document.querySelector('.lgreet'); if(!g) return; g.querySelectorAll('.lg-l').forEach(b=>{ b.style.fontSize=''; const cw=g.clientWidth-4; if(cw>0&&b.scrollWidth>cw) b.style.fontSize=Math.max(.6,cw/b.scrollWidth).toFixed(3)+'em'; }); }catch(e){} }
+  function lgFit(){ try{ const g=document.querySelector('.lgreet'); if(!g) return; const cw=g.clientWidth-4; if(cw<=0) return;
+    g.querySelectorAll('.lg-l').forEach(b=>{ b.style.fontSize=''; b.style.width=''; b.classList.remove('two');
+      if(b.scrollWidth<=cw) return; const s=cw/b.scrollWidth;
+      if(s>=.55||!b.classList.contains('lg-b')){ b.style.fontSize=Math.max(.6,s).toFixed(3)+'em'; return; }
+      b.classList.add('two'); b.style.width=cw+'px'; let f=.56; b.style.fontSize=f+'em';
+      while(f>.36&&(b.scrollWidth>cw+1||b.getBoundingClientRect().height>g.clientHeight*1.02)){ f-=.02; b.style.fontSize=f.toFixed(2)+'em'; } }); }catch(e){} }
   window.lgFit=lgFit;
   new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(()=>{ fit(); lgFit(); }); }).observe(document.body,{childList:true,subtree:true});
   addEventListener('resize',()=>{ fit(); lgFit(); }); if(document.fonts) document.fonts.ready.then(fit);
@@ -7652,22 +7658,22 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
   function holiday(now){
     const y=now.getFullYear(), m=now.getMonth()+1, d=now.getDate(), md=m*100+d, c=country();
     const E=easter(y), off=k=>{ const x=new Date(E); x.setDate(x.getDate()+k); return x; };
-    if(same(now,off(-48))||same(now,off(-47))) return ['Carnaval de *comodines*.','Joker *carnival*.'];
-    if(same(now,off(-2))) return ['Mesa *tranquila* hoy.','*Calm* table today.'];
+    if(same(now,off(-48))||same(now,off(-47))) return ['¡Feliz *carnaval*!','Happy *carnival*!'];
+    if(same(now,off(-2))) return ['Feriado y burako. *Planazo*.','Day off and burako. *Perfect*.'];
     if(same(now,E)) return ['¡Felices *Pascuas*!','Happy *Easter*!'];
-    const fixed={101:['¡Feliz *año nuevo*!','Happy *new year*!'],106:['Comodines de *Reyes*.','*Epiphany* jokers.'],
+    const fixed={101:['Año nuevo, mismas *mañas*.','New year, same *habits*.'],106:['¡Felices *Reyes*!','Happy *Epiphany*!'],
       214:['Amor a primera *canasta*.','Love at first *canasta*.'],308:['¡Feliz *8M*!','Happy *Women’s Day*!'],
-      1031:['Comodines *disfrazados*.','Jokers in *costume*.'],1224:['Nochebuena con *fichas*.','Christmas Eve *tiles*.'],
-      1225:['¡Feliz *Navidad*!','Merry *Christmas*!'],1231:['La última del *año*.','Last one of the *year*.']};
+      1224:['Nochebuena y *burakito*.','Christmas Eve *burako*.'],
+      1225:['Papá Noel también *juega*.','Santa plays *too*.'],1231:['La última del *año*.','Last one of the *year*.']};
     const loc={
       AR:{324:['Memoria, verdad y *justicia*.','Memory, truth and *justice*.'],402:['Honor a *Malvinas*.','Honoring *Malvinas*.'],
-          501:['Descanso con *fichas*.','Rest day, *tiles* on.'],525:['¡Feliz *25 de Mayo*!','Happy *May 25th*!'],
+          501:['Feriado y burako. *Planazo*.','Day off and burako. *Perfect*.'],525:['Locro, escarapela y *canasta*.','Locro, rosettes and *canasta*.'],
           620:['¡Feliz día, *Bandera*!','Happy *Flag Day*!'],709:['¡Feliz *9 de Julio*!','Happy *Independence Day*!'],
-          720:['Día de la *amistad*.','*Friendship* Day.'],921:['Llegó la *primavera*.','Spring is *here*.'],
-          1208:['Arbolito y *fichas*.','Tree up, *tiles* out.']},
+          720:['La amistad se demuestra *jugando*.','Friendship is shown by *playing*.'],921:['Llegó la *primavera*.','Spring is *here*.'],
+          1208:['Feriado y burako. *Planazo*.','Day off and burako. *Perfect*.']},
       UY:{718:['¡Feliz día de la *Jura*!','Happy *Constitution Day*!'],825:['¡Feliz *Independencia*!','Happy *Independence Day*!']},
       CL:{918:['¡Felices *Fiestas Patrias*!','Happy *Fiestas Patrias*!'],919:['Empanadas y *fichas*.','Empanadas and *tiles*.']},
-      MX:{916:['¡Viva *México*!','¡Viva *México*!'],1102:['Fichas *bien vivas*.','Very *lively* tiles.']},
+      MX:{916:['¡Viva *México*!','¡Viva *México*!'],1102:['¡Feliz Día de *Muertos*!','Happy Day of the *Dead*!']},
       ES:{1012:['¡Feliz *Fiesta Nacional*!','Happy *National Day*!'],1206:['Puente largo, *partida larga*.','Long weekend, *long game*.']},
       PY:{515:['¡Feliz *Independencia*!','Happy *Independence Day*!']},CO:{720:['¡Feliz *Independencia*!','Happy *Independence Day*!']},
       US:{704:['¡Feliz *4 de julio*!','Happy *Fourth*!']}};
@@ -7684,34 +7690,41 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
   }
 
   function streak(){ let st=null; try{ st=lbStats(); }catch(e){} if(!st) return null; const g=ld(), played=(st.w||0)+(st.l||0)+(st.t||0);
-    if(!played) return pick([['Tu primera *canasta*.','Your first *canasta*.'],['Cero presión, *a jugar*.','No pressure, *let’s play*.']]);
-    if(st.streak>=3&&st.streak>=st.best) return [`Racha *récord*: ${st.streak}.`,`*Record* streak: ${st.streak}.`];
-    if(st.streak>=3) return [`Racha de *${st.streak}*. ¿Más?`,`*${st.streak}* in a row. More?`];
-    if(st.streak===2) return pick([['Dos al hilo. *Ojo*.','Two in a row. *Watch out*.'],['Venís *on fire*.','You’re *on fire*.']]);
-    if((g.ls||0)>=3) return pick([['Hoy se da *vuelta*.','Today it *turns*.'],['Te deben *una*.','They owe you *one*.']]);
-    if((g.ls||0)>=2) return ['Hora de *revancha*.','*Revenge* time.'];
+    const nw=n=>en()?(['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'][n]||n):(['','Una','Dos','Tres','Cuatro','Cinco','Seis','Siete','Ocho','Nueve','Diez'][n]||n);
+    if(!played) return ['Primera partida. *Sin presión*.','First game. *No pressure*.'];
+    if(st.streak>=3&&st.streak>=st.best&&Math.random()<.5) return ['Récord personal. *Sacá pecho*.','Personal record. *Flex a little*.'];
+    if(st.streak>=3) return [`${nw(st.streak)} al hilo. *Calmate*.`,`${nw(st.streak)} in a row. *Chill*.`];
+    if(st.streak===2) return ['Dos seguidas. ¿*Talento* o suerte?','Two in a row. *Talent* or luck?'];
+    if((g.ls||0)>=2) return pick([['Perder también es *cardio*.','Losing is also *cardio*.'],['La revancha es *hoy*.','Revenge is *today*.']]);
     return null; }
 
   function special(now){ const g=ld();
-    if(g.bd){ const [bd,bm]=g.bd.split('-').map(Number); if(bd===now.getDate()&&bm===now.getMonth()+1) return {bday:1,m:pick([['Las fichas *te festejan*.','The tiles *celebrate you*.'],['¡A soplar *velitas*!','Make a *wish*!']])}; }
+    if(g.bd){ const [bd,bm]=g.bd.split('-').map(Number); if(bd===now.getDate()&&bm===now.getMonth()+1) return {bday:1,m:pick([['Hoy perdés solo si *querés*.','Today you lose only if you *want*.'],['Cumple y burako. *Planazo*.','Birthday and burako. *Perfect*.']])}; }
     if(g.first){ const f=new Date(g.first); if(f.getDate()===now.getDate()&&f.getMonth()===now.getMonth()&&now.getFullYear()>f.getFullYear()){ const n=now.getFullYear()-f.getFullYear(); return {m:[`${n===1?'Un año':n+' años'} de *burako*.`,`${n} year${n>1?'s':''} of *burako*.`]}; } }
-    if(g.last&&Date.now()-g.last>7*864e5) return {m:pick([['Las fichas *te extrañaban*.','The tiles *missed you*.'],['Mirá quién *volvió*.','Look who’s *back*.']])};
+    if(g.last&&Date.now()-g.last>7*864e5) return {m:['¿Dónde estabas? Te *esperábamos* :)','Where were you? We *waited* :)']};
     return null; }
 
   function timeMsg(now){ const h=now.getHours(), dw=now.getDay();
-    const T=h<6?[['Fichas *sin sueño*.','Tiles *never sleep*.'],['Una más y *a dormir*.','One more, then *bed*.'],['Modo *búho* activado.','*Night owl* mode.']]
-      :h<12?[['Café y *fichas*.','Coffee and *tiles*.'],['Arrancá con *escalera*.','Start with a *run*.'],['Mañana de *canastas*.','A morning of *canastas*.']]
-      :h<15?[['Burako de *sobremesa*.','After-lunch *burako*.'],['Sobremesa con *fichas*.','*Tiles* after lunch.']]
-      :h<20?[['Mate y *burako*.','Tea and *burako*.'],['Tarde de *revancha*.','*Revenge* afternoon.'],['Merienda y *canasta*.','Snacks and *canasta*.']]
-      :[['Noche de *canastas*.','*Canasta* night.'],['Cerrá el día *ganando*.','End the day *winning*.'],['¿La última? *Ajá*.','Last one? *Sure*.']];
-    const W={0:[['Domingo de *fichas*.','Sunday *tiles*.'],['Domingo de *revancha*.','*Revenge* Sunday.']],
-      1:[['Lunes con *fichas*.','Monday, with *tiles*.'],['Arrancá *ganando*.','Start *winning*.']],
-      2:[['Martes de *remontada*.','*Comeback* Tuesday.']],3:[['Miércoles *sin apuro*.','Wednesday, *no rush*.']],
-      4:[['Jueves, casi *viernes*.','Thursday, almost *Friday*.']],
-      5:[['Viernes de *canasta*.','*Canasta* Friday.'],['El viernes pide *pura*.','Friday wants a *clean* one.']],
-      6:[['Sábado *sin reloj*.','Saturday, *no clock*.'],['Sábado de *mesa larga*.','Long-table *Saturday*.']]};
-    if(dw===0&&h>=20) return ['Domingo, *la última*.','Sunday, *last one*.'];
-    return pick(Math.random()<.5?T:W[dw]); }
+    const DN=en()?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']:['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    const G=[['Desconectá la mente, *creá una mesa* :)','Unplug your brain, *start a table* :)'],['Ya fue todo. *A jugar*.','Forget it all. *Let’s play*.'],
+      ['CEO de mi tiempo. *Juguemos*.','CEO of my time. *Let’s play*.'],['¿Otra vez acá? *Tqm* :)','Here again? *Love you* :)'],
+      ['Shh, modo *concentración* activado.','Shh, *focus mode* on.'],['Cinco minutitos nomás. *(Ja.)*','Just five minutes. *(Ha.)*'],
+      ['Prometo que es *la última*.','I swear it’s *the last one*.'],['Notificaciones afuera, *fichas adentro*.','Notifications out, *tiles in*.'],
+      ['Tu lugar feliz, *cargando…*','Your happy place, *loading…*'],['El celular puede *esperar*.','Your phone can *wait*.'],
+      ['Nadie te vio entrar. *Tranqui*.','Nobody saw you come in. *Relax*.'],['Hoy se viene a *ganar*.','Today we came to *win*.']];
+    const T=h<6?[['¿Quién dijo *dormir*?','Who said *sleep*?'],['Insomnio, pero *con onda*.','Insomnia, but *make it fun*.']]
+      :h<12?[...(dw>=1&&dw<=5?[[`Jugando un ${DN[dw]}. *¿Sí, por?*`,`Playing on a ${DN[dw]}. *So what?*`]]:[]),['Café en mano, *fichas listas*.','Coffee in hand, *tiles ready*.']]
+      :h<15?[['Cortando el día con *burakito*.','Breaking up the day with *burako*.'],['La siesta puede *esperar*.','The nap can *wait*.']]
+      :h<20?[['¿Reunión aburrida? *Minimizá y jugá*.','Boring meeting? *Minimize and play*.'],['Ya cumpliste. Ahora, *burako*.','You did your part. Now, *burako*.']]
+      :[['Cena liviana, partida *pesada*.','Light dinner, *heavy* game.'],['Una y a dormir. *Mentira*.','One and then bed. *Kidding*.']];
+    const W={0:h>=15?[['¿Bajón de domingo? *Burakito*.','Sunday blues? *Burako*.'],['Mañana es lunes. *Jugá hoy*.','Tomorrow’s Monday. *Play today*.']]:[['¿Bajón de domingo? *Burakito*.','Sunday blues? *Burako*.']],
+      1:h>=19?[['Lunes sobrevivido. *Merecés jugar*.','Monday survived. *You’ve earned it*.']]:[['¿Lunes? Arrancá con *escalera*.','Monday? Start with a *run*.']],
+      2:[['Martes: lunes con *mejor peinado*.','Tuesday: Monday with *better hair*.']],
+      3:[['Cortando la semana *con estilo*.','Breaking up the week *in style*.']],
+      4:[['Jueves, viernes *en entrenamiento*.','Thursday, Friday *in training*.']],
+      5:[['Viernes. Se nota, *¿no?*','Friday. You can tell, *right?*'],['Viernes y sin planes. *Perfecto*.','Friday, no plans. *Perfect*.']],
+      6:[['Sábado sin alarma, *con fichas*.','Saturday, no alarm, *just tiles*.']]};
+    const r=Math.random(); return pick(r<.34?T:r<.67?W[dw]:G); }
 
   function greet(now,bday){ const h=now.getHours();
     if(bday) return ['Feliz cumple','Happy bday'];
@@ -7727,7 +7740,7 @@ body:not(.fun):not(.glass) .lg-bd select{background:rgba(0,0,0,.2);border-color:
     LGS.b=b; LGS.bAt=Date.now(); const g=ld(); if(!g.first) g.first=Date.now(); g.last=Date.now(); sv(g); }
   window.lgDbg={holiday,streak,timeMsg,special,greet,set:(a,b)=>{LGS.a=a;LGS.b=b;},S:LGS,swap:()=>swap()};
   const aH=()=>`${en()?'':'¡'}${esc(L(LGS.a))}, <span>${esc(lbMyName())}</span>!`;
-  function bH(){ let k=0; return L(LGS.b).split('*').map((seg,j)=>seg.split(' ').filter(Boolean).map(w=>{ const t=esc(w); return `<i class="lg-w" style="--i:${k++}">${j%2?'<span>'+t+'</span>':t}</i>`; }).join(' ')).filter(Boolean).join(' ').replace(/<\/i> ?(<i class="lg-w" style="--i:\d+">[.,:!?…])/g,'</i>$1'); }
+  function bH(){ let k=0; return L(LGS.b).split('*').map((seg,j)=>seg.split(' ').filter(Boolean).map(w=>{ const t=esc(w); return `<i class="lg-w" style="--i:${k++}">${j%2?'<span>'+t+'</span>':t}</i>`; }).join(' ')).filter(Boolean).join(' ').replace(/<\/i> ?(<i class="lg-w" style="--i:\d+">[.,:!?…](?!\)))/g,'</i>$1'); }
   /* alterna saludo ⇄ mensaje; todo cae hacia abajo */
   function swap(){
     const w=document.querySelector('.lg-win'); const to=LGS.st?0:1;
