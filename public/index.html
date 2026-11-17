@@ -3859,12 +3859,12 @@ function renderMenu(){
     <button class="menu-item" data-act="rules"><span><b>Cómo se juega</b></span></button>
     <button class="menu-item" data-act="lbuy"><span><b>Tienda</b><small>Tickets y suscripción.</small></span></button>
     <div class="menu-row"><span class="label">Idioma</span><div class="lang-tabs" role="tablist" aria-label="Idioma"><button role="tab" data-act="lang" data-v="es" aria-selected="${LANG==='es'}">ES</button><button role="tab" data-act="lang" data-v="en" aria-selected="${LANG==='en'}">EN</button></div></div>
-    <div class="menu-row theme-row"><span class="label">Diseño</span><div class="lang-tabs" role="tablist" aria-label="Diseño"><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button></div></div>
+    <div class="menu-row theme-row"><span class="label">Diseño</span><div class="lang-tabs" role="tablist" aria-label="Diseño"><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button></div></div>
     ${inGame()?'<div class="menu-foot"><button class="btn primary" data-act="lresume">Volver a mi partida</button></div>':''}`; return; }
   m.innerHTML=`<div class="menu-head"><span class="brand">Bura<span>ko</span></span><button class="icon-btn sm" data-act="menu" aria-label="Cerrar menú">✕</button></div><div class="menu-row"><span class="label">Idioma</span><div class="lang-tabs" role="tablist" aria-label="Idioma"><button role="tab" data-act="lang" data-v="es" aria-selected="${LANG==='es'}">ES</button><button role="tab" data-act="lang" data-v="en" aria-selected="${LANG==='en'}">EN</button></div></div>
     <button class="menu-item" data-act="relator"><span><b>Relator</b><small>Narra lo que pasa en cada turno.</small></span><span class="sw${relatorOn?' on':''}" aria-hidden="true"></span></button>
     <button class="menu-item" data-act="chat"><span><b>Historial del chat</b></span>${unread?`<i class="badge-n inl">${unread}</i>`:''}</button>
-    <button class="menu-item" data-act="rules"><span><b>Cómo se juega</b></span></button><div class="menu-row theme-row"><span class="label">Diseño</span><div class="lang-tabs" role="tablist" aria-label="Diseño"><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button></div></div>
+    <button class="menu-item" data-act="rules"><span><b>Cómo se juega</b></span></button><div class="menu-row theme-row"><span class="label">Diseño</span><div class="lang-tabs" role="tablist" aria-label="Diseño"><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button></div></div>
     <div class="menu-foot"><button class="btn" data-act="golobby">Ir al lobby</button><button class="btn danger-ghost" data-act="quit">Abandonar partida</button></div>`;
 }
 function renderRelator(){
@@ -5609,7 +5609,7 @@ function lbNavH(){ const on=lnavActive(), th={fun:'Fun',classic:'Classic',glass:
       ${it('reglas','lbook','Cómo se juega')}
       <div class="lni-b lni-row" data-nav="idioma">${LNAV_IC.idioma}<span class="lni-l">Idioma</span><span class="lni-seg" role="tablist" aria-label="Idioma"><button role="tab" data-act="lang" data-v="es" aria-selected="${LANG==='es'}">ES</button><button role="tab" data-act="lang" data-v="en" aria-selected="${LANG==='en'}">EN</button></span></div>
       <div class="lni-grp${lnavX==='diseno'?' open':''}">${it('diseno','lnavx','Diseño',`<span class="lni-v">${th[theme]}</span><svg class="lni-car" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`)}
-        <div class="lni-sub" role="tablist" aria-label="Diseño">${['fun','classic','glass'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" class="th-${v}"><i></i>${th[v]}</button>`).join('')}</div></div>
+        <div class="lni-sub" role="tablist" aria-label="Diseño">${['glass','classic','fun'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" class="th-${v}"><i></i>${th[v]}</button>`).join('')}</div></div>
       ${it('config','lcfg','Configuración')}
     </div>
     <div class="lver">V.1</div><button class="lnav-tog" data-act="lnavslim" aria-label="Menú angosto (solo iconos)" title="Menú angosto (solo iconos)">${LNAV_IC.collapse}</button></nav>`; }
@@ -5623,7 +5623,7 @@ function lbNavSlimH(on,th,it){ const st=lbStats(), tot=st.w+st.l, pct=tot?Math.r
       <div class="lns-x${lnavX==='idioma'?' open':''}"><button class="lni-b" data-act="lnavx" data-x="idioma" data-nav="idioma" aria-label="Idioma" aria-expanded="${lnavX==='idioma'}">${LNAV_IC.idioma}<b class="lns-badge">${LANG.toUpperCase()}</b></button>
         <span class="lns-fly lni-seg" role="tablist" aria-label="Idioma"><button role="tab" data-act="lang" data-v="es" aria-selected="${LANG==='es'}">ES</button><button role="tab" data-act="lang" data-v="en" aria-selected="${LANG==='en'}">EN</button></span></div>
       <div class="lns-x${lnavX==='diseno'?' open':''}"><button class="lni-b" data-act="lnavx" data-x="diseno" data-nav="diseno" aria-label="Diseño" aria-expanded="${lnavX==='diseno'}">${LNAV_IC.diseno}</button>
-        <span class="lns-fly lni-sub" role="tablist" aria-label="Diseño">${['fun','classic','glass'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" class="th-${v}"><i></i>${th[v]}</button>`).join('')}</span></div>
+        <span class="lns-fly lni-sub" role="tablist" aria-label="Diseño">${['glass','classic','fun'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" class="th-${v}"><i></i>${th[v]}</button>`).join('')}</span></div>
       ${it('config','lcfg','Configuración')}</div>
     <button class="lni-b lns-tog" data-act="lnavslim" data-nav="tog" aria-label="Menú completo">${LNAV_IC.expand}<span class="lni-l">Ver menú completo</span></button>
   </nav>`; }
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794878921';</script>
+<script>window.BURAKO_BUILD='1794879139';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7583,6 +7583,22 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
   }catch(e){} }
   new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(fit); }).observe(document.body,{childList:true,subtree:true});
   addEventListener('resize',fit); if(document.fonts) document.fonts.ready.then(fit);
+})();
+
+/* Ventanas: tocar afuera las cierra (crear mesa / jugar contra la máquina, abandonar, pausa) */
+(function(){
+  let down=null;
+  document.addEventListener('pointerdown',e=>{ down=e.target; },true);
+  document.addEventListener('click',e=>{
+    const t=e.target, d=down; down=null;
+    if(t!==d) return;                       // arrastró desde adentro hacia afuera: no cerrar
+    try{
+      if(t.id==='pauseov'){ e.stopPropagation(); onAct('pause',t); return; }
+      if(t.id!=='modal'||t.hidden) return;
+      if(quitOpen){ e.stopPropagation(); onAct('quitno',t); return; }
+      if(setupOpen&&!(window.BURAKO_NET&&BURAKO_NET.code&&!lobbyOpen)){ e.stopPropagation(); onAct('cancelsetup',t); return; }
+    }catch(err){}
+  },true);
 })();
 </script>
 

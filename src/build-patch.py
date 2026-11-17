@@ -95,6 +95,9 @@ rep('data-act="quityes" style="background:var(--op);border-color:var(--op);color
 rep("  document.body.appendChild(t); setTimeout(()=>t.remove(),2300);\n  tone([330,262],'square');","  document.body.appendChild(t); setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),260); },Math.max(3200,String(msg).length*65));\n  tone([330,262],'square');")
 # de a tres: «Jimmy contra Graciela contra Gladys»
 rep("<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"${d(2200)}>${LL('y','&')}</span><span class=\"lm-side y\"","<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"${d(2200)}>${LL('contra','vs')}</span><span class=\"lm-side y\"")
+# orden de diseños en el menú: Glass, Classic, Fun
+rep("['fun','classic','glass'].map","['glass','classic','fun'].map",2)
+rep("""data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button>""","""data-v="glass" aria-selected="${theme==='glass'}">Glass</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button>""",2)
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

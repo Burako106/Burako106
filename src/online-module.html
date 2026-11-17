@@ -1516,4 +1516,20 @@ html body.fun .lseat[class*="sc-"] .lav>*,html body.fun .hs[class*="sc-"] .lav>*
   new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(fit); }).observe(document.body,{childList:true,subtree:true});
   addEventListener('resize',fit); if(document.fonts) document.fonts.ready.then(fit);
 })();
+
+/* Ventanas: tocar afuera las cierra (crear mesa / jugar contra la máquina, abandonar, pausa) */
+(function(){
+  let down=null;
+  document.addEventListener('pointerdown',e=>{ down=e.target; },true);
+  document.addEventListener('click',e=>{
+    const t=e.target, d=down; down=null;
+    if(t!==d) return;                       // arrastró desde adentro hacia afuera: no cerrar
+    try{
+      if(t.id==='pauseov'){ e.stopPropagation(); onAct('pause',t); return; }
+      if(t.id!=='modal'||t.hidden) return;
+      if(quitOpen){ e.stopPropagation(); onAct('quitno',t); return; }
+      if(setupOpen&&!(window.BURAKO_NET&&BURAKO_NET.code&&!lobbyOpen)){ e.stopPropagation(); onAct('cancelsetup',t); return; }
+    }catch(err){}
+  },true);
+})();
 </script>
