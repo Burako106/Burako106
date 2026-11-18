@@ -6066,7 +6066,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795042263';</script>
+<script>window.BURAKO_BUILD='1795042712';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6711,6 +6711,9 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
 #ecologin .el-codehint small{opacity:.65}
 #ecologin .el-codehint b{word-break:break-all}
 #ecologin .el-guest.el-inline{display:inline;margin:0;padding:0 2px;opacity:.85}
+#ecologin .el-tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.06);margin-bottom:2px}
+#ecologin .el-tabs button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font:inherit;font-size:14px;font-weight:700;color:inherit;opacity:.6;cursor:pointer}
+#ecologin .el-tabs button.on{background:#fff;opacity:1;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -8270,7 +8273,7 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     if(c==='verification_expired') return en()?'The code expired. Ask for a new one.':'El código venció. Pedí uno nuevo.';
     if(c==='form_param_format_invalid'||c==='form_identifier_invalid') return en()?'That email doesn’t look right.':'Ese email no parece válido.';
     if(c==='form_password_pwned') return en()?'That password is too common (it appeared in leaks). Pick another.':'Esa contraseña es muy común (apareció en filtraciones). Elegí otra.';
-    if(c==='form_password_length_too_short') return en()?'Too short: at least 8 characters.':'Muy corta: mínimo 8 caracteres.';
+    if(c==='form_password_length_too_short') return en()?'Too short: at least '+pwMin()+' characters.':'Muy corta: mínimo '+pwMin()+' caracteres.';
     if(c==='form_password_not_strong_enough'||c==='form_password_validation_failed') return en()?'Too weak. Mix letters and numbers.':'Muy débil. Mezclá letras y números.';
     if(c==='form_password_incorrect') return en()?'Wrong password. Try again or reset it.':'Contraseña incorrecta. Probá de nuevo o recuperala.';
     if(c==='form_identifier_not_found') return en()?'No account with that email. Create one below.':'No hay una cuenta con ese email. Creala abajo.';
@@ -8279,29 +8282,29 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     if(c==='too_many_requests') return en()?'Too many tries. Wait a minute.':'Demasiados intentos. Esperá un minuto.';
     return (en()?'Something went wrong: ':'Algo falló: ')+((e&&e.errors&&e.errors[0]&&(e.errors[0].longMessage||e.errors[0].message))||(e&&e.message)||''); };
   let pendName='';
+  const pwMin=()=>{ try{ return (window.Clerk.environment.userSettings.passwordSettings||{}).min_length||8; }catch(e){ return 8; } };
   function mailBox(mode){
-    mode=mode||'in';
+    mode=mode||'up';
     const card=document.querySelector('#ecologin .el-card'); if(!card) return;
     let box=card.querySelector('.el-mailbox');
     const btn=card.querySelector('[data-eco="login"][data-v="email"].el-btn'); const foot=card.querySelector('.el-foot');
     if(!box){ box=document.createElement('form'); box.className='el-mailbox'; (btn||foot).insertAdjacentElement('beforebegin',box); }
     if(btn) btn.hidden=true; if(foot) foot.hidden=true; status('');
-    const E_=en(); const keep=(box.mail&&box.mail.value)||'';
-    if(mode==='up') box.innerHTML=`<p class="el-codehint"><b>${E_?'Create your account':'Creá tu cuenta'}</b></p>
+    const E_=en(); const keep=(box.mail&&box.mail.value)||''; const mn=pwMin();
+    const tabs=`<div class="el-tabs"><button type="button" data-m="up" class="${mode==='up'?'on':''}">${E_?'Create account':'Crear cuenta'}</button><button type="button" data-m="in" class="${mode==='in'?'on':''}">${E_?'Sign in':'Ya tengo cuenta'}</button></div>`;
+    if(mode==='up') box.innerHTML=tabs+`
       <label class="el-field"><span>${E_?'Name':'Nombre'}</span><input name="nm" autocomplete="given-name" maxlength="18" required></label>
       <label class="el-field"><span>Email</span><input name="mail" type="email" inputmode="email" autocomplete="email" placeholder="${E_?'you@email.com':'tu@email.com'}" required></label>
-      <label class="el-field"><span>${E_?'Password':'Contraseña'}</span><input name="pw" type="password" autocomplete="new-password" minlength="8" placeholder="${E_?'At least 8 characters':'Mínimo 8 caracteres'}" required></label>
-      <button class="el-btn el-mail" type="submit">${E_?'Create account':'Crear cuenta'}</button>
-      <p class="el-codehint"><small>${E_?'Already have an account?':'¿Ya tenés cuenta?'}</small> <button class="el-guest el-inline" type="button" data-m="in">${E_?'Sign in':'Entrá'}</button></p>`;
+      <label class="el-field"><span>${E_?'Password':'Contraseña'}</span><input name="pw" type="password" autocomplete="new-password" minlength="${mn}" placeholder="${E_?'At least '+mn+' characters':'Mínimo '+mn+' caracteres'}" required></label>
+      <button class="el-btn el-mail" type="submit">${E_?'Create account':'Crear cuenta'}</button>`;
     else if(mode==='reset') box.innerHTML=`<p class="el-codehint"><b>${E_?'Reset your password':'Recuperá tu contraseña'}</b><br><small>${E_?'We’ll send you a code by email.':'Te mandamos un código por mail.'}</small></p>
       <label class="el-field"><span>Email</span><input name="mail" type="email" inputmode="email" autocomplete="email" required></label>
       <button class="el-btn el-mail" type="submit">${E_?'Send me a code':'Enviarme un código'}</button>
       <button class="el-guest" type="button" data-m="in">${E_?'Back':'Volver'}</button>`;
-    else box.innerHTML=`<label class="el-field"><span>Email</span><input name="mail" type="email" inputmode="email" autocomplete="username" placeholder="${E_?'you@email.com':'tu@email.com'}" required></label>
+    else box.innerHTML=tabs+`<label class="el-field"><span>Email</span><input name="mail" type="email" inputmode="email" autocomplete="username" placeholder="${E_?'you@email.com':'tu@email.com'}" required></label>
       <label class="el-field"><span>${E_?'Password':'Contraseña'}</span><input name="pw" type="password" autocomplete="current-password" required></label>
       <button class="el-btn el-mail" type="submit">${E_?'Sign in':'Entrar'}</button>
-      <button class="el-guest" type="button" data-m="reset">${E_?'Forgot your password?':'¿Olvidaste tu contraseña?'}</button>
-      <p class="el-codehint"><small>${E_?'No account?':'¿No tenés cuenta?'}</small> <button class="el-guest el-inline" type="button" data-m="up">${E_?'Create one':'Creala acá'}</button></p>`;
+      <button class="el-guest" type="button" data-m="reset">${E_?'Forgot your password?':'¿Olvidaste tu contraseña?'}</button>`;
     if(keep&&box.mail) box.mail.value=keep;
     box.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{ flow=null; mailBox(x.dataset.m); });
     let busy=false;
@@ -8331,7 +8334,7 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     const box=document.querySelector('#ecologin .el-mailbox'); if(!box) return; status(''); const E_=en();
     box.innerHTML=`<p class="el-codehint">${E_?'We sent a 6-digit code to':'Te mandamos un código de 6 números a'} <b></b>.<br><small>${E_?'Not there? Check Spam or Promotions.':'¿No llegó? Mirá en Spam o Promociones.'}</small></p>
       <label class="el-field"><span>${E_?'Code':'Código'}</span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required></label>
-      <label class="el-field"><span>${E_?'New password':'Contraseña nueva'}</span><input name="pw" type="password" autocomplete="new-password" minlength="8" placeholder="${E_?'At least 8 characters':'Mínimo 8 caracteres'}" required></label>
+      <label class="el-field"><span>${E_?'New password':'Contraseña nueva'}</span><input name="pw" type="password" autocomplete="new-password" minlength="${pwMin()}" placeholder="${E_?'At least '+pwMin()+' characters':'Mínimo '+pwMin()+' caracteres'}" required></label>
       <button class="el-btn el-mail" type="submit">${E_?'Save and sign in':'Guardar y entrar'}</button>
       <button class="el-guest" type="button" data-back>${E_?'Back':'Volver'}</button>`;
     box.querySelector('b').textContent=addr;
@@ -8410,8 +8413,8 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
   }
   function pwBox(){
     const box=document.querySelector('#ecologin .el-mailbox'); if(!box) return; status('');
-    box.innerHTML=`<p class="el-codehint">${en()?'Email confirmed ✓ Last step: choose a password.':'Email confirmado ✓ Último paso: elegí una contraseña.'}<br><small>${en()?'At least 8 characters. Avoid very common ones.':'Mínimo 8 caracteres. Evitá las muy comunes.'}</small></p>
-      <label class="el-field"><span>${en()?'Password':'Contraseña'}</span><input name="pw" type="password" autocomplete="new-password" minlength="8" required></label>
+    box.innerHTML=`<p class="el-codehint">${en()?'Email confirmed ✓ Last step: choose a password.':'Email confirmado ✓ Último paso: elegí una contraseña.'}<br><small>${en()?'At least '+pwMin()+' characters. Avoid very common ones.':'Mínimo '+pwMin()+' caracteres. Evitá las muy comunes.'}</small></p>
+      <label class="el-field"><span>${en()?'Password':'Contraseña'}</span><input name="pw" type="password" autocomplete="new-password" minlength="${pwMin()}" required></label>
       <button class="el-btn el-mail" type="submit">${en()?'Create account':'Crear cuenta'}</button>`;
     let busy=false;
     box.onsubmit=async ev=>{ ev.preventDefault(); if(busy) return; busy=true; const b=box.querySelector('button'); b.disabled=true; status(en()?'Creating…':'Creando…');
