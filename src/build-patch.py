@@ -122,7 +122,7 @@ rep("""<label class="el-field"><span>Email</span><input type="email" placeholder
     <label class="el-field"><span>Contraseña</span><input type="password" placeholder="••••••••" autocomplete="current-password"></label>
     <button class="el-btn el-mail" data-eco="login" data-v="email">Entrar con email</button>
     <p class="el-foot">¿No tenés cuenta? <a href="#" data-eco="login" data-v="email">Creala acá</a></p>""","""<button class="el-btn el-mail" data-eco="login" data-v="email">Continuar con email</button>
-    <p class="el-foot">¿No tenés cuenta? Se crea sola la primera vez que entrás.</p>""")
+    <p class="el-foot">¿No tenés cuenta? La creás en el mismo paso.</p>""")
 rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>""","""<p class="el-test" id="elstatus" hidden></p>""")
 rep("""E.account.provider==='google'?'Google':'Facebook'):''} · modo prueba</small>""","""E.account.provider==='google'?'Google':'Facebook'):''}${E.account&&E.account.email?' · '+esc(E.account.email):''}</small>""")
 # 5) módulo online al final
