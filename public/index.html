@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795009959';</script>
+<script>window.BURAKO_BUILD='1795010479';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6686,6 +6686,7 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
   #lobby .lsearch{flex:0 1 auto}
 }
 @media (min-width:901px){ #lobby .lact-r{justify-content:flex-start!important} }
+@media (min-width:901px){ #lobby .lhead .lhead-r{justify-content:flex-end!important} }
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7875,6 +7876,8 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
     const W=hr.getBoundingClientRect().width, s2=Math.max(.6,Math.min(1,(CW-280)/W));
     if(s2<1){ hr.style.transform='scale('+s2.toFixed(3)+')'; hr.style.marginLeft=(-(W*(1-s2)))+'px'; }
     const H=hd.getBoundingClientRect(); hr.style.marginRight=(H.right-R)+'px';
+    /* lo que importa es el último botón visible, no la caja que los contiene */
+    const lastB=[...hr.children].filter(k=>k.offsetWidth).pop(); if(lastB){ const d=R-lastB.getBoundingClientRect().right; if(Math.abs(d)>.5) hr.style.marginRight=((H.right-R)-d)+'px'; }
     /* saludo: empieza donde empiezan las mesas y se centra en altura con el logo y los botones */
     const ga=g.querySelector('.lg-a')||g; g.style.marginLeft=(L-ga.getBoundingClientRect().left)+'px';
     const lb=g.querySelector('.lg-b'); if(lb){ lb.style.marginTop=''; { const A=ga.getBoundingClientRect(), B=lb.getBoundingClientRect(); lb.style.marginTop=Math.round((A.top+A.height/2)-(B.top+B.height/2))+'px'; } }
