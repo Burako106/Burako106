@@ -508,6 +508,9 @@ html body.fun button.fi-pre>svg.fi{width:24px;height:24px;flex:none}
 html body.fun label.lsearch>svg.fi{width:24px!important;height:24px!important}
 /* Fun: ícono del chat un poco más grande */
 html body.fun button.chat-btn2>svg.fi{width:auto!important;height:82%!important;aspect-ratio:1;justify-self:center;align-self:center;transform:translate(.7px,.2px)}
+/* Marco animado del fin de partida: mismas esquinas que la tarjeta (radio de la tarjeta + separación) */
+html body.fun .modal .card.final::before,html body.fun .modal .card.final.final-win::before{inset:-3px!important;border-radius:calc(var(--fcr,32px) + 3px)!important}
+html body:not(.fun) .modal .card.final::before,html body:not(.fun) .modal .card.final.final-win::before{inset:-2px!important;border-radius:calc(var(--fcr,16px) + 2px)!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -1907,4 +1910,7 @@ html body.fun button.chat-btn2>svg.fi{width:auto!important;height:82%!important;
   let pd=0; new MutationObserver(()=>{ if(!pd) pd=requestAnimationFrame(()=>{ pd=0; hook(); }); }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
   addEventListener('resize',hook); hook();
 })();
+
+/* el marco del fin de partida copia el radio real de la tarjeta */
+(function(){ let pd=0; new MutationObserver(()=>{ if(pd) return; pd=requestAnimationFrame(()=>{ pd=0; document.querySelectorAll('.modal .card.final').forEach(c=>{ const r=parseFloat(getComputedStyle(c).borderTopLeftRadius)||0; const v=r+'px'; if(c.style.getPropertyValue('--fcr')!==v) c.style.setProperty('--fcr',v); }); }); }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']}); })();
 </script>
