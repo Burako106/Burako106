@@ -563,6 +563,14 @@ html body:not(.fun):not(.glass) .lbadge.m2,html body:not(.fun):not(.glass) .hb.m
 html body:not(.fun):not(.glass) .lbadge.m3,html body:not(.fun):not(.glass) .hb.m3 .hb-tag{background:#23804c!important;color:#fff!important}
 html body:not(.fun):not(.glass) .ppl em{color:#f6efe2!important;opacity:1!important}
 html body:not(.fun):not(.glass) .tile.c-y,html body:not(.fun):not(.glass) .tile.c-y *{color:#b06a00!important}
+/* Jugadores en Crear mesa: personitas de color y contenido centrado (todos los modos) */
+.ppl-seg button{align-items:center!important;text-align:center!important;justify-content:center}
+.ppl{justify-content:center;gap:2px!important}
+html body .ppl i.pp.fi-host{width:26px!important;height:26px!important;border:0!important;outline:0!important;background:none!important;border-radius:0!important;display:inline-grid!important;place-items:center;opacity:1!important}
+.ppl i.pp svg.fi{width:100%;height:100%}
+.ppl i.pp.b{--pc:#4a8cff;color:#4a8cff} .ppl i.pp.r{--pc:#ff6a5c;color:#ff6a5c} .ppl i.pp.y{--pc:#f2b632;color:#e0a01e}
+html body.fun .ppl i.pp svg.fi .c{fill:var(--pc)!important}
+html body:not(.fun):not(.glass) .ppl i.pp.b{color:#7fb0ff} html body:not(.fun):not(.glass) .ppl i.pp.r{color:#ff8a7e} html body:not(.fun):not(.glass) .ppl i.pp.y{color:#f2c14e}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -1905,6 +1913,7 @@ html body:not(.fun):not(.glass) .tile.c-y,html body:not(.fun):not(.glass) .tile.
     ['button[data-act="netshare"]>svg','link']];
   const INNER=[
     ['button[data-act="sortnum"] .ico-num','n123'],
+    ['.ppl i.pp','user'],
     ['.lbig.lbot .lplus','robot'],['.lbig.lfriend .lplus','users'],
     ['.lbig.lresume .lplus',e=>/Volver/.test(e.closest('.lbig').textContent)?'play':'robot2'],
     ['button[aria-label="Cerrar"]',e=>/^[✕×]$/.test(e.textContent.trim())?'x':null]];
