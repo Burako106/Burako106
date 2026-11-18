@@ -110,6 +110,13 @@ rep("""setupKind==='create'?'Crear mesa':setupKind==='bot'""","""setupKind==='cr
 rep("""setupKind==='create'?'<button class="btn primary go-btn" data-act="createtable">Crear mesa</button>':""","""setupKind==='create'?'<button class="btn primary go-btn" data-act="createtable">'+(window.NETFRIEND?'Crear mesa e invitar':'Crear mesa')+'</button>':""")
 # todos contra todos: vs entre los tres
 rep("""<span class="ppl">${dot('b')}${dot('r')}${dot('y')}</span>`)}""","""<span class="ppl">${dot('b')}<em>vs</em>${dot('r')}<em>vs</em>${dot('y')}</span>`)}""")
+# legal: sección en Configuración y enlaces en la pantalla de entrada
+rep("""<button class="btn" data-act="lcfgout">Cerrar sesión</button></div>
+  </div></div>`; }""","""<button class="btn" data-act="lcfgout">Cerrar sesión</button></div>
+  <div class="lcfg-row lcfg-legal"><span><b>Legal</b><small>Términos, privacidad y cómo borrar tus datos.</small></span><span class="lcfg-links"><a href="/terms?lang=${LANG}" target="_blank" rel="noopener">Términos</a><a href="/privacy?lang=${LANG}" target="_blank" rel="noopener">Privacidad</a><a href="/data-deletion?lang=${LANG}" target="_blank" rel="noopener">Eliminar datos</a></span></div>
+  </div></div>`; }""")
+rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>""","""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>
+    <p class="el-legal">Al continuar aceptás los <a href="/terms?lang=${LANG}" target="_blank" rel="noopener">Términos</a> y la <a href="/privacy?lang=${LANG}" target="_blank" rel="noopener">Política de privacidad</a>.</p>""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
