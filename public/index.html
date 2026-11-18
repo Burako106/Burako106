@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795001864';</script>
+<script>window.BURAKO_BUILD='1795003509';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6647,6 +6647,32 @@ html body.glass .ppl-seg button[aria-pressed="true"] .ppl i.pp{color:#fff!import
 html body:not(.fun):not(.glass) .ppl-seg button .ppl i.pp{color:#f6efe2!important}
 /* Mesas de 3 y 4: más aire entre el nombre del jugador de abajo y las etiquetas de reglas */
 html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top:24px!important}
+/* Pantallas chicas (web/iPad): menú que entra entero y cabecera en una sola fila */
+.lnav .lnav-list{min-height:0}
+.lnav .lnav-list>.lni-b,.lnav .lnav-list>.lni-grp>.lni-b,.lnav .lnav-list>.lnf-me{height:clamp(34px,calc((100vh - 236px) / 9),54px)!important;min-height:0!important}
+.lnav .lnav-list{gap:clamp(2px,.7vh,6px)!important}
+.lnav .lns-sep{margin-top:clamp(3px,1vh,8px)!important;margin-bottom:clamp(3px,1vh,8px)!important}
+.lnav .lni-b svg.fi,.lnav .lni-b svg.lni{width:clamp(20px,3.6vh,26px)!important;height:clamp(20px,3.6vh,26px)!important}
+.lnav .lnf-me .lp-av,.lnav .lnf-me .lav,.lnav .lnf-me img{max-height:100%}
+@media (min-width:901px){
+  .lhead{flex-wrap:nowrap!important}
+  .lhead .lgreet{min-width:0!important;flex:1 1 0!important}
+  .lhead .lhead-r{flex:none!important}
+}
+@media (min-width:901px) and (max-width:1260px){ .lhead .lhead-r{zoom:.86} }
+@media (min-width:901px) and (max-width:1080px){ .lhead .lhead-r{zoom:.74} }
+/* Menú colapsado: los íconos se juntan y achican para que entren con la flecha */
+.lnav.slim{--nh:clamp(32px,calc((100vh - 292px) / 8),54px)}
+.lnav.slim .lns-g{gap:clamp(2px,.7vh,6px)!important}
+.lnav.slim .lns-g>.lni-b,.lnav.slim .lns-g>.lns-x,.lnav.slim .lns-g>.lns-x>.lni-b,.lnav.slim .lns-tog{height:var(--nh)!important;min-height:0!important}
+.lnav.slim .lns-g>.lni-b,.lnav.slim .lns-g>.lns-x>.lni-b,.lnav.slim .lns-tog{width:var(--nh)!important}
+.lnav.slim .lns-me{height:var(--nh)!important;margin-bottom:clamp(2px,1vh,10px)!important}
+.lnav.slim .lns-me .lav{width:calc(var(--nh) - 4px)!important;height:calc(var(--nh) - 4px)!important}
+.lnav.slim .lni-b svg{width:calc(var(--nh) * .5)!important;height:calc(var(--nh) * .5)!important}
+.lnav.slim .lns-sep{margin-top:clamp(2px,.8vh,6px)!important;margin-bottom:clamp(2px,.8vh,6px)!important}
+/* Botones grandes del lobby: se achican en pantallas chicas para que no se corten */
+@media (min-width:901px) and (max-width:1280px){ #lobby .lact{zoom:.88} }
+@media (min-width:901px) and (max-width:1120px){ #lobby .lact{zoom:.72} }
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7797,6 +7823,12 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
 (function(){
   let pend=0;
   function fit(){ pend=0; try{
+    const wx=document.querySelector('.lwrap2:not(.slim) .lhead-logo');
+    if(wx){ const ll=wx.querySelector('.llogo'), nv=document.querySelector('.lwrap2:not(.slim) .lnav');
+      ['marginLeft','marginRight','width'].forEach(k=>wx.style[k]=''); if(ll){ ll.style.transform=''; }
+      if(ll&&nv){ const cs=getComputedStyle(wx), ml=parseFloat(cs.marginLeft)||0, mr=parseFloat(cs.marginRight)||0, W=wx.getBoundingClientRect().width, L=wx.getBoundingClientRect().left, nr=nv.getBoundingClientRect();
+        if(L<nr.left-1||W>nr.width+1){ const base=L-ml, nml=nr.left-base, nw=nr.width; wx.style.marginLeft=nml+'px'; wx.style.width=nw+'px'; wx.style.marginRight=(ml+W+mr-nml-nw)+'px';
+          const nat=ll.scrollWidth; if(nat>nw){ ll.style.transformOrigin='0 50%'; ll.style.transform='scale('+(nw/nat).toFixed(3)+')'; } } } }
     const w=document.querySelector('.lwrap2.slim .lhead-logo'); if(!w) return;
     const l=w.querySelector('.llogo'), n=document.querySelector('.lnav.slim'); if(!l||!n) return;
     const nat=l.scrollWidth, max=n.offsetWidth+20;
@@ -7806,7 +7838,7 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
   function lgFit(){ try{ const g=document.querySelector('.lgreet'); if(!g) return; const cw=g.clientWidth-4; if(cw<=0) return;
     g.querySelectorAll('.lg-l').forEach(b=>{ b.style.fontSize=''; b.style.width=''; b.classList.remove('two');
       if(b.scrollWidth<=cw) return; const s=cw/b.scrollWidth;
-      if(s>=.55||!b.classList.contains('lg-b')){ b.style.fontSize=Math.max(.6,s).toFixed(3)+'em'; return; }
+      if(s>=.55||!b.classList.contains('lg-b')){ b.style.fontSize=Math.max(.42,s).toFixed(3)+'em'; return; }
       b.classList.add('two'); b.style.width=cw+'px'; let f=.56; b.style.fontSize=f+'em';
       while(f>.36&&(b.scrollWidth>cw+1||b.getBoundingClientRect().height>g.clientHeight*1.02)){ f-=.02; b.style.fontSize=f.toFixed(2)+'em'; } }); }catch(e){} }
   window.lgFit=lgFit;
