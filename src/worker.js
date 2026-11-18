@@ -272,6 +272,122 @@ export class Room extends DurableObject {
   }
 }
 
+
+// ---------------------------------------------------------------------------
+// Jugadores con cuenta (Clerk). Un solo Durable Object guarda a todos en SQLite,
+// para poder armar después el panel de administración.
+// ---------------------------------------------------------------------------
+const CLERK_PK_DEFAULT = "pk_test_ZmFpci1lc2NhcmdvdC0zMTE3LmNsZXJrLmFjY291bnRzLmRldiQ";
+const players = (env) => env.PLAYERS.get(env.PLAYERS.idFromName("all"));
+const clerkFapi = (env) => {
+  const pk = env.CLERK_PUBLISHABLE_KEY || CLERK_PK_DEFAULT;
+  try { return "https://" + atob(pk.split("_").slice(2).join("_")).replace(/\$$/, ""); } catch (e) { return ""; }
+};
+const b64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+let JWKS = { at: 0, keys: [] };
+async function verifyClerk(request, env) {
+  const h = request.headers.get("authorization") || "";
+  const tok = h.startsWith("Bearer ") ? h.slice(7) : "";
+  const parts = tok.split(".");
+  if (parts.length !== 3) return null;
+  let head, body;
+  try { head = JSON.parse(new TextDecoder().decode(b64u(parts[0]))); body = JSON.parse(new TextDecoder().decode(b64u(parts[1]))); } catch (e) { return null; }
+  const iss = clerkFapi(env);
+  if (!iss || body.iss !== iss) return null;
+  const now = Math.floor(Date.now() / 1000);
+  if (!body.sub || (body.exp && body.exp < now - 5) || (body.nbf && body.nbf > now + 5)) return null;
+  if (Date.now() - JWKS.at > 3600e3 || !JWKS.keys.some((k) => k.kid === head.kid)) {
+    try { const r = await fetch(iss + "/.well-known/jwks.json"); const j = await r.json(); JWKS = { at: Date.now(), keys: j.keys || [] }; } catch (e) {}
+  }
+  const jwk = JWKS.keys.find((k) => k.kid === head.kid);
+  if (!jwk) return null;
+  try {
+    const key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+    const ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64u(parts[2]), new TextEncoder().encode(parts[0] + "." + parts[1]));
+    return ok ? body : null;
+  } catch (e) { return null; }
+}
+// Datos oficiales de la cuenta (solo si está guardada la Secret key en Cloudflare)
+async function clerkUser(env, id) {
+  if (!env.CLERK_SECRET_KEY) return null;
+  try {
+    const r = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(id), { headers: { authorization: "Bearer " + env.CLERK_SECRET_KEY } });
+    if (!r.ok) return null;
+    const u = await r.json();
+    const em = (u.email_addresses || []).find((e) => e.id === u.primary_email_address_id) || (u.email_addresses || [])[0];
+    const ext = (u.external_accounts || [])[0];
+    return {
+      email: em ? em.email_address : "",
+      name: [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || "",
+      imageUrl: u.has_image ? u.image_url : "",
+      provider: ext ? String(ext.provider || "").replace(/^oauth_/, "") : "email",
+    };
+  } catch (e) { return null; }
+}
+const clip = (v, n) => String(v == null ? "" : v).slice(0, n);
+
+export class Players extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => {
+      this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS players (
+        id TEXT PRIMARY KEY, email TEXT, name TEXT, name_custom INTEGER DEFAULT 0,
+        image_url TEXT, avatar TEXT DEFAULT '', photo TEXT DEFAULT '', provider TEXT,
+        verified INTEGER DEFAULT 0, created INTEGER, last_seen INTEGER, data TEXT DEFAULT '{}')`);
+    });
+  }
+  row(id) { return this.ctx.storage.sql.exec("SELECT * FROM players WHERE id=?", id).toArray()[0] || null; }
+  out(r) {
+    let data = {}; try { data = JSON.parse(r.data || "{}"); } catch (e) {}
+    return { id: r.id, email: r.email, name: r.name, nameCustom: !!r.name_custom, imageUrl: r.image_url, avatar: r.avatar, photo: r.photo, provider: r.provider, created: r.created, data };
+  }
+  // Primera vez: crea al jugador. Después: actualiza los datos de la cuenta (sin pisar lo que él cambió en el juego).
+  async sync(id, acc, verified) {
+    const now = Date.now();
+    const r = this.row(id);
+    if (!r) {
+      this.ctx.storage.sql.exec("INSERT INTO players (id,email,name,image_url,provider,verified,created,last_seen) VALUES (?,?,?,?,?,?,?,?)",
+        id, clip(acc.email, 200), clip(acc.name || "Jugador", 18), clip(acc.imageUrl, 500), clip(acc.provider, 20), verified ? 1 : 0, now, now);
+    } else {
+      this.ctx.storage.sql.exec("UPDATE players SET email=?, image_url=?, provider=?, verified=?, last_seen=?, name=CASE WHEN name_custom=1 THEN name ELSE ? END WHERE id=?",
+        clip(acc.email || r.email, 200), clip(acc.imageUrl, 500), clip(acc.provider || r.provider, 20), verified ? 1 : r.verified, now, clip(acc.name || r.name, 18), id);
+    }
+    return this.out(this.row(id));
+  }
+  // Cambios hechos en el juego: nombre, personaje o foto, y un resumen de su partida
+  async edit(id, b) {
+    const r = this.row(id); if (!r) return null;
+    if (typeof b.name === "string" && b.name.trim()) this.ctx.storage.sql.exec("UPDATE players SET name=?, name_custom=1 WHERE id=?", clip(b.name.trim(), 18), id);
+    if (typeof b.avatar === "string") {
+      const ph = b.avatar === "photo" && typeof b.photo === "string" && b.photo.startsWith("data:image/") && b.photo.length < 200000 ? b.photo : "";
+      this.ctx.storage.sql.exec("UPDATE players SET avatar=?, photo=? WHERE id=?", clip(b.avatar === "photo" && !ph ? "" : b.avatar, 20), ph, id);
+    }
+    if (b.data && typeof b.data === "object") {
+      let d = {}; try { d = JSON.parse(r.data || "{}"); } catch (e) {}
+      Object.assign(d, b.data); const js = JSON.stringify(d);
+      if (js.length < 20000) this.ctx.storage.sql.exec("UPDATE players SET data=? WHERE id=?", js, id);
+    }
+    this.ctx.storage.sql.exec("UPDATE players SET last_seen=? WHERE id=?", Date.now(), id);
+    return this.out(this.row(id));
+  }
+  async count() { return this.ctx.storage.sql.exec("SELECT COUNT(*) AS n FROM players").one().n; }
+}
+
+async function apiMe(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  const id = claims.sub;
+  let b = {};
+  if (request.method === "POST") { try { b = await request.json(); } catch (e) {} }
+  const st = players(env);
+  const official = await clerkUser(env, id);
+  const hint = b.account || {};
+  const acc = official || { email: clip(hint.email, 200), name: clip(hint.name, 18), imageUrl: clip(hint.imageUrl, 500), provider: clip(hint.provider, 20) };
+  let me = await st.sync(id, acc, !!official);
+  if (request.method === "POST" && (b.name !== undefined || b.avatar !== undefined || b.data)) me = await st.edit(id, b);
+  return Response.json(me, { headers: { "cache-control": "no-store" } });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -291,6 +407,7 @@ export default {
       if (request.method === "DELETE") { await lb.remove(code); return new Response("ok"); }
       return new Response("método no permitido", { status: 405 });
     }
+    if (url.pathname === "/api/me") return apiMe(request, env);
     if (url.pathname === "/ws/lobby") return lobby(env).fetch(request);
     if (url.pathname === "/ws") {
       const code = (url.searchParams.get("mesa") || "").toUpperCase();

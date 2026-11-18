@@ -117,6 +117,14 @@ rep("""<button class="btn" data-act="lcfgout">Cerrar sesión</button></div>
   </div></div>`; }""")
 rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>""","""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>
     <p class="el-legal">Al continuar aceptás los <a href="/terms?lang=${LANG}" target="_blank" rel="noopener">Términos</a> y la <a href="/privacy?lang=${LANG}" target="_blank" rel="noopener">Política de privacidad</a>.</p>""")
+# inicio de sesión real con Clerk: el email lo maneja la ventana de Clerk; fuera el aviso de "modo prueba"
+rep("""<label class="el-field"><span>Email</span><input type="email" placeholder="tu@email.com" autocomplete="email"></label>
+    <label class="el-field"><span>Contraseña</span><input type="password" placeholder="••••••••" autocomplete="current-password"></label>
+    <button class="el-btn el-mail" data-eco="login" data-v="email">Entrar con email</button>
+    <p class="el-foot">¿No tenés cuenta? <a href="#" data-eco="login" data-v="email">Creala acá</a></p>""","""<button class="el-btn el-mail" data-eco="login" data-v="email">Continuar con email</button>
+    <p class="el-foot">¿No tenés cuenta? Se crea sola la primera vez que entrás.</p>""")
+rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>""","""<p class="el-test" id="elstatus" hidden></p>""")
+rep("""E.account.provider==='google'?'Google':'Facebook'):''} · modo prueba</small>""","""E.account.provider==='google'?'Google':'Facebook'):''}${E.account&&E.account.email?' · '+esc(E.account.email):''}</small>""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
