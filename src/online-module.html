@@ -645,6 +645,10 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
 #ecologin .el-tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.06);margin-bottom:2px}
 #ecologin .el-tabs button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font:inherit;font-size:14px;font-weight:700;color:inherit;opacity:.6;cursor:pointer}
 #ecologin .el-tabs button.on{background:#fff;opacity:1;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+html.auth-wait #ecologin .el-card{visibility:hidden}
+html.auth-wait #ecologin::after{content:"Entrando…";position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:700;font-size:17px;letter-spacing:.02em;opacity:.7;animation:awPulse 1.1s ease-in-out infinite alternate}
+html.auth-wait[lang=en] #ecologin::after{content:"Signing in…"}
+@keyframes awPulse{from{opacity:.35}to{opacity:.85}}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -2146,6 +2150,12 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
   const PK='pk_test_ZmFpci1lc2NhcmdvdC0zMTE3LmNsZXJrLmFjY291bnRzLmRldiQ';
   const FAPI='https://'+atob(PK.split('_').slice(2).join('_')).replace(/\$$/,'');
   const ACC={ready:false,user:null,me:null,quiet:0};
+  // al volver de Google/Facebook: en vez de mostrar un segundo la pantalla de entrada, mostramos "Entrando…"
+  const AW='burako-authwait';
+  const waitOn=()=>{ try{ sessionStorage.setItem(AW,String(Date.now())); }catch(e){} document.documentElement.classList.add('auth-wait'); };
+  const waitOff=()=>{ try{ sessionStorage.removeItem(AW); }catch(e){} document.documentElement.classList.remove('auth-wait'); };
+  try{ const t=+sessionStorage.getItem(AW)||0; if(new URLSearchParams(location.search).get('sso')||Date.now()-t<120000) document.documentElement.classList.add('auth-wait'); }catch(e){}
+  setTimeout(()=>document.documentElement.classList.remove('auth-wait'),10000);
   window.BURAKO_ACC=ACC;
   const en=()=>typeof LANG!=='undefined'&&LANG==='en';
   const status=t=>{ const s=document.getElementById('elstatus'); if(s){ s.hidden=!t; s.textContent=t||''; } };
@@ -2173,7 +2183,7 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     try{ if(typeof renderLobby==='function'&&lobbyOpen) renderLobby(); else if(typeof render==='function'&&S) render(); }catch(e){}
   }
   async function onSignedIn(u){
-    ACC.user=u;
+    ACC.user=u; setTimeout(waitOff,150);
     const prov=accountHint(u).provider;
     const isNew=!E.account||E.account.id!==u.id;
     E.account={id:u.id,provider:prov==='google'||prov==='facebook'?prov:'email',email:accountHint(u).email,created:(E.account&&E.account.id===u.id&&E.account.created)||Date.now()};
@@ -2182,7 +2192,7 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     try{ applyMe(await api('POST',{account:accountHint(u),data:{bal:E.bal,sub:E.sub?{plan:E.sub.plan,until:E.sub.until}:null}})); }catch(e){ console.warn('perfil',e); }
     if(pendName){ const nm=pendName; pendName=''; try{ localStorage.setItem('burako-name',nm); }catch(e){} try{ renderLobby(); }catch(e){} }
   }
-  function onSignedOut(){ ACC.user=null; ACC.me=null; if(E.account&&E.account.provider==='guest') return; if(E.account){ E.account=null; ecoSave(); } if(!document.getElementById('ecologin')) ecoShowLogin(); }
+  function onSignedOut(){ waitOff(); ACC.user=null; ACC.me=null; if(E.account&&E.account.provider==='guest') return; if(E.account){ E.account=null; ecoSave(); } if(!document.getElementById('ecologin')) ecoShowLogin(); }
 
   // los botones de la pantalla de entrada
   window.ecoLogin=async function(provider){
@@ -2193,9 +2203,9 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     }
     try{ status(en()?'Opening…':'Abriendo…'); const C=await loadClerk(); if(!C.loaded) await C.load();
       if(provider==='google'||provider==='facebook'){
-        await C.client.signIn.authenticateWithRedirect({strategy:'oauth_'+provider,redirectUrl:location.origin+'/?sso=1',redirectUrlComplete:location.origin+'/'});
+        waitOn(); await C.client.signIn.authenticateWithRedirect({strategy:'oauth_'+provider,redirectUrl:location.origin+'/?sso=1',redirectUrlComplete:location.origin+'/'});
       } else { status(''); mailBox(); }
-    }catch(e){ console.warn(e); status(en()?'Couldn’t connect. Try again.':'No se pudo conectar. Probá de nuevo.'); }
+    }catch(e){ waitOff(); console.warn(e); status(en()?'Couldn’t connect. Try again.':'No se pudo conectar. Probá de nuevo.'); }
   };
   // email sin contraseña: mail → código de 6 números → adentro (sirve para cuentas nuevas y existentes)
   let flow=null;
@@ -2401,6 +2411,6 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     ACC.ready=true;
     if(C.user) onSignedIn(C.user); else onSignedOut();
     let last=C.user&&C.user.id; C.addListener(({user})=>{ const id=user&&user.id; if(id===last) return; last=id; if(user) onSignedIn(user); else onSignedOut(); });
-  }catch(e){ console.warn('Clerk',e); status(en()?'Couldn’t load sign-in. Check your connection.':'No se pudo cargar el inicio de sesión. Revisá la conexión.'); } })();
+  }catch(e){ waitOff(); console.warn('Clerk',e); status(en()?'Couldn’t load sign-in. Check your connection.':'No se pudo cargar el inicio de sesión. Revisá la conexión.'); } })();
 })();
 </script>
