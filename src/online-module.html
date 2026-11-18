@@ -2245,6 +2245,12 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
         if(mode==='in'){ status(E_?'Signing in…':'Entrando…');
           const si=await C.client.signIn.create({identifier:addr,password:box.pw.value});
           if(si.status==='complete'&&si.createdSessionId){ await C.setActive({session:si.createdSessionId}); status(''); }
+          else if(si.status==='needs_second_factor'||si.status==='needs_client_trust'){ // dispositivo nuevo: Clerk pide un código extra por mail
+            const f=(si.supportedSecondFactors||[]).find(x=>x.strategy==='email_code');
+            if(!f) throw {errors:[{message:si.status}]};
+            await si.prepareSecondFactor({strategy:'email_code',emailAddressId:f.emailAddressId});
+            flow={t:'trust',o:si}; codeBox(addr,true);
+          }
           else throw {errors:[{message:si.status}]};
         } else if(mode==='up'){ status(E_?'Creating…':'Creando…');
           pendName=box.nm.value.trim().slice(0,18);
@@ -2284,14 +2290,14 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
       b.disabled=false; busy=false; };
     setTimeout(()=>box.code.focus(),50);
   }
-  function codeBox(addr){
+  function codeBox(addr,trust){
     const box=document.querySelector('#ecologin .el-mailbox'); if(!box) return; status('');
-    box.innerHTML=`<p class="el-codehint">${en()?'We sent a 6-digit code to':'Te mandamos un código de 6 números a'} <b></b>.<br><small>${en()?'Not there? Check Spam or Promotions.':'¿No llegó? Mirá en Spam o Promociones.'}</small></p>
+    box.innerHTML=`<p class="el-codehint">${trust?(en()?'New device: for your safety we sent a 6-digit code to':'Dispositivo nuevo: por seguridad te mandamos un código de 6 números a'):(en()?'Confirm your email: we sent a 6-digit code to':'Confirmá tu email: te mandamos un código de 6 números a')} <b></b>.<br><small>${en()?'Not there? Check Spam or Promotions.':'¿No llegó? Mirá en Spam o Promociones.'}</small></p>
       <label class="el-field"><span>${en()?'Code':'Código'}</span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required></label>
-      <button class="el-btn el-mail" type="submit">${en()?'Sign in':'Entrar'}</button>
+      <button class="el-btn el-mail" type="submit">${en()?'Continue':'Continuar'}</button>
       <button class="el-guest" type="button" data-back>${en()?'Use another email':'Usar otro email'}</button>`;
     box.querySelector('b').textContent=addr;
-    box.querySelector('[data-back]').onclick=()=>{ flow=null; mailBox('up'); };
+    box.querySelector('[data-back]').onclick=()=>{ const m=flow&&flow.t==='trust'?'in':'up'; flow=null; mailBox(m); };
     const inp=box.code; inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,'').slice(0,6); if(inp.value.length===6) box.requestSubmit(); };
     let busy=false;
     box.onsubmit=async ev=>{ ev.preventDefault(); if(busy) return; busy=true; const b=box.querySelector('button[type=submit]'); b.disabled=true; status(en()?'Checking…':'Verificando…');
@@ -2332,6 +2338,11 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
   }
   async function mailVerify(code){
     const C=window.Clerk; if(!flow) throw {errors:[{code:'verification_expired'}]};
+    if(flow.t==='trust'){
+      const r=await flow.o.attemptSecondFactor({strategy:'email_code',code});
+      if(r.status==='complete'&&r.createdSessionId){ flow=null; await C.setActive({session:r.createdSessionId}); return; }
+      throw {errors:[{message:r.status}]};
+    }
     if(flow.t==='in'){
       const r=await flow.o.attemptFirstFactor({strategy:'email_code',code});
       if(r.status==='complete'&&r.createdSessionId){ flow=null; await C.setActive({session:r.createdSessionId}); return; }
