@@ -634,6 +634,13 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
 
 #ecologin .el-guest{display:block;margin:2px auto 6px;background:none;border:0;padding:6px 10px;font:inherit;font-size:13px;font-weight:600;color:inherit;opacity:.65;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 #ecologin .el-guest:hover{opacity:1}
+
+#ecologin .el-mailbox{display:flex;flex-direction:column;gap:10px;margin:0 0 6px}
+#ecologin .el-mailbox .el-field input{text-align:left}
+#ecologin .el-mailbox input[name=code]{letter-spacing:.35em;font-size:20px;text-align:center}
+#ecologin .el-codehint{margin:0;font-size:14px;line-height:1.45;text-align:center}
+#ecologin .el-codehint small{opacity:.65}
+#ecologin .el-codehint b{word-break:break-all}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -2182,9 +2189,73 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     try{ status(en()?'Opening…':'Abriendo…'); const C=await loadClerk(); if(!C.loaded) await C.load();
       if(provider==='google'||provider==='facebook'){
         await C.client.signIn.authenticateWithRedirect({strategy:'oauth_'+provider,redirectUrl:location.origin+'/?sso=1',redirectUrlComplete:location.origin+'/'});
-      } else { status(''); C.openSignIn({forceRedirectUrl:location.origin+'/',signUpForceRedirectUrl:location.origin+'/'}); }
+      } else { status(''); mailBox(); }
     }catch(e){ console.warn(e); status(en()?'Couldn’t connect. Try again.':'No se pudo conectar. Probá de nuevo.'); }
   };
+  // email sin contraseña: mail → código de 6 números → adentro (sirve para cuentas nuevas y existentes)
+  let flow=null;
+  const errMsg=e=>{ const c=e&&e.errors&&e.errors[0]&&e.errors[0].code||'';
+    if(c==='form_code_incorrect') return en()?'Wrong code. Check it and try again.':'El código no es correcto. Revisalo y probá de nuevo.';
+    if(c==='verification_expired') return en()?'The code expired. Ask for a new one.':'El código venció. Pedí uno nuevo.';
+    if(c==='form_param_format_invalid'||c==='form_identifier_invalid') return en()?'That email doesn’t look right.':'Ese email no parece válido.';
+    if(c==='too_many_requests') return en()?'Too many tries. Wait a minute.':'Demasiados intentos. Esperá un minuto.';
+    return (en()?'Something went wrong: ':'Algo falló: ')+((e&&e.errors&&e.errors[0]&&(e.errors[0].longMessage||e.errors[0].message))||(e&&e.message)||''); };
+  function mailBox(){
+    const card=document.querySelector('#ecologin .el-card'); if(!card) return;
+    let box=card.querySelector('.el-mailbox');
+    const btn=card.querySelector('[data-eco="login"][data-v="email"].el-btn'); const foot=card.querySelector('.el-foot');
+    if(!box){ box=document.createElement('form'); box.className='el-mailbox'; (btn||foot).insertAdjacentElement('beforebegin',box); }
+    if(btn) btn.hidden=true; if(foot) foot.hidden=true;
+    box.innerHTML=`<label class="el-field"><span>Email</span><input name="mail" type="email" inputmode="email" autocomplete="email" placeholder="${en()?'you@email.com':'tu@email.com'}" required></label>
+      <button class="el-btn el-mail" type="submit">${en()?'Send me a code':'Enviarme un código'}</button>`;
+    box.onsubmit=async ev=>{ ev.preventDefault(); const b=box.querySelector('button'); const addr=box.mail.value.trim(); if(!addr) return; b.disabled=true; status(en()?'Sending…':'Enviando…');
+      try{ await mailStart(addr); codeBox(addr); }catch(e){ console.warn(e); status(errMsg(e)); b.disabled=false; } };
+    setTimeout(()=>{ const i=box.querySelector('input'); if(i) i.focus(); },50);
+  }
+  function codeBox(addr){
+    const box=document.querySelector('#ecologin .el-mailbox'); if(!box) return; status('');
+    box.innerHTML=`<p class="el-codehint">${en()?'We sent a 6-digit code to':'Te mandamos un código de 6 números a'} <b></b>.<br><small>${en()?'Not there? Check Spam or Promotions.':'¿No llegó? Mirá en Spam o Promociones.'}</small></p>
+      <label class="el-field"><span>${en()?'Code':'Código'}</span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" required></label>
+      <button class="el-btn el-mail" type="submit">${en()?'Sign in':'Entrar'}</button>
+      <button class="el-guest" type="button" data-back>${en()?'Use another email':'Usar otro email'}</button>`;
+    box.querySelector('b').textContent=addr;
+    box.querySelector('[data-back]').onclick=()=>{ flow=null; mailBox(); };
+    const inp=box.code; inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,'').slice(0,6); if(inp.value.length===6) box.requestSubmit(); };
+    box.onsubmit=async ev=>{ ev.preventDefault(); const b=box.querySelector('button[type=submit]'); b.disabled=true; status(en()?'Checking…':'Verificando…');
+      try{ await mailVerify(inp.value); status(''); }catch(e){ console.warn(e); status(errMsg(e)); b.disabled=false; inp.select(); } };
+    setTimeout(()=>inp.focus(),50);
+  }
+  async function mailStart(addr){
+    const C=window.Clerk;
+    try{
+      const si=await C.client.signIn.create({identifier:addr});
+      const f=(si.supportedFirstFactors||[]).find(x=>x.strategy==='email_code');
+      if(!f) throw {errors:[{message:'email_code'}]};
+      await si.prepareFirstFactor({strategy:'email_code',emailAddressId:f.emailAddressId});
+      flow={t:'in',o:si};
+    }catch(e){
+      const c=e&&e.errors&&e.errors[0]&&e.errors[0].code;
+      if(c!=='form_identifier_not_found') throw e;
+      const su=await C.client.signUp.create({emailAddress:addr});
+      await su.prepareEmailAddressVerification({strategy:'email_code'});
+      flow={t:'up',o:su};
+    }
+  }
+  async function mailVerify(code){
+    const C=window.Clerk; if(!flow) throw {errors:[{code:'verification_expired'}]};
+    let r;
+    if(flow.t==='in') r=await flow.o.attemptFirstFactor({strategy:'email_code',code});
+    else r=await flow.o.attemptEmailAddressVerification({code});
+    if(r.status==='complete'&&r.createdSessionId){ flow=null; await C.setActive({session:r.createdSessionId}); return; }
+    if(flow.t==='up'&&r.status==='missing_requirements'){
+      const miss=r.missingFields||[];
+      if(miss.includes('password')){ // Clerk todavía exige contraseña: usamos su ventana como plan B
+        status(en()?'Almost done — choose a password.':'Ya casi: elegí una contraseña.');
+        C.openSignUp({forceRedirectUrl:location.origin+'/'}); return; }
+      throw {errors:[{message:'faltan datos: '+miss.join(', ')}]};
+    }
+    throw {errors:[{message:r.status}]};
+  }
   window.ecoLogout=async function(){ if(E.account&&E.account.provider==='guest'){ E.account=null; ecoSave(); if(!document.getElementById('ecologin')) ecoShowLogin(); return; } try{ if(window.Clerk&&window.Clerk.user) await window.Clerk.signOut(); }catch(e){} onSignedOut(); };
 
   // cambios hechos en el juego (nombre, personaje, foto) se guardan en su cuenta
