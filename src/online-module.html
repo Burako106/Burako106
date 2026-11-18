@@ -2140,7 +2140,7 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
 
   function loadClerk(){ return new Promise((ok,bad)=>{ if(window.Clerk) return ok(window.Clerk);
     const s=document.createElement('script'); s.async=true; s.crossOrigin='anonymous'; s.setAttribute('data-clerk-publishable-key',PK);
-    s.src=FAPI+'/npm/@clerk/clerk-js@5/dist/clerk.browser.js'; s.onload=()=>ok(window.Clerk); s.onerror=bad; document.head.appendChild(s); }); }
+    s.src=FAPI+'/npm/@clerk/clerk-js@6/dist/clerk.browser.js'; s.onload=()=>ok(window.Clerk); s.onerror=bad; document.head.appendChild(s); }); }
 
   async function api(method,body){
     const tok=await window.Clerk.session.getToken();
