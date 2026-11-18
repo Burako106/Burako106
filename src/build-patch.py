@@ -123,8 +123,9 @@ rep("""<label class="el-field"><span>Email</span><input type="email" placeholder
     <button class="el-btn el-mail" data-eco="login" data-v="email">Entrar con email</button>
     <p class="el-foot">¿No tenés cuenta? <a href="#" data-eco="login" data-v="email">Creala acá</a></p>""","""<button class="el-btn el-mail" data-eco="login" data-v="email">Continuar con email</button>
     <p class="el-foot">¿No tenés cuenta? La creás en el mismo paso.</p>""")
-rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>""","""<p class="el-test" id="elstatus" hidden></p>""")
-rep("""E.account.provider==='google'?'Google':'Facebook'):''} · modo prueba</small>""","""E.account.provider==='google'?'Google':'Facebook'):''}${E.account&&E.account.email?' · '+esc(E.account.email):''}</small>""")
+rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Google. Cualquier botón te deja entrar.</p>""","""<p class="el-test" id="elstatus" hidden></p>
+    <button class="el-guest" data-eco="login" data-v="guest">Entrar sin cuenta (prueba)</button>""")
+rep("""E.account.provider==='google'?'Google':'Facebook'):''} · modo prueba</small>""","""E.account.provider==='google'?'Google':E.account.provider==='guest'?'Invitado (sin cuenta)':'Facebook'):''}${E.account&&E.account.email?' · '+esc(E.account.email):''}</small>""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
