@@ -571,6 +571,12 @@ html body .ppl i.pp.fi-host{width:26px!important;height:26px!important;border:0!
 .ppl i.pp.b{--pc:#4a8cff;color:#4a8cff} .ppl i.pp.r{--pc:#ff6a5c;color:#ff6a5c} .ppl i.pp.y{--pc:#f2b632;color:#e0a01e}
 html body.fun .ppl i.pp svg.fi .c{fill:var(--pc)!important}
 html body:not(.fun):not(.glass) .ppl i.pp.b{color:#7fb0ff} html body:not(.fun):not(.glass) .ppl i.pp.r{color:#ff8a7e} html body:not(.fun):not(.glass) .ppl i.pp.y{color:#f2c14e}
+/* Glass/Classic: las personitas de Jugadores en un solo color (el del texto), sin colores de equipo */
+html body:not(.fun) .ppl i.pp.b,html body:not(.fun) .ppl i.pp.r,html body:not(.fun) .ppl i.pp.y{color:inherit!important}
+html body:not(.fun) .ppl-seg button .ppl{color:inherit!important;opacity:1!important}
+html body.glass .ppl-seg button:not([aria-pressed="true"]) .ppl i.pp{color:#161618!important}
+html body.glass .ppl-seg button[aria-pressed="true"] .ppl i.pp{color:#fff!important}
+html body:not(.fun):not(.glass) .ppl-seg button .ppl i.pp{color:#f6efe2!important}
 </style>
 <script id="net-js">
 /* ==========================================================================
