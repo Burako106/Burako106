@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795003509';</script>
+<script>window.BURAKO_BUILD='1795005326';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6659,8 +6659,6 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
   .lhead .lgreet{min-width:0!important;flex:1 1 0!important}
   .lhead .lhead-r{flex:none!important}
 }
-@media (min-width:901px) and (max-width:1260px){ .lhead .lhead-r{zoom:.86} }
-@media (min-width:901px) and (max-width:1080px){ .lhead .lhead-r{zoom:.74} }
 /* Menú colapsado: los íconos se juntan y achican para que entren con la flecha */
 .lnav.slim{--nh:clamp(32px,calc((100vh - 292px) / 8),54px)}
 .lnav.slim .lns-g{gap:clamp(2px,.7vh,6px)!important}
@@ -6671,8 +6669,11 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
 .lnav.slim .lni-b svg{width:calc(var(--nh) * .5)!important;height:calc(var(--nh) * .5)!important}
 .lnav.slim .lns-sep{margin-top:clamp(2px,.8vh,6px)!important;margin-bottom:clamp(2px,.8vh,6px)!important}
 /* Botones grandes del lobby: se achican en pantallas chicas para que no se corten */
-@media (min-width:901px) and (max-width:1280px){ #lobby .lact{zoom:.88} }
-@media (min-width:901px) and (max-width:1120px){ #lobby .lact{zoom:.72} }
+/* Foto de perfil del menú: siempre circular */
+.lnf-me .lav,.lns-me .lav{aspect-ratio:1/1!important;height:calc(100% - 4px)!important;width:auto!important;flex:none!important;border-radius:50%!important}
+.lnf-me .lav img,.lnf-me .lav svg,.lns-me .lav img{width:100%!important;height:100%!important;object-fit:cover}
+.lhead .lhead-r{transform-origin:100% 50%}
+#lobby .lact{transform-origin:0 0}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -7841,9 +7842,26 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
       if(s>=.55||!b.classList.contains('lg-b')){ b.style.fontSize=Math.max(.42,s).toFixed(3)+'em'; return; }
       b.classList.add('two'); b.style.width=cw+'px'; let f=.56; b.style.fontSize=f+'em';
       while(f>.36&&(b.scrollWidth>cw+1||b.getBoundingClientRect().height>g.clientHeight*1.02)){ f-=.02; b.style.fontSize=f.toFixed(2)+'em'; } }); }catch(e){} }
+  /* cabecera: botones de arriba alineados a la derecha con el buscador; saludo alineado con Crear mesa y centrado con los botones */
+  function hdFit(){ try{
+    const hd=document.querySelector('#lobby .lhead'), hr=hd&&hd.querySelector('.lhead-r'), g=hd&&hd.querySelector('.lgreet'), act=document.querySelector('#lobby .lact');
+    if(!hd||!hr||!g||!act||innerWidth<901) { if(hr){hr.style.transform='';hr.style.marginLeft='';} if(g){g.style.marginLeft='';g.style.top='';} if(act){act.style.transform='';act.style.marginBottom='';act.style.width='';} return; }
+    hr.style.transform=''; hr.style.marginLeft=''; hr.style.marginRight=''; g.style.marginLeft=''; g.style.top=''; act.style.transform=''; act.style.marginBottom=''; act.style.width='';
+    const col=act.getBoundingClientRect(), H=hd.getBoundingClientRect();
+    /* botones grandes: si no entran, se achican en bloque */
+    const kids=[...act.children].filter(k=>k.offsetWidth); if(kids.length){ const need=Math.max(...kids.map(k=>k.getBoundingClientRect().right))-col.left; if(need>col.width+1){ const s=col.width/need; act.style.width=(100/s)+'%'; act.style.transform='scale('+s.toFixed(3)+')'; act.style.marginBottom=(-(act.offsetHeight*(1-s)))+'px'; } }
+    /* botones de arriba: escala para dejarle lugar al saludo (mínimo 260px) */
+    const W=hr.getBoundingClientRect().width, avail=col.right-col.left, s2=Math.max(.62,Math.min(1,(avail-260)/W));
+    if(s2<1){ hr.style.transform='scale('+s2.toFixed(3)+')'; hr.style.marginLeft=(-(W*(1-s2)))+'px'; }
+    hr.style.marginRight=Math.max(0,H.right-col.right)+'px';
+    const a=g.querySelector('.lg-a.on')||g.querySelector('.lg-a'); const tl=(a||g).getBoundingClientRect().left; g.style.marginLeft=(col.left-tl)+'px';
+    const hrc=hr.getBoundingClientRect(), gc=(a||g).getBoundingClientRect(); g.style.position='relative'; g.style.top=(Math.round((hrc.top+hrc.height/2)-(gc.top+gc.height/2))+(parseFloat(g.style.top)||0))+'px';
+  }catch(e){} }
+  window.hdFit=hdFit; let hdT=0; const hdLater=()=>{ clearTimeout(hdT); hdT=setTimeout(()=>{ hdFit(); setTimeout(hdFit,450); },120); };
   window.lgFit=lgFit;
-  new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(()=>{ fit(); lgFit(); }); }).observe(document.body,{childList:true,subtree:true});
-  addEventListener('resize',()=>{ fit(); lgFit(); }); if(document.fonts) document.fonts.ready.then(fit);
+  new MutationObserver(()=>{ if(!pend) pend=requestAnimationFrame(()=>{ fit(); hdFit(); lgFit(); hdFit(); hdLater(); }); }).observe(document.body,{childList:true,subtree:true});
+  addEventListener('resize',()=>{ fit(); hdFit(); lgFit(); hdFit(); });
+  document.addEventListener('transitionend',e=>{ if(e.target&&e.target.closest&&e.target.closest('.lwrap2')&&!e.target.closest('.lcard')){ if(!pend) pend=requestAnimationFrame(()=>{ pend=0; fit(); hdFit(); lgFit(); hdFit(); }); } },true); if(document.fonts) document.fonts.ready.then(fit);
 })();
 
 /* Ventanas: tocar afuera las cierra (crear mesa / jugar contra la máquina, abandonar, pausa) */
