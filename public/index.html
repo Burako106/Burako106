@@ -5911,7 +5911,7 @@ function ecoLogin(provider){ // SERVIDOR: supabase.auth.signInWithOAuth / signIn
 function ecoLogout(){ E.account=null; ecoSave(); ecoShowLogin(); }
 function ecoShowLogin(){ if(document.getElementById('ecologin')) return; setTimeout(()=>{ const l=document.getElementById('ecologin'); if(l) trTree(l); },0); const d=document.createElement('div'); d.id='ecologin'; d.innerHTML=`
   <div class="el-card" role="dialog" aria-modal="true" aria-labelledby="elTitle">
-    <div class="el-brand">Bura<i>ko</i> <small>CLUB</small></div>
+    <div class="el-brand el-logo">${lbLogo()}</div>
     <h2 id="elTitle">Entrá para jugar</h2>
     <p class="el-sub">Creá tu cuenta y te regalamos <b>${ecoN(ECO.SIGNUP)} tickets</b>.</p>
     <button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#fff"/><path fill="#1877f2" d="M13.4 24v-8.4h2.8l.42-3.26H13.4v-2.08c0-.94.26-1.59 1.62-1.59h1.73V5.75a23 23 0 0 0-2.53-.13c-2.5 0-4.22 1.53-4.22 4.34v2.4H7.18v3.26H10V24z"/></svg></span>Continuar con Facebook</button>
@@ -6066,7 +6066,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795044607';</script>
+<script>window.BURAKO_BUILD='1795046283';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6725,6 +6725,8 @@ body:not(.fun):not(.glass) button.xbtn.xbtn,body:not(.fun):not(.glass) .eco-x{bo
 html body.fun button.xbtn.xbtn,html body.fun #menu .menu-head .icon-btn.xbtn{border:0;outline:1.5px solid #141414 !important;outline-offset:-1.5px;background:#fff !important}
 button.xbtn.xbtn>svg.fi-x{width:22px;height:22px;margin:0}
 body:not(.fun) button.xbtn.xbtn:hover{background:rgba(127,127,127,.12)}
+#ecologin .el-logo{display:flex;justify-content:center}
+#ecologin .el-logo .llogo{margin:0 0 6px}
 </style>
 <script id="net-js">
 /* ==========================================================================
