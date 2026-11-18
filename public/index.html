@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795011109';</script>
+<script>window.BURAKO_BUILD='1795011693';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6687,6 +6687,8 @@ html body #lobby .lcard.m3 .lrules,html body #lobby .lcard.m4 .lrules{margin-top
 }
 @media (min-width:901px){ #lobby .lact-r{justify-content:flex-start!important} }
 @media (min-width:901px){ #lobby .lhead .lhead-r{justify-content:flex-end!important} }
+/* Las mesas se cortan con el borde de la ventana, sin franja abajo */
+@media (min-width:901px){ #lobby .lwrap2 .lmain .lgrid{margin-bottom:-18px!important;padding-bottom:58px!important} }
 </style>
 <script id="net-js">
 /* ==========================================================================
