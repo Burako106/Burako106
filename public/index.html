@@ -5308,7 +5308,7 @@ function renderModal(){
       <section class="s2"><span class="label">Jugadores</span><div class="seg s2-3 ppl-seg">
         ${pb('setn',2,P===2,'1 contra 1','Vos contra un personaje.',vsI(dot('b'),dot('r')))}
         ${pb('setn',4,P===4,'2 contra 2','Con compañero/a contra dos personajes.',vsI(dot('b')+dot('b'),dot('r')+dot('r')))}
-        ${pb('setn',3,P===3,'Todos contra todos','3 jugadores, cada uno por su cuenta.',`<span class="ppl">${dot('b')}${dot('r')}${dot('y')}</span>`)}</div></section>
+        ${pb('setn',3,P===3,'Todos contra todos','3 jugadores, cada uno por su cuenta.',`<span class="ppl">${dot('b')}<em>vs</em>${dot('r')}<em>vs</em>${dot('y')}</span>`)}</div></section>
       ${setupKind==='bot'?`<section class="s2"><span class="label">Dificultad de la máquina</span><div class="seg s2-3 lvl-seg">${[1,2,3].map(l=>`<button data-act="setlevel" data-v="${l}" aria-pressed="${(pref.level||2)===l}"><b>${LVL[l]}</b>${lvlH(l)}<span class="lvl-help">${l===1?'Con ayudas':'Sin ayudas'}</span></button>`).join('')}</div></section>`
        :setupKind==='create'?`<section class="s2"><span class="label">Entrada de la mesa</span><div class="seg s2-3 entry-seg">${ECO.ENTRIES.map(v=>`<button data-act="setbet" data-v="${v}" aria-pressed="${(ECO.ENTRIES.includes(bet)?bet:ECO.ENTRIES[0])===v}"><b>${TKI}${ecoN(v)}</b><span>Ganás ${ecoN(v*2*(1-ECO.FEE))}</span></button>`).join('')}</div><small class="set-note">Cada jugador paga su entrada. El que pierde, la pierde; el que gana recibe el doble menos 10 %.${ecoIsSub()?' Con tu suscripción no gastás tickets.':''}</small></section>`:`
       <section class="s2 s2-vs">
@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794966948';</script>
+<script>window.BURAKO_BUILD='1794967102';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}

@@ -108,6 +108,8 @@ rep("""<span class="hb-rules">${lbRules(t).join(' · ')}</span>""","""<span clas
 # jugar con un amigo: primero se eligen las reglas
 rep("""setupKind==='create'?'Crear mesa':setupKind==='bot'""","""setupKind==='create'?(window.NETFRIEND?'Jugar con un amigo':'Crear mesa'):setupKind==='bot'""")
 rep("""setupKind==='create'?'<button class="btn primary go-btn" data-act="createtable">Crear mesa</button>':""","""setupKind==='create'?'<button class="btn primary go-btn" data-act="createtable">'+(window.NETFRIEND?'Crear mesa e invitar':'Crear mesa')+'</button>':""")
+# todos contra todos: vs entre los tres
+rep("""<span class="ppl">${dot('b')}${dot('r')}${dot('y')}</span>`)}""","""<span class="ppl">${dot('b')}<em>vs</em>${dot('r')}<em>vs</em>${dot('y')}</span>`)}""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
