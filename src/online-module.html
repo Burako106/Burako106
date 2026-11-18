@@ -2192,7 +2192,24 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
   // arranque
   (async()=>{ try{
     const C=await loadClerk(); await C.load();
-    if(new URLSearchParams(location.search).get('sso')){ status(en()?'Signing in…':'Entrando…'); await C.handleRedirectCallback({signInFallbackRedirectUrl:location.origin+'/',signUpFallbackRedirectUrl:location.origin+'/'}); return; }
+    const sso=new URLSearchParams(location.search).get('sso');
+    if(sso==='2'){ // cuenta nueva con Google/Facebook a la que Clerk le pide datos extra (ej. usuario): los completamos solos
+      status(en()?'Signing in…':'Entrando…');
+      const su=C.client&&C.client.signUp;
+      try{
+        if(su&&su.status==='missing_requirements'){
+          const miss=su.missingFields||[], upd={};
+          const base=(String(su.emailAddress||su.firstName||'jugador').split('@')[0].toLowerCase().normalize('NFD').replace(/[^a-z0-9_]/g,'').slice(0,20)||'jugador');
+          if(miss.includes('username')) upd.username=(base.length<4?base+'jugador':base)+'_'+Math.floor(1000+Math.random()*9000);
+          if(miss.includes('first_name')&&!su.firstName) upd.firstName=base;
+          if(miss.includes('last_name')&&!su.lastName) upd.lastName='-';
+          const r=await su.update(upd);
+          if(r.status==='complete'&&r.createdSessionId){ await C.setActive({session:r.createdSessionId}); }
+          else console.warn('faltan datos',r.missingFields);
+        }
+      }catch(e){ console.warn('signup',e); }
+      history.replaceState(null,'',location.pathname);
+    } else if(sso){ status(en()?'Signing in…':'Entrando…'); await C.handleRedirectCallback({signInFallbackRedirectUrl:location.origin+'/',signUpFallbackRedirectUrl:location.origin+'/',continueSignUpUrl:location.origin+'/?sso=2'}); return; }
     ACC.ready=true;
     if(C.user) onSignedIn(C.user); else onSignedOut();
     let last=C.user&&C.user.id; C.addListener(({user})=>{ const id=user&&user.id; if(id===last) return; last=id; if(user) onSignedIn(user); else onSignedOut(); });
