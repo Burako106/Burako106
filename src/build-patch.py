@@ -105,6 +105,9 @@ rep('<small class="set-note">Así te ven en las mesas.</small>','<small class="s
 rep("""${EMOJIS.map(e=>`<button data-act="emoji" data-v="${e}" aria-label="Mandar ${e}">${e}</button>`).join('')}""","""${EMOJIS.slice(0,-1).map(e=>`<button data-act="emoji" data-v="${e}" aria-label="Mandar ${e}">${e}</button>`).join('')}<button type="button" class="emo-more" aria-label="Más emojis" aria-expanded="false">+</button>""",2)
 # mesas compactas: cada regla en un solo renglón
 rep("""<span class="hb-rules">${lbRules(t).join(' · ')}</span>""","""<span class="hb-rules">${lbRules(t).map(r=>'<span class="hb-r">'+r+'</span>').join(' · ')}</span>""")
+# jugar con un amigo: primero se eligen las reglas
+rep("""setupKind==='create'?'Crear mesa':setupKind==='bot'""","""setupKind==='create'?(window.NETFRIEND?'Jugar con un amigo':'Crear mesa'):setupKind==='bot'""")
+rep("""setupKind==='create'?'<button class="btn primary go-btn" data-act="createtable">Crear mesa</button>':""","""setupKind==='create'?'<button class="btn primary go-btn" data-act="createtable">'+(window.NETFRIEND?'Crear mesa e invitar':'Crear mesa')+'</button>':""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

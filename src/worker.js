@@ -146,9 +146,19 @@ export class Room extends DurableObject {
       if (role === "host") {
         if (room.host && room.host.pid !== pid) { this.reject(ws); return; }
         room.host = who;
+        if (typeof m.pw === "string") room.pw = m.pw.replace(/\s+/g, "").toUpperCase().slice(0, 8);
         if (Number.isInteger(who.cap) && who.cap >= 1 && who.cap <= 3) room.cap = who.cap;
       } else {
         const known = !!room.guests[pid];
+        // Mesa con clave: quien no estaba sentado tiene que traer la clave correcta.
+        if (!known && room.pw) {
+          const pw = typeof m.pw === "string" ? m.pw.replace(/\s+/g, "").toUpperCase().slice(0, 8) : "";
+          if (pw !== room.pw) {
+            try { ws.send(JSON.stringify({ t: "needpw", bad: !!pw })); } catch (e) {}
+            try { ws.close(4002, "clave"); } catch (e) {}
+            return;
+          }
+        }
         const count = Object.keys(room.guests).length;
         // Mesa llena, o la partida ya empezó sin esta persona.
         if (!known && (room.state || count >= (room.cap || 1))) { this.reject(ws); return; }
@@ -170,6 +180,14 @@ export class Room extends DurableObject {
     const me = this.info(ws);
     if (!me.ok) return;
     const role = me.role || tagRole;
+
+    if (m.t === "setpw") {
+      if (role !== "host") return;
+      const room = (await this.ctx.storage.get("room")) || {};
+      room.pw = typeof m.pw === "string" ? m.pw.replace(/\s+/g, "").toUpperCase().slice(0, 8) : "";
+      await this.ctx.storage.put("room", room);
+      return;
+    }
 
     if (m.t === "kick") {
       // Solo el anfitrión libera lugares (alguien se fue antes de empezar, o no había lugar).
