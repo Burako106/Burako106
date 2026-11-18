@@ -6066,7 +6066,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795041335';</script>
+<script>window.BURAKO_BUILD='1795041839';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8267,6 +8267,9 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     if(c==='form_code_incorrect') return en()?'Wrong code. Check it and try again.':'El código no es correcto. Revisalo y probá de nuevo.';
     if(c==='verification_expired') return en()?'The code expired. Ask for a new one.':'El código venció. Pedí uno nuevo.';
     if(c==='form_param_format_invalid'||c==='form_identifier_invalid') return en()?'That email doesn’t look right.':'Ese email no parece válido.';
+    if(c==='form_password_pwned') return en()?'That password is too common (it appeared in leaks). Pick another.':'Esa contraseña es muy común (apareció en filtraciones). Elegí otra.';
+    if(c==='form_password_length_too_short') return en()?'Too short: at least 8 characters.':'Muy corta: mínimo 8 caracteres.';
+    if(c==='form_password_not_strong_enough'||c==='form_password_validation_failed') return en()?'Too weak. Mix letters and numbers.':'Muy débil. Mezclá letras y números.';
     if(c==='too_many_requests') return en()?'Too many tries. Wait a minute.':'Demasiados intentos. Esperá un minuto.';
     return (en()?'Something went wrong: ':'Algo falló: ')+((e&&e.errors&&e.errors[0]&&(e.errors[0].longMessage||e.errors[0].message))||(e&&e.message)||''); };
   function mailBox(){
@@ -8290,8 +8293,10 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
     box.querySelector('b').textContent=addr;
     box.querySelector('[data-back]').onclick=()=>{ flow=null; mailBox(); };
     const inp=box.code; inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,'').slice(0,6); if(inp.value.length===6) box.requestSubmit(); };
-    box.onsubmit=async ev=>{ ev.preventDefault(); const b=box.querySelector('button[type=submit]'); b.disabled=true; status(en()?'Checking…':'Verificando…');
-      try{ await mailVerify(inp.value); status(''); }catch(e){ console.warn(e); status(errMsg(e)); b.disabled=false; inp.select(); } };
+    let busy=false;
+    box.onsubmit=async ev=>{ ev.preventDefault(); if(busy) return; busy=true; const b=box.querySelector('button[type=submit]'); b.disabled=true; status(en()?'Checking…':'Verificando…');
+      try{ await mailVerify(inp.value); if(!document.querySelector('#ecologin input[name=pw]')) status(''); }catch(e){ console.warn(e); status(errMsg(e)); b.disabled=false; inp.select(); }
+      busy=false; };
     setTimeout(()=>inp.focus(),50);
   }
   async function mailStart(addr){
@@ -8310,20 +8315,44 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
       flow={t:'up',o:su};
     }
   }
+  const baseName=su=>(String(su.emailAddress||'jugador').split('@')[0].toLowerCase().normalize('NFD').replace(/[^a-z0-9_]/g,'').slice(0,20)||'jugador');
+  // termina de crear la cuenta: completa solo lo que Clerk pida (nombre, usuario); si pide contraseña, la pedimos acá
+  async function finishUp(su){
+    const C=window.Clerk;
+    if(su.status==='complete'&&su.createdSessionId){ flow=null; await C.setActive({session:su.createdSessionId}); return 'ok'; }
+    if(su.status!=='missing_requirements') throw {errors:[{message:su.status}]};
+    const miss=su.missingFields||[], upd={}, base=baseName(su);
+    if(miss.includes('first_name')) upd.firstName=base;
+    if(miss.includes('last_name')) upd.lastName='-';
+    if(miss.includes('username')) upd.username=(base.length<4?base+'jugador':base)+'_'+Math.floor(1000+Math.random()*9000);
+    if(Object.keys(upd).length) su=await su.update(upd);
+    if(su.status==='complete') return finishUp(su);
+    if((su.missingFields||[]).includes('password')){ pwBox(); return 'password'; }
+    throw {errors:[{message:(en()?'missing: ':'faltan datos: ')+(su.missingFields||[]).join(', ')}]};
+  }
   async function mailVerify(code){
     const C=window.Clerk; if(!flow) throw {errors:[{code:'verification_expired'}]};
-    let r;
-    if(flow.t==='in') r=await flow.o.attemptFirstFactor({strategy:'email_code',code});
-    else r=await flow.o.attemptEmailAddressVerification({code});
-    if(r.status==='complete'&&r.createdSessionId){ flow=null; await C.setActive({session:r.createdSessionId}); return; }
-    if(flow.t==='up'&&r.status==='missing_requirements'){
-      const miss=r.missingFields||[];
-      if(miss.includes('password')){ // Clerk todavía exige contraseña: usamos su ventana como plan B
-        status(en()?'Almost done — choose a password.':'Ya casi: elegí una contraseña.');
-        C.openSignUp({forceRedirectUrl:location.origin+'/'}); return; }
-      throw {errors:[{message:'faltan datos: '+miss.join(', ')}]};
+    if(flow.t==='in'){
+      const r=await flow.o.attemptFirstFactor({strategy:'email_code',code});
+      if(r.status==='complete'&&r.createdSessionId){ flow=null; await C.setActive({session:r.createdSessionId}); return; }
+      throw {errors:[{message:r.status}]};
     }
-    throw {errors:[{message:r.status}]};
+    let su;
+    try{ su=await flow.o.attemptEmailAddressVerification({code}); }
+    catch(e){ const c=e&&e.errors&&e.errors[0]&&e.errors[0].code; if(c!=='verification_already_verified') throw e; su=C.client.signUp; }
+    await finishUp(su);
+  }
+  function pwBox(){
+    const box=document.querySelector('#ecologin .el-mailbox'); if(!box) return; status('');
+    box.innerHTML=`<p class="el-codehint">${en()?'Email confirmed ✓ Last step: choose a password.':'Email confirmado ✓ Último paso: elegí una contraseña.'}<br><small>${en()?'At least 8 characters. Avoid very common ones.':'Mínimo 8 caracteres. Evitá las muy comunes.'}</small></p>
+      <label class="el-field"><span>${en()?'Password':'Contraseña'}</span><input name="pw" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="el-btn el-mail" type="submit">${en()?'Create account':'Crear cuenta'}</button>`;
+    let busy=false;
+    box.onsubmit=async ev=>{ ev.preventDefault(); if(busy) return; busy=true; const b=box.querySelector('button'); b.disabled=true; status(en()?'Creating…':'Creando…');
+      try{ const su=await window.Clerk.client.signUp.update({password:box.pw.value}); await finishUp(su); }
+      catch(e){ console.warn(e); status(errMsg(e)); b.disabled=false; }
+      busy=false; };
+    setTimeout(()=>box.pw.focus(),50);
   }
   window.ecoLogout=async function(){ if(E.account&&E.account.provider==='guest'){ E.account=null; ecoSave(); if(!document.getElementById('ecologin')) ecoShowLogin(); return; } try{ if(window.Clerk&&window.Clerk.user) await window.Clerk.signOut(); }catch(e){} onSignedOut(); };
 
