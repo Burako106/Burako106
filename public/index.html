@@ -6065,7 +6065,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1794963528';</script>
+<script>window.BURAKO_BUILD='1794963754';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6585,9 +6585,8 @@ html body.fun .lhead-r button.lcoins{background:#d6a8f5!important}
 html body.fun .lhead-r button.lfs-btn{background:#7fd8c4!important}
 html body.fun .lact .lbig.lfriend,html body.fun .lbig.lfriend{background:#ff8f7d!important}
 /* Glass/Classic: íconos de un solo color (toman el color del texto del botón) */
-html body:not(.fun) svg.fim .ko{display:none}
-html body:not(.fun) svg.fim .k{fill:currentColor}
-html body:not(.fun) svg.fim .c{fill:none;stroke:currentColor;stroke-width:1.6px;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html body:not(.fun) svg.fim .k{fill:currentColor;stroke:currentColor;stroke-width:var(--fis,0px);stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html body:not(.fun) svg.fim .c{fill:var(--fibg,#fff)}
 html body:not(.fun) button.fi-pre{display:inline-flex!important;align-items:center;gap:8px}
 html body:not(.fun) button.fi-pre>svg.fi{width:20px;height:20px;flex:none}
 html body:not(.fun) label.lsearch>svg.fi{width:20px!important;height:20px!important}
@@ -7905,8 +7904,7 @@ html body:not(.fun) .lcoin svg.fim{color:#1b1c21}
   try{ FI.home[1]=FI.home[1].replace(/--c:#[0-9a-f]{6}/,'--c:#ff6f61'); }catch(e){}
   /* Glass y Classic: los mismos dibujos en un solo color (contorno), sin el relleno de color ni la sombra */
   const KO={"home":[0],"bag":[0],"cart":[0],"chat":[0],"book":[0],"globe":[0],"palette":[0],"gear":[0,2],"ticket":[0],"play":[0,2],"pause":[0],"robot2":[0],"robot":[0],"users":[0],"user":[0],"link":[0],"x":[0],"video":[0],"image":[0],"sound":[3],"mute":[1],"music":[0],"soundface":[2],"back":[0],"remote":[0],"pausesq":[0],"mic":[0],"clock":[0],"n123":[0,1],"column":[0],"smile":[0],"brush":[0],"user2":[0],"dice":[0],"search":[0,3],"gamepad":[0],"door":[2]}, MONO={};
-  function mono(n){ if(MONO[n]) return MONO[n]; const d=FI[n]; if(!d) return ''; const t=document.createElement('template'); t.innerHTML=`<svg>${d[1]}</svg>`;
-    const kids=[...t.content.firstChild.children], ko=KO[n==='playy'?'play':n]||[]; ko.forEach(i=>kids[i]&&kids[i].classList.add('ko')); return MONO[n]=t.content.firstChild.innerHTML; }
+  function mono(n){ const d=FI[n]; return d?d[1]:''; }
   let MODE='f';
   const svg=n=>{ const d=FI[n]; if(!d) return ''; return MODE==='f'?`<svg class="fi fi-${n}" viewBox="${d[0]}" aria-hidden="true">${d[1]}</svg>`:`<svg class="fi fim fi-${n}" viewBox="${d[0]}" aria-hidden="true">${mono(n)}</svg>`; };
   const RULES=[
@@ -7945,6 +7943,11 @@ html body:not(.fun) .lcoin svg.fim{color:#1b1c21}
       PRE.forEach(([sel,name,strip])=>document.querySelectorAll(sel).forEach(e=>{ if(e.querySelector(':scope>svg.fi')) return;
         if(!e.hasAttribute('data-fio')) e.setAttribute('data-fio',e.innerHTML);
         if(strip) e.innerHTML=e.innerHTML.replace(strip,''); e.insertAdjacentHTML('afterbegin',svg(name)); e.classList.add('fi-pre'); }));
+      /* Glass/Classic: el relleno toma el color del fondo donde está el ícono (queda contorno + sombra de un solo color) */
+      if(MODE==='m') document.querySelectorAll('svg.fim').forEach(s=>{ let e=s.parentElement, col=null;
+        while(e&&e!==document.documentElement){ const m=getComputedStyle(e).backgroundColor.match(/[\d.]+/g); if(m&&(m[3]===undefined||+m[3]>=0.45)){ col=`rgb(${m[0]},${m[1]},${m[2]})`; break; } e=e.parentElement; }
+        if(!col) col=document.body.classList.contains('glass')?'#f2f3f7':'#3b171b';
+        if(s._bg!==col){ s._bg=col; s.style.setProperty('--fibg',col); } });
       /* grosor parejo: el contorno de cada ícono queda en 1.5px en pantalla, sin importar su tamaño */
       document.querySelectorAll('svg.fi').forEach(s=>{ const w=s.getBoundingClientRect().width; if(!w) return; const k=Math.round(w*4)/4; if(s._fw===k) return; s._fw=k;
         const vb=(s.getAttribute('viewBox')||'0 0 1 1').split(' ').map(Number), cur=6*w/vb[2]; s.style.setProperty('--fis',Math.max(0,1.5-cur).toFixed(2)+'px'); });
