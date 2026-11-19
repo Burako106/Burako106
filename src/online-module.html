@@ -2437,6 +2437,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
       const tok=await window.Clerk.session.getToken();
       const r=await fetch('/api/mp/checkout',{method:'POST',headers:{authorization:'Bearer '+tok,'content-type':'application/json'},body:JSON.stringify({pack:id})});
       const j=await r.json().catch(()=>({}));
+      if(j.error==='no-test'){ if(b){ b.disabled=false; b.textContent=en()?'Buy':'Comprar'; } ecoNote(en()?'Payments are paused: the store isn’t in test mode yet.':'Pagos en pausa: la tienda todavía no está en modo prueba.'); return; }
       if(!r.ok||!j.url) throw new Error(j.error||('http '+r.status));
       location.href=j.url;
     }catch(e){ console.warn('mp',e); if(b){ b.disabled=false; b.textContent=en()?'Buy':'Comprar'; } ecoNote(en()?'Couldn’t open Mercado Pago. Try again.':'No se pudo abrir Mercado Pago. Probá de nuevo.'); }

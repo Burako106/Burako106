@@ -419,12 +419,20 @@ const mpApi = (env, path, opt = {}) => fetch((env.TEST_MP_BASE || "https://api.m
   ...opt, headers: { authorization: "Bearer " + env.MP_ACCESS_TOKEN, "content-type": "application/json", ...(opt.headers || {}) } });
 const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (x) => x.toString(16).padStart(2, "0")).join("");
 
+// Seguro de "modo prueba": mientras no exista MP_LIVE=1, solo se aceptan credenciales de una cuenta de prueba de MP
+let MPWHO = null;
+async function mpIsTest(env) {
+  if (env.MP_LIVE === "1") return true;
+  if (!MPWHO) { try { const r = await mpApi(env, "/users/me"); const j = await r.json(); MPWHO = { test: Array.isArray(j.tags) && j.tags.includes("test_user") }; } catch (e) { return false; } }
+  return MPWHO.test;
+}
 async function mpCheckout(request, env) {
   const claims = await verifyClerk(request, env);
   if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
   if (!env.MP_ACCESS_TOKEN) return Response.json({ error: "falta MP_ACCESS_TOKEN" }, { status: 500 });
   let b = {}; try { b = await request.json(); } catch (e) {}
   const pk = MP_PACKS[b.pack]; if (!pk) return Response.json({ error: "paquete" }, { status: 400 });
+  if (!(await mpIsTest(env))) return Response.json({ error: "no-test" }, { status: 409 });
   const u0 = new URL(request.url);
   const origin = /^(localhost|127\.)/.test(u0.hostname) ? u0.origin : "https://" + u0.host; // Mercado Pago exige https
   const st = players(env);
