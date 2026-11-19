@@ -154,6 +154,8 @@ rep("""const ecoMoney=n=>'ARS '+Math.round(n).toLocaleString('es-AR');""","""con
 rep("""<span class="eco-price">${ecoMoney(p.ars)} <small>${ecoUsd(p.usd)}</small></span>""","""<span class="eco-price">${ecoMoney(p.ars)} <small>ARS</small></span>""")
 rep("""<small>${p.id==='anual'?'/año':'/mes'} · ${ecoUsd(p.usd)}</small>""","""<small>${p.id==='anual'?'/año':'/mes'}</small>""")
 rep("""<p class="eco-test">Modo prueba: los botones simulan la compra. No se cobra nada.</p>""","""<p class="eco-test">Modo prueba: los tickets se pagan con Mercado Pago en modo de prueba (no se cobra de verdad). Las suscripciones todavía son simuladas.</p>""")
+# Google AdSense: verificación del sitio (sin mostrar anuncios)
+rep('<head>','<head>\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9099367835712483" crossorigin="anonymous"></script>')
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
