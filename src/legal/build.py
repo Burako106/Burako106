@@ -246,6 +246,7 @@ def page(slug):
     return f'''<!DOCTYPE html>
 <html lang="es">
 <head>
+<script>(window.adsbygoogle=window.adsbygoogle||[]).pauseAdRequests=1;</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9099367835712483" crossorigin="anonymous"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
