@@ -1,6 +1,23 @@
 <!doctype html>
 <html lang="es">
 <head>
+<script>(function(){try{var q=/[?&]sso=/.test(location.search),t=+sessionStorage.getItem('burako-authwait')||0;if(!(q||Date.now()-t<120000))return;var th=localStorage.getItem('burako-theme-v2')?(localStorage.getItem('burako-theme')||'glass'):'glass';var d=document.documentElement;d.classList.add('auth-wait','aw-'+th);if(localStorage.getItem('burako-lang')==='en')d.classList.add('aw-en');setTimeout(function(){d.classList.remove('auth-wait')},12000);}catch(e){}})();</script>
+<style>
+html.auth-wait body{visibility:hidden}
+html.auth-wait{background:linear-gradient(160deg,#e3e7fb,#f3e9f0) fixed!important;min-height:100%}
+html.auth-wait.aw-fun{background:#ffe9a8!important}
+html.auth-wait.aw-classic{background:radial-gradient(circle at 50% 40%,#4a1f22,#1e0d0f) fixed!important}
+html.auth-wait::before{content:"";position:fixed;left:50%;top:calc(50% - 28px);width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid rgba(20,20,30,.15);border-top-color:#1b1c21;animation:awSpin .8s linear infinite;z-index:2147483647}
+html.auth-wait.aw-fun::before{border-color:rgba(20,20,20,.18);border-top-color:#141414}
+html.auth-wait.aw-classic::before{border-color:rgba(255,255,255,.18);border-top-color:#e6b63f}
+html.auth-wait::after{content:"Entrando…";position:fixed;left:0;right:0;top:calc(50% + 6px);text-align:center;font:700 16px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.02em;color:#1b1c21;opacity:.75;z-index:2147483647}
+html.auth-wait.aw-en::after{content:"Signing in…"}
+html.auth-wait.aw-classic::after{color:#f6efe2}
+html.aw-out body{animation:awIn .35s ease both}
+@keyframes awSpin{to{transform:rotate(360deg)}}
+@keyframes awIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){html.auth-wait::before{animation-duration:2s}html.aw-out body{animation:none}}
+</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -6066,7 +6083,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795046283';</script>
+<script>window.BURAKO_BUILD='1795047753';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6714,10 +6731,6 @@ body:not(.fun):not(.glass) .lcfg-links a{border-color:rgba(230,182,63,.5);color:
 #ecologin .el-tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.06);margin-bottom:2px}
 #ecologin .el-tabs button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font:inherit;font-size:14px;font-weight:700;color:inherit;opacity:.6;cursor:pointer}
 #ecologin .el-tabs button.on{background:#fff;opacity:1;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-html.auth-wait #ecologin .el-card{visibility:hidden}
-html.auth-wait #ecologin::after{content:"Entrando…";position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:700;font-size:17px;letter-spacing:.02em;opacity:.7;animation:awPulse 1.1s ease-in-out infinite alternate}
-html.auth-wait[lang=en] #ecologin::after{content:"Signing in…"}
-@keyframes awPulse{from{opacity:.35}to{opacity:.85}}
 /* X de cerrar: siempre el botón redondo grande (como el de la tienda), con el ícono de cada modo */
 button.xbtn.xbtn{width:36px;height:36px;min-width:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:none;box-shadow:none;color:inherit;display:inline-grid;place-items:center;line-height:1;cursor:pointer;flex:none}
 body.glass button.xbtn.xbtn{border-color:rgba(30,32,48,.15)}
@@ -8232,10 +8245,10 @@ body:not(.fun) button.xbtn.xbtn:hover{background:rgba(127,127,127,.12)}
   const ACC={ready:false,user:null,me:null,quiet:0};
   // al volver de Google/Facebook: en vez de mostrar un segundo la pantalla de entrada, mostramos "Entrando…"
   const AW='burako-authwait';
-  const waitOn=()=>{ try{ sessionStorage.setItem(AW,String(Date.now())); }catch(e){} document.documentElement.classList.add('auth-wait'); };
-  const waitOff=()=>{ try{ sessionStorage.removeItem(AW); }catch(e){} document.documentElement.classList.remove('auth-wait'); };
-  try{ const t=+sessionStorage.getItem(AW)||0; if(new URLSearchParams(location.search).get('sso')||Date.now()-t<120000) document.documentElement.classList.add('auth-wait'); }catch(e){}
-  setTimeout(()=>document.documentElement.classList.remove('auth-wait'),10000);
+  const waitOn=()=>{ try{ sessionStorage.setItem(AW,String(Date.now())); }catch(e){} };
+  const waitOff=()=>{ try{ sessionStorage.removeItem(AW); }catch(e){} const d=document.documentElement; if(!d.classList.contains('auth-wait')) return;
+    d.classList.add('aw-out'); d.classList.remove('auth-wait'); setTimeout(()=>d.classList.remove('aw-out'),450); };
+  setTimeout(waitOff,12000);
   window.BURAKO_ACC=ACC;
   const en=()=>typeof LANG!=='undefined'&&LANG==='en';
   const status=t=>{ const s=document.getElementById('elstatus'); if(s){ s.hidden=!t; s.textContent=t||''; } };
@@ -8263,7 +8276,7 @@ body:not(.fun) button.xbtn.xbtn:hover{background:rgba(127,127,127,.12)}
     try{ if(typeof renderLobby==='function'&&lobbyOpen) renderLobby(); else if(typeof render==='function'&&S) render(); }catch(e){}
   }
   async function onSignedIn(u){
-    ACC.user=u; setTimeout(waitOff,150);
+    ACC.user=u; setTimeout(waitOff,200);
     const prov=accountHint(u).provider;
     const isNew=!E.account||E.account.id!==u.id;
     E.account={id:u.id,provider:prov==='google'||prov==='facebook'?prov:'email',email:accountHint(u).email,created:(E.account&&E.account.id===u.id&&E.account.created)||Date.now()};
@@ -8469,10 +8482,12 @@ body:not(.fun) button.xbtn.xbtn:hover{background:rgba(127,127,127,.12)}
 
   // arranque
   (async()=>{ try{
-    const C=await loadClerk(); await C.load();
-    const sso=new URLSearchParams(location.search).get('sso');
-    if(sso==='2'){ // cuenta nueva con Google/Facebook a la que Clerk le pide datos extra (ej. usuario): los completamos solos
-      status(en()?'Signing in…':'Entrando…');
+    // las vueltas de Clerk se hacen sin recargar la página (así no parpadea)
+    const nav=async to=>{ const u=new URL(to,location.href); if(u.origin!==location.origin){ location.href=u.href; return; } history.replaceState(null,'',u.pathname+u.search+u.hash); };
+    const C=await loadClerk(); await C.load({routerPush:nav,routerReplace:nav});
+    const ssoOf=()=>new URLSearchParams(location.search).get('sso');
+    if(ssoOf()==='1'){ try{ await C.handleRedirectCallback({signInFallbackRedirectUrl:location.origin+'/',signUpFallbackRedirectUrl:location.origin+'/',continueSignUpUrl:location.origin+'/?sso=2'}); }catch(e){ console.warn('callback',e); } }
+    if(ssoOf()==='2'||(C.client&&C.client.signUp&&C.client.signUp.status==='missing_requirements'&&!C.user&&ssoOf())){ // cuenta nueva con Google/Facebook a la que Clerk le pide datos extra: los completamos solos
       const su=C.client&&C.client.signUp;
       try{
         if(su&&su.status==='missing_requirements'){
@@ -8486,8 +8501,8 @@ body:not(.fun) button.xbtn.xbtn:hover{background:rgba(127,127,127,.12)}
           else console.warn('faltan datos',r.missingFields);
         }
       }catch(e){ console.warn('signup',e); }
-      history.replaceState(null,'',location.pathname);
-    } else if(sso){ status(en()?'Signing in…':'Entrando…'); await C.handleRedirectCallback({signInFallbackRedirectUrl:location.origin+'/',signUpFallbackRedirectUrl:location.origin+'/',continueSignUpUrl:location.origin+'/?sso=2'}); return; }
+    }
+    if(ssoOf()) history.replaceState(null,'',location.pathname);
     ACC.ready=true;
     if(C.user) onSignedIn(C.user); else onSignedOut();
     let last=C.user&&C.user.id; C.addListener(({user})=>{ const id=user&&user.id; if(id===last) return; last=id; if(user) onSignedIn(user); else onSignedOut(); });

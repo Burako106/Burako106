@@ -128,6 +128,25 @@ rep("""<p class="el-test">Modo prueba: todavía no se conecta con Facebook ni Go
 rep("""E.account.provider==='google'?'Google':'Facebook'):''} · modo prueba</small>""","""E.account.provider==='google'?'Google':E.account.provider==='guest'?'Invitado (sin cuenta)':'Facebook'):''}${E.account&&E.account.email?' · '+esc(E.account.email):''}</small>""")
 # pantalla de entrada: mismo logo que el lobby (BURAKO + fichitas 106)
 rep("""<div class="el-brand">Bura<i>ko</i> <small>CLUB</small></div>""","""<div class="el-brand el-logo">${lbLogo()}</div>""")
+# pantalla de carga al volver de iniciar sesión: se activa antes de que se dibuje nada (sin parpadeos)
+rep("<head>","""<head>
+<script>(function(){try{var q=/[?&]sso=/.test(location.search),t=+sessionStorage.getItem('burako-authwait')||0;if(!(q||Date.now()-t<120000))return;var th=localStorage.getItem('burako-theme-v2')?(localStorage.getItem('burako-theme')||'glass'):'glass';var d=document.documentElement;d.classList.add('auth-wait','aw-'+th);if(localStorage.getItem('burako-lang')==='en')d.classList.add('aw-en');setTimeout(function(){d.classList.remove('auth-wait')},12000);}catch(e){}})();</script>
+<style>
+html.auth-wait body{visibility:hidden}
+html.auth-wait{background:linear-gradient(160deg,#e3e7fb,#f3e9f0) fixed!important;min-height:100%}
+html.auth-wait.aw-fun{background:#ffe9a8!important}
+html.auth-wait.aw-classic{background:radial-gradient(circle at 50% 40%,#4a1f22,#1e0d0f) fixed!important}
+html.auth-wait::before{content:"";position:fixed;left:50%;top:calc(50% - 28px);width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid rgba(20,20,30,.15);border-top-color:#1b1c21;animation:awSpin .8s linear infinite;z-index:2147483647}
+html.auth-wait.aw-fun::before{border-color:rgba(20,20,20,.18);border-top-color:#141414}
+html.auth-wait.aw-classic::before{border-color:rgba(255,255,255,.18);border-top-color:#e6b63f}
+html.auth-wait::after{content:"Entrando…";position:fixed;left:0;right:0;top:calc(50% + 6px);text-align:center;font:700 16px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.02em;color:#1b1c21;opacity:.75;z-index:2147483647}
+html.auth-wait.aw-en::after{content:"Signing in…"}
+html.auth-wait.aw-classic::after{color:#f6efe2}
+html.aw-out body{animation:awIn .35s ease both}
+@keyframes awSpin{to{transform:rotate(360deg)}}
+@keyframes awIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){html.auth-wait::before{animation-duration:2s}html.aw-out body{animation:none}}
+</style>""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
