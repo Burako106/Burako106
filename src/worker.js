@@ -370,6 +370,7 @@ export class Players extends DurableObject {
     this.ctx.storage.sql.exec("UPDATE players SET last_seen=? WHERE id=?", Date.now(), id);
     return this.out(this.row(id));
   }
+  async remove(id) { this.ctx.storage.sql.exec("DELETE FROM players WHERE id=?", id); return true; }
   async count() { return this.ctx.storage.sql.exec("SELECT COUNT(*) AS n FROM players").one().n; }
 }
 
@@ -377,6 +378,15 @@ async function apiMe(request, env) {
   const claims = await verifyClerk(request, env);
   if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
   const id = claims.sub;
+  if (request.method === "DELETE") {
+    // borrar la cuenta: el registro del jugador y, si está la Secret key, también la cuenta en Clerk
+    await players(env).remove(id);
+    let clerk = false;
+    if (env.CLERK_SECRET_KEY) {
+      try { const r = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(id), { method: "DELETE", headers: { authorization: "Bearer " + env.CLERK_SECRET_KEY } }); clerk = r.ok; } catch (e) {}
+    }
+    return Response.json({ deleted: true, clerk });
+  }
   let b = {};
   if (request.method === "POST") { try { b = await request.json(); } catch (e) {} }
   const st = players(env);

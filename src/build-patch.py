@@ -147,6 +147,8 @@ html.aw-out body{animation:awIn .35s ease both}
 @keyframes awIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){html.auth-wait::before{animation-duration:2s}html.aw-out body{animation:none}}
 </style>""")
+# Ajustes: eliminar cuenta (solo cuentas reales, no invitados)
+rep("""data-act="lcfgout">Cerrar sesión</button></div>""","""data-act="lcfgout">Cerrar sesión</button></div>${E.account&&E.account.provider!=='guest'?`<div class="lcfg-row lcfg-del"><span><b>Eliminar cuenta</b><small>Borra tu cuenta y tus datos. No se puede deshacer.</small></span><button class="btn lcfg-delbtn" data-act="lcfgdel">Eliminar</button></div>`:''}""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

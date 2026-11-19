@@ -89,7 +89,8 @@ ES = f'''
 <section id="eliminar-datos" class="doc">
 <h2>Eliminación de datos</h2>
 <p class="upd">Última actualización: {UPD_ES}</p>
-<p>Podés pedir que borremos tu cuenta y todos tus datos en cualquier momento:</p>
+<p><b>Desde el juego (lo más rápido):</b> entrá a <i>Ajustes → Eliminar cuenta</i> y confirmá. Se borran al instante tu cuenta y los datos asociados (nombre, foto, tickets y estadísticas). No se puede deshacer.</p>
+<p><b>Por email:</b> si no podés entrar al juego, pedinos que borremos tu cuenta y todos tus datos:</p>
 <ol>
 <li>Escribí a <a href="mailto:{MAIL}?subject=Eliminar%20mis%20datos">{MAIL}</a> con el asunto <b>“Eliminar mis datos”</b>.</li>
 <li>Indicá el nombre con el que jugás y cómo entraste (Google, Facebook o email), usando si es posible el mismo email de tu cuenta.</li>
@@ -188,7 +189,8 @@ EN = f'''
 <section id="data-deletion" class="doc">
 <h2>Data deletion</h2>
 <p class="upd">Last updated: {UPD_EN}</p>
-<p>You can ask us to delete your account and all your data at any time:</p>
+<p><b>From the game (fastest):</b> go to <i>Settings → Delete account</i> and confirm. Your account and its data (name, photo, tickets and stats) are deleted right away. This can’t be undone.</p>
+<p><b>By email:</b> if you can’t sign in, ask us to delete your account and all your data:</p>
 <ol>
 <li>Email <a href="mailto:{MAIL}?subject=Delete%20my%20data">{MAIL}</a> with the subject <b>“Delete my data”</b>.</li>
 <li>Include the name you play with and how you signed in (Google, Facebook or email), ideally from the same email as your account.</li>
