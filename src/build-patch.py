@@ -149,6 +149,11 @@ html.aw-out body{animation:awIn .35s ease both}
 </style>""")
 # Ajustes: eliminar cuenta (solo cuentas reales, no invitados)
 rep("""data-act="lcfgout">Cerrar sesión</button></div>""","""data-act="lcfgout">Cerrar sesión</button></div>${E.account&&E.account.provider!=='guest'?`<div class="lcfg-row lcfg-del"><span><b>Eliminar cuenta</b><small>Borra tu cuenta y tus datos. No se puede deshacer.</small></span><button class="btn lcfg-delbtn" data-act="lcfgdel">Eliminar</button></div>`:''}""")
+# precios en pesos argentinos (sin dólares)
+rep("""const ecoMoney=n=>'ARS '+Math.round(n).toLocaleString('es-AR');""","""const ecoMoney=n=>'$ '+Math.round(n).toLocaleString('es-AR');""")
+rep("""<span class="eco-price">${ecoMoney(p.ars)} <small>${ecoUsd(p.usd)}</small></span>""","""<span class="eco-price">${ecoMoney(p.ars)} <small>ARS</small></span>""")
+rep("""<small>${p.id==='anual'?'/año':'/mes'} · ${ecoUsd(p.usd)}</small>""","""<small>${p.id==='anual'?'/año':'/mes'}</small>""")
+rep("""<p class="eco-test">Modo prueba: los botones simulan la compra. No se cobra nada.</p>""","""<p class="eco-test">Modo prueba: los tickets se pagan con Mercado Pago en modo de prueba (no se cobra de verdad). Las suscripciones todavía son simuladas.</p>""")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")

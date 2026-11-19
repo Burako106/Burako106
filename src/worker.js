@@ -292,7 +292,7 @@ async function verifyClerk(request, env) {
   if (parts.length !== 3) return null;
   let head, body;
   try { head = JSON.parse(new TextDecoder().decode(b64u(parts[0]))); body = JSON.parse(new TextDecoder().decode(b64u(parts[1]))); } catch (e) { return null; }
-  const iss = clerkFapi(env);
+  const iss = env.TEST_ISSUER || clerkFapi(env); // TEST_ISSUER: solo para pruebas locales
   if (!iss || body.iss !== iss) return null;
   const now = Math.floor(Date.now() / 1000);
   if (!body.sub || (body.exp && body.exp < now - 5) || (body.nbf && body.nbf > now + 5)) return null;
@@ -334,12 +334,16 @@ export class Players extends DurableObject {
         id TEXT PRIMARY KEY, email TEXT, name TEXT, name_custom INTEGER DEFAULT 0,
         image_url TEXT, avatar TEXT DEFAULT '', photo TEXT DEFAULT '', provider TEXT,
         verified INTEGER DEFAULT 0, created INTEGER, last_seen INTEGER, data TEXT DEFAULT '{}')`);
+      try { this.ctx.storage.sql.exec("ALTER TABLE players ADD COLUMN pending INTEGER DEFAULT 0"); } catch (e) {}
+      this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS orders (
+        id TEXT PRIMARY KEY, user_id TEXT, pack TEXT, tickets INTEGER, amount REAL, status TEXT,
+        payment_id TEXT, created INTEGER, paid INTEGER)`);
     });
   }
   row(id) { return this.ctx.storage.sql.exec("SELECT * FROM players WHERE id=?", id).toArray()[0] || null; }
   out(r) {
     let data = {}; try { data = JSON.parse(r.data || "{}"); } catch (e) {}
-    return { id: r.id, email: r.email, name: r.name, nameCustom: !!r.name_custom, imageUrl: r.image_url, avatar: r.avatar, photo: r.photo, provider: r.provider, created: r.created, data };
+    return { id: r.id, email: r.email, name: r.name, nameCustom: !!r.name_custom, imageUrl: r.image_url, avatar: r.avatar, photo: r.photo, provider: r.provider, created: r.created, pending: r.pending || 0, data };
   }
   // Primera vez: crea al jugador. Después: actualiza los datos de la cuenta (sin pisar lo que él cambió en el juego).
   async sync(id, acc, verified) {
@@ -350,7 +354,7 @@ export class Players extends DurableObject {
         id, clip(acc.email, 200), clip(acc.name || "Jugador", 18), clip(acc.imageUrl, 500), clip(acc.provider, 20), verified ? 1 : 0, now, now);
     } else {
       this.ctx.storage.sql.exec("UPDATE players SET email=?, image_url=?, provider=?, verified=?, last_seen=?, name=CASE WHEN name_custom=1 THEN name ELSE ? END WHERE id=?",
-        clip(acc.email || r.email, 200), clip(acc.imageUrl, 500), clip(acc.provider || r.provider, 20), verified ? 1 : r.verified, now, clip(acc.name || r.name, 18), id);
+        clip(acc.email || r.email, 200), clip(acc.imageUrl || r.image_url, 500), clip(acc.provider || r.provider, 20), verified ? 1 : r.verified, now, clip(acc.name || r.name, 18), id);
     }
     return this.out(this.row(id));
   }
@@ -371,7 +375,125 @@ export class Players extends DurableObject {
     return this.out(this.row(id));
   }
   async remove(id) { this.ctx.storage.sql.exec("DELETE FROM players WHERE id=?", id); return true; }
+  // compras: la orden se crea antes de ir a Mercado Pago; se acredita una sola vez, cuando MP confirma el pago
+  async get(id) { const r = this.row(id); return r ? this.out(r) : null; }
+  async ensure(id) {
+    if (!this.row(id)) { const now = Date.now(); this.ctx.storage.sql.exec("INSERT INTO players (id,name,created,last_seen) VALUES (?,?,?,?)", id, "Jugador", now, now); }
+    return true;
+  }
+  async newOrder(o) {
+    this.ctx.storage.sql.exec("INSERT INTO orders (id,user_id,pack,tickets,amount,status,created) VALUES (?,?,?,?,?,'created',?)", o.id, o.user, o.pack, o.tickets, o.amount, Date.now());
+    return true;
+  }
+  async order(id) { return this.ctx.storage.sql.exec("SELECT * FROM orders WHERE id=?", id).toArray()[0] || null; }
+  async creditOrder(orderId, paymentId) {
+    const o = this.ctx.storage.sql.exec("SELECT * FROM orders WHERE id=?", orderId).toArray()[0];
+    if (!o) return { ok: false, why: "no-order" };
+    if (o.status === "paid") return { ok: true, already: true, tickets: o.tickets };
+    const paidOther = this.ctx.storage.sql.exec("SELECT id FROM orders WHERE payment_id=?", String(paymentId)).toArray()[0];
+    if (paidOther) return { ok: true, already: true };
+    this.ctx.storage.sql.exec("UPDATE orders SET status='paid', payment_id=?, paid=? WHERE id=?", String(paymentId), Date.now(), orderId);
+    this.ctx.storage.sql.exec("UPDATE players SET pending=COALESCE(pending,0)+? WHERE id=?", o.tickets, o.user_id);
+    return { ok: true, tickets: o.tickets, user: o.user_id };
+  }
+  async markOrder(orderId, status, paymentId) {
+    this.ctx.storage.sql.exec("UPDATE orders SET status=?, payment_id=COALESCE(payment_id,?) WHERE id=? AND status!='paid'", status, String(paymentId || ""), orderId);
+  }
+  // el juego retira los tickets acreditados (una sola vez)
+  async claim(id) {
+    const r = this.row(id); const n = (r && r.pending) || 0;
+    if (n > 0) this.ctx.storage.sql.exec("UPDATE players SET pending=0 WHERE id=?", id);
+    return n;
+  }
   async count() { return this.ctx.storage.sql.exec("SELECT COUNT(*) AS n FROM players").one().n; }
+}
+
+// ---------------------------------------------------------------------------
+// Mercado Pago (Checkout Pro). Los precios viven acá, en el servidor: el navegador no los puede cambiar.
+// ---------------------------------------------------------------------------
+const MP_PACKS = {
+  chico: { title: "Burako 106 · 1.000 tickets", tickets: 1000, ars: 1190 },
+  grande: { title: "Burako 106 · 3.000 tickets", tickets: 3000, ars: 2990 },
+};
+const mpApi = (env, path, opt = {}) => fetch((env.TEST_MP_BASE || "https://api.mercadopago.com") + path, {
+  ...opt, headers: { authorization: "Bearer " + env.MP_ACCESS_TOKEN, "content-type": "application/json", ...(opt.headers || {}) } });
+const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (x) => x.toString(16).padStart(2, "0")).join("");
+
+async function mpCheckout(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  if (!env.MP_ACCESS_TOKEN) return Response.json({ error: "falta MP_ACCESS_TOKEN" }, { status: 500 });
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const pk = MP_PACKS[b.pack]; if (!pk) return Response.json({ error: "paquete" }, { status: 400 });
+  const u0 = new URL(request.url);
+  const origin = /^(localhost|127\.)/.test(u0.hostname) ? u0.origin : "https://" + u0.host; // Mercado Pago exige https
+  const st = players(env);
+  await st.ensure(claims.sub);
+  const order = rid();
+  await st.newOrder({ id: order, user: claims.sub, pack: b.pack, tickets: pk.tickets, amount: pk.ars });
+  const body = {
+    items: [{ id: b.pack, title: pk.title, quantity: 1, unit_price: pk.ars, currency_id: "ARS" }],
+    external_reference: order,
+    back_urls: { success: origin + "/?mp=ok", failure: origin + "/?mp=fail", pending: origin + "/?mp=pend" },
+    auto_return: "approved",
+    notification_url: origin + "/api/mp/webhook",
+    statement_descriptor: "BURAKO106",
+    metadata: { order, user: claims.sub, pack: b.pack },
+  };
+  const r = await mpApi(env, "/checkout/preferences", { method: "POST", body: JSON.stringify(body), headers: { "x-idempotency-key": order } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.init_point) return Response.json({ error: "mp", detail: j.message || r.status }, { status: 502 });
+  return Response.json({ url: j.init_point, order });
+}
+
+// Revisa el pago directamente con Mercado Pago y, si está aprobado y coincide, acredita (una sola vez)
+async function mpSettle(env, paymentId) {
+  if (!env.MP_ACCESS_TOKEN || !/^\d+$/.test(String(paymentId || ""))) return { ok: false, why: "id" };
+  const r = await mpApi(env, "/v1/payments/" + paymentId);
+  if (!r.ok) return { ok: false, why: "mp " + r.status };
+  const p = await r.json();
+  const order = p.external_reference; if (!order) return { ok: false, why: "ref" };
+  const st = players(env);
+  const o = await st.order(order); if (!o) return { ok: false, why: "no-order" };
+  if (p.status !== "approved") { await st.markOrder(order, p.status || "unknown", paymentId); return { ok: false, status: p.status }; }
+  if (p.currency_id !== "ARS" || Number(p.transaction_amount) + 0.001 < Number(o.amount)) return { ok: false, why: "monto" };
+  const res = await st.creditOrder(order, paymentId);
+  return { ...res, status: "approved", user: o.user_id };
+}
+
+async function mpSigOk(request, env, dataId) {
+  if (!env.MP_WEBHOOK_SECRET) return true; // si no hay clave, igual consultamos el pago a MP antes de acreditar
+  const sig = request.headers.get("x-signature") || "", reqId = request.headers.get("x-request-id") || "";
+  const parts = Object.fromEntries(sig.split(",").map((x) => x.trim().split("=")));
+  if (!parts.ts || !parts.v1) return false;
+  let manifest = "";
+  if (dataId) manifest += "id:" + String(dataId).toLowerCase() + ";";
+  if (reqId) manifest += "request-id:" + reqId + ";";
+  manifest += "ts:" + parts.ts + ";";
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.MP_WEBHOOK_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(manifest)));
+  const hex = Array.from(mac, (x) => x.toString(16).padStart(2, "0")).join("");
+  return hex === parts.v1;
+}
+
+async function mpWebhook(request, env) {
+  const url = new URL(request.url);
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const type = url.searchParams.get("type") || url.searchParams.get("topic") || b.type || b.topic || "";
+  const id = url.searchParams.get("data.id") || (b.data && b.data.id) || url.searchParams.get("id") || "";
+  if (!(await mpSigOk(request, env, url.searchParams.get("data.id") || (b.data && b.data.id) || ""))) return new Response("firma", { status: 401 });
+  if (type.startsWith("payment") && id) { try { await mpSettle(env, id); } catch (e) {} }
+  return new Response("ok");
+}
+
+// al volver de Mercado Pago, el juego pide revisar el pago (el servidor lo confirma con MP, no con el navegador)
+async function mpCheck(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const res = await mpSettle(env, b.payment_id);
+  if (res.user && res.user !== claims.sub) return Response.json({ ok: false });
+  return Response.json({ ok: !!res.ok, status: res.status || null });
 }
 
 async function apiMe(request, env) {
@@ -393,8 +515,11 @@ async function apiMe(request, env) {
   const official = await clerkUser(env, id);
   const hint = b.account || {};
   const acc = official || { email: clip(hint.email, 200), name: clip(hint.name, 18), imageUrl: clip(hint.imageUrl, 500), provider: clip(hint.provider, 20) };
-  let me = await st.sync(id, acc, !!official);
+  let me;
+  if (official || b.account) me = await st.sync(id, acc, !!official);
+  else { await st.ensure(id); me = await st.get(id); } // pedidos sin datos de cuenta (cambios de nombre, tickets): no tocar el perfil
   if (request.method === "POST" && (b.name !== undefined || b.avatar !== undefined || b.data)) me = await st.edit(id, b);
+  if (request.method === "POST" && b.claim) { me.claimed = await st.claim(id); me.pending = 0; }
   return Response.json(me, { headers: { "cache-control": "no-store" } });
 }
 
@@ -418,6 +543,9 @@ export default {
       return new Response("método no permitido", { status: 405 });
     }
     if (url.pathname === "/api/me") return apiMe(request, env);
+    if (url.pathname === "/api/mp/checkout" && request.method === "POST") return mpCheckout(request, env);
+    if (url.pathname === "/api/mp/check" && request.method === "POST") return mpCheck(request, env);
+    if (url.pathname === "/api/mp/webhook") return mpWebhook(request, env);
     if (url.pathname === "/ws/lobby") return lobby(env).fetch(request);
     if (url.pathname === "/ws") {
       const code = (url.searchParams.get("mesa") || "").toUpperCase();
