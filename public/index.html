@@ -6085,7 +6085,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795130098';</script>
+<script>window.BURAKO_BUILD='1795131378';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8291,13 +8291,13 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     const prov=accountHint(u).provider;
     const isNew=!E.account||E.account.id!==u.id;
     E.account={id:u.id,provider:prov==='google'||prov==='facebook'?prov:'email',email:accountHint(u).email,created:(E.account&&E.account.id===u.id&&E.account.created)||Date.now()};
-    if(isNew&&!E.signupGiven){ E.signupGiven=true; ecoTx(ECO.SIGNUP,'signup'); setTimeout(()=>ecoNote(`${TKI}<b>+${ecoN(ECO.SIGNUP)}</b> ${en()?'free tickets. Welcome!':'tickets de regalo. ¡Bienvenido/a!'}`,'up'),400); }
     ecoSave(); ecoCloseLogin();
+    await walletStart(!isNew);
     try{ applyMe(await api('POST',{account:accountHint(u),data:{bal:E.bal,sub:E.sub?{plan:E.sub.plan,until:E.sub.until}:null}})); }catch(e){ console.warn('perfil',e); }
     try{ await mpReturn(); if(ACC.me&&ACC.me.pending>0) await claimTickets(); }catch(e){}
     if(pendName){ const nm=pendName; pendName=''; try{ localStorage.setItem('burako-name',nm); }catch(e){} try{ renderLobby(); }catch(e){} }
   }
-  function onSignedOut(){ waitOff(); ACC.user=null; ACC.me=null; if(E.account&&E.account.provider==='guest') return; if(E.account){ E.account=null; ecoSave(); } if(!document.getElementById('ecologin')) ecoShowLogin(); }
+  function onSignedOut(){ waitOff(); ACC.user=null; ACC.me=null; ACC.wallet=false; if(E.account&&E.account.provider==='guest') return; if(E.account){ E.account=null; ecoSave(); } if(!document.getElementById('ecologin')) ecoShowLogin(); }
 
   // los botones de la pantalla de entrada
   window.ecoLogin=async function(provider){
@@ -8514,6 +8514,54 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
       } };
   }
   document.addEventListener('click',e=>{ const b=e.target.closest('[data-act="lcfgdel"]'); if(!b) return; e.preventDefault(); e.stopPropagation(); delDialog(); },true);
+  // ===== Saldo de tickets en el servidor =====
+  // Cada movimiento (entrada, premio, video…) se muestra al instante y se manda al servidor, que es el que decide el saldo real.
+  const ecoTx0=window.ecoTx, TXQ='burako-txq';
+  let txq=[], flushing=false, curGame=null;
+  try{ txq=JSON.parse(localStorage.getItem(TXQ)||'[]')||[]; }catch(e){ txq=[]; }
+  const saveQ=()=>{ try{ set0.call(localStorage,TXQ,JSON.stringify(txq.slice(-200))); }catch(e){} };
+  const rid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+  async function walletCall(body){
+    const tok=await window.Clerk.session.getToken();
+    const r=await fetch('/api/wallet',{method:'POST',headers:{authorization:'Bearer '+tok,'content-type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('wallet '+r.status); return r.json();
+  }
+  function setBal(b){ if(typeof b!=='number') return; E.bal=b; ecoSave(); try{ if(ecoView==='store') ecoOpen('store'); }catch(e){} }
+  async function walletSync(){ try{ const r=await walletCall({}); if(!txq.length) setBal(r.bal); return r.bal; }catch(e){ return null; } }
+  async function walletStart(mine){
+    try{
+      const uid=ACC.user&&ACC.user.id;
+      txq=txq.filter(t=>t.u===uid); saveQ(); // movimientos pendientes de otra cuenta no se mandan
+      const r=await walletCall({init:{mine,bal:E.bal,signupGiven:!!E.signupGiven}});
+      ACC.wallet=true; E.signupGiven=true;
+      if(r.init&&r.init.gift>0) setTimeout(()=>ecoNote(`${TKI}<b>+${ecoN(r.init.gift)}</b> ${en()?'free tickets. Welcome!':'tickets de regalo. ¡Bienvenido/a!'}`,'up'),400);
+      if(!txq.length) setBal(r.bal); else flush();
+    }catch(e){ console.warn('saldo',e); }
+  }
+  async function flush(){
+    if(flushing||!txq.length||!ACC.wallet) return; flushing=true;
+    try{
+      const batch=txq.slice(0,20);
+      const r=await walletCall({tx:batch.map(({id,delta,kind,meta})=>({id,delta,kind,meta}))});
+      const done=new Set((r.results||[]).map(x=>x.id)); txq=txq.filter(t=>!done.has(t.id)); saveQ();
+      (r.results||[]).filter(x=>!x.ok).forEach(x=>console.warn('movimiento rechazado',x));
+      if(!txq.length) setBal(r.bal);
+    }catch(e){ setTimeout(()=>{ flushing=false; flush(); },5000); return; }
+    flushing=false; if(txq.length) setTimeout(flush,200);
+  }
+  window.ecoTx=function(amount,type,meta){
+    if(!ACC.user||!ACC.wallet) return ecoTx0(amount,type,meta); // invitados: como antes, solo en este dispositivo
+    meta=Object.assign({},meta||{});
+    const id=type+'-'+rid();
+    if(type==='entry') curGame=id;
+    if((type==='prize'||type==='refund'||type==='puramadre')&&curGame) meta.game=curGame;
+    ecoTx0(amount,type,meta); // se ve al instante
+    if(type==='purchase'||type==='signup') return;
+    txq.push({id,delta:amount,kind:type,meta,u:ACC.user.id}); saveQ(); flush();
+  };
+  window.addEventListener('online',()=>flush());
+  setInterval(()=>{ if(ACC.wallet&&!txq.length&&document.visibilityState==='visible') walletSync(); },60000);
+
   // ===== Mercado Pago: comprar tickets =====
   const ecoBuy0=window.ecoBuy;
   window.ecoBuy=async function(kind,id){
@@ -8536,7 +8584,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     if(claiming||!ACC.user) return 0; claiming=true;
     try{
       const me=await api('POST',{claim:true}); const n=me.claimed||0;
-      if(n>0){ ecoTx(n,'purchase',{via:'mercadopago'}); ecoSave();
+      if(n>0){ if(ACC.wallet) await walletSync(); else { ecoTx(n,'purchase',{via:'mercadopago'}); ecoSave(); }
         setTimeout(()=>ecoNote(`${TKI}<b>+${ecoN(n)}</b> ${en()?'tickets added. Thanks for your purchase!':'tickets acreditados. ¡Gracias por tu compra!'}`,'up'),300);
         try{ if(ecoView==='store') ecoOpen('store'); else if(lobbyOpen) renderLobby(); }catch(e){} }
       return n;

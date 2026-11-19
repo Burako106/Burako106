@@ -338,12 +338,18 @@ export class Players extends DurableObject {
       this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS orders (
         id TEXT PRIMARY KEY, user_id TEXT, pack TEXT, tickets INTEGER, amount REAL, status TEXT,
         payment_id TEXT, created INTEGER, paid INTEGER)`);
+      for (const col of ["bal INTEGER DEFAULT 0", "wallet INTEGER DEFAULT 0"]) { try { this.ctx.storage.sql.exec("ALTER TABLE players ADD COLUMN " + col); } catch (e) {} }
+      this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS tx (
+        id TEXT PRIMARY KEY, user_id TEXT, delta INTEGER, kind TEXT, meta TEXT, bal INTEGER, at INTEGER)`);
+      this.ctx.storage.sql.exec("CREATE INDEX IF NOT EXISTS tx_user ON tx(user_id, at)");
+      this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS games (
+        id TEXT PRIMARY KEY, user_id TEXT, entry INTEGER, settled INTEGER DEFAULT 0, pm INTEGER DEFAULT 0, at INTEGER)`);
     });
   }
   row(id) { return this.ctx.storage.sql.exec("SELECT * FROM players WHERE id=?", id).toArray()[0] || null; }
   out(r) {
     let data = {}; try { data = JSON.parse(r.data || "{}"); } catch (e) {}
-    return { id: r.id, email: r.email, name: r.name, nameCustom: !!r.name_custom, imageUrl: r.image_url, avatar: r.avatar, photo: r.photo, provider: r.provider, created: r.created, pending: r.pending || 0, data };
+    return { id: r.id, email: r.email, name: r.name, nameCustom: !!r.name_custom, imageUrl: r.image_url, avatar: r.avatar, photo: r.photo, provider: r.provider, created: r.created, pending: r.pending || 0, bal: r.bal || 0, wallet: !!r.wallet, data };
   }
   // Primera vez: crea al jugador. Después: actualiza los datos de la cuenta (sin pisar lo que él cambió en el juego).
   async sync(id, acc, verified) {
@@ -402,8 +408,79 @@ export class Players extends DurableObject {
   // el juego retira los tickets acreditados (una sola vez)
   async claim(id) {
     const r = this.row(id); const n = (r && r.pending) || 0;
-    if (n > 0) this.ctx.storage.sql.exec("UPDATE players SET pending=0 WHERE id=?", id);
+    if (n > 0) {
+      this.ctx.storage.sql.exec("UPDATE players SET pending=0, bal=COALESCE(bal,0)+? WHERE id=?", n, id);
+      const b = this.row(id).bal;
+      this.ctx.storage.sql.exec("INSERT INTO tx (id,user_id,delta,kind,meta,bal,at) VALUES (?,?,?,?,?,?,?)", "buy-" + crypto.randomUUID(), id, n, "purchase", "{}", b, Date.now());
+    }
     return n;
+  }
+  // ===== Saldo de tickets: vive acá. El juego pide movimientos y el servidor decide si valen. =====
+  wallet(id) { const r = this.row(id); return { bal: (r && r.bal) || 0, ready: !!(r && r.wallet) }; }
+  // Primera vez con saldo en el servidor: se pasa el saldo que el jugador tenía en su dispositivo (con tope), o se dan los 500 de bienvenida
+  async walletInit(id, init) {
+    await this.ensure(id);
+    const r = this.row(id);
+    if (r.wallet) return { ...this.wallet(id), gift: 0 };
+    let bal = 0, gift = 0, kind = "migrate";
+    if (init && init.mine && Number.isFinite(+init.bal)) bal = Math.max(0, Math.min(20000, Math.round(+init.bal)));
+    if (!(init && init.mine && init.signupGiven)) { gift = 500; bal += gift; kind = "signup"; }
+    this.ctx.storage.sql.exec("UPDATE players SET bal=?, wallet=1 WHERE id=?", bal, id);
+    this.ctx.storage.sql.exec("INSERT INTO tx (id,user_id,delta,kind,meta,bal,at) VALUES (?,?,?,?,?,?,?)", "init-" + id, id, bal, kind, JSON.stringify({ local: init && init.bal, gift }), bal, Date.now());
+    return { ...this.wallet(id), gift };
+  }
+  // Un movimiento pedido por el juego. Reglas: gastar siempre se puede (si alcanza); ganar solo lo que corresponde.
+  async applyTx(id, t) {
+    const sql = this.ctx.storage.sql, now = Date.now();
+    const r = this.row(id); if (!r || !r.wallet) return { ok: false, why: "sin-saldo" };
+    const txid = String(t.id || "").slice(0, 64); if (!txid) return { ok: false, why: "id" };
+    if (sql.exec("SELECT id FROM tx WHERE id=?", txid).toArray()[0]) return { ok: true, dup: true };
+    const kind = String(t.kind || ""), delta = Math.round(+t.delta || 0), meta = t.meta && typeof t.meta === "object" ? t.meta : {};
+    let bal = r.bal || 0, ok = false, why = "";
+    const game = meta.game ? sql.exec("SELECT * FROM games WHERE id=? AND user_id=?", String(meta.game), id).toArray()[0] : null;
+    const dayStart = (() => { const d = new Date(now - 3 * 3600e3); d.setUTCHours(0, 0, 0, 0); return d.getTime() + 3 * 3600e3; })(); // día de Argentina
+    if (kind === "entry") {
+      const amt = -delta;
+      if (![100, 500, 1000].includes(amt)) why = "monto";
+      else if (bal < amt) why = "saldo";
+      else { ok = true; sql.exec("INSERT OR IGNORE INTO games (id,user_id,entry,at) VALUES (?,?,?,?)", txid, id, amt, now); }
+    } else if (kind === "penalty") {
+      ok = delta < 0 && -delta <= 1000; if (!ok) why = "monto";
+    } else if (kind === "prize" || kind === "refund") {
+      const max = game ? (kind === "prize" ? Math.round(game.entry * 2 * 0.9) : game.entry) : 0;
+      if (!game || game.settled) why = "partida";
+      else if (delta <= 0 || delta > max) why = "monto";
+      else { ok = true; sql.exec("UPDATE games SET settled=1 WHERE id=?", game.id); }
+    } else if (kind === "puramadre") {
+      if (!game) why = "partida";
+      else if (delta !== 50 || game.pm >= 3) why = "monto";
+      else { ok = true; sql.exec("UPDATE games SET pm=pm+1 WHERE id=?", game.id); }
+    } else if (kind === "video") {
+      const vids = sql.exec("SELECT at FROM tx WHERE user_id=? AND kind='video' AND at>=? ORDER BY at DESC", id, dayStart).toArray();
+      if (delta !== 100) why = "monto";
+      else if (vids.length >= 2) why = "limite";
+      else if (vids[0] && now - vids[0].at < 3 * 3600e3 - 60e3) why = "espera";
+      else ok = true;
+    } else why = "tipo";
+    if (!ok) return { ok: false, why, bal };
+    bal = Math.max(0, bal + delta);
+    sql.exec("UPDATE players SET bal=? WHERE id=?", bal, id);
+    sql.exec("INSERT INTO tx (id,user_id,delta,kind,meta,bal,at) VALUES (?,?,?,?,?,?,?)", txid, id, delta, kind, JSON.stringify(meta).slice(0, 500), bal, now);
+    return { ok: true, bal };
+  }
+  async applyMany(id, list) {
+    const res = [];
+    for (const t of (list || []).slice(0, 30)) res.push({ id: t.id, ...(await this.applyTx(id, t)) });
+    return { results: res, ...this.wallet(id) };
+  }
+  // Copia de seguridad: todo lo importante, sin las fotos (que pesan mucho)
+  async exportAll() {
+    const sql = this.ctx.storage.sql;
+    return {
+      players: sql.exec("SELECT id,email,name,name_custom,image_url,avatar,provider,verified,created,last_seen,pending,bal,wallet,data FROM players").toArray(),
+      orders: sql.exec("SELECT * FROM orders").toArray(),
+      tx: sql.exec("SELECT * FROM tx WHERE at>=?", Date.now() - 90 * 864e5).toArray(),
+    };
   }
   async count() { return this.ctx.storage.sql.exec("SELECT COUNT(*) AS n FROM players").one().n; }
 }
@@ -504,6 +581,46 @@ async function mpCheck(request, env) {
   return Response.json({ ok: !!res.ok, status: res.status || null });
 }
 
+// ---------------------------------------------------------------------------
+// Copias de seguridad: una por día, se guardan 30 días (aparte de la recuperación propia de Cloudflare).
+// ---------------------------------------------------------------------------
+export class Backups extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => {
+      this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS snaps (day TEXT, part INTEGER, json TEXT, at INTEGER, PRIMARY KEY(day, part))");
+    });
+  }
+  async save(day, data) {
+    const js = JSON.stringify(data), size = 900000;
+    this.ctx.storage.sql.exec("DELETE FROM snaps WHERE day=?", day);
+    for (let i = 0, part = 0; i < js.length; i += size, part++)
+      this.ctx.storage.sql.exec("INSERT INTO snaps (day,part,json,at) VALUES (?,?,?,?)", day, part, js.slice(i, i + size), Date.now());
+    const old = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+    this.ctx.storage.sql.exec("DELETE FROM snaps WHERE day<?", old);
+    return { day, bytes: js.length, players: (data.players || []).length };
+  }
+  async list() { return this.ctx.storage.sql.exec("SELECT day, COUNT(*) AS parts, SUM(LENGTH(json)) AS bytes, MAX(at) AS at FROM snaps GROUP BY day ORDER BY day DESC").toArray(); }
+  async get(day) { const rows = this.ctx.storage.sql.exec("SELECT json FROM snaps WHERE day=? ORDER BY part", day).toArray(); return rows.length ? rows.map((r) => r.json).join("") : null; }
+}
+async function runBackup(env) {
+  const data = await players(env).exportAll();
+  const day = new Date().toISOString().slice(0, 10);
+  return env.BACKUPS.get(env.BACKUPS.idFromName("all")).save(day, { at: Date.now(), ...data });
+}
+
+async function apiWallet(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const st = players(env);
+  let out = {};
+  if (b.init) out.init = await st.walletInit(claims.sub, b.init);
+  if (Array.isArray(b.tx) && b.tx.length) Object.assign(out, await st.applyMany(claims.sub, b.tx));
+  if (!out.results) Object.assign(out, await st.applyMany(claims.sub, []));
+  return Response.json(out, { headers: { "cache-control": "no-store" } });
+}
+
 async function apiMe(request, env) {
   const claims = await verifyClerk(request, env);
   if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
@@ -532,6 +649,7 @@ async function apiMe(request, env) {
 }
 
 export default {
+  async scheduled(event, env, ctx) { ctx.waitUntil(runBackup(env)); },
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/tables") {
@@ -551,6 +669,8 @@ export default {
       return new Response("método no permitido", { status: 405 });
     }
     if (url.pathname === "/api/me") return apiMe(request, env);
+    if (url.pathname === "/api/wallet" && request.method === "POST") return apiWallet(request, env);
+    if (url.pathname === "/api/_test/backups" && env.TEST_ISSUER) return Response.json(await env.BACKUPS.get(env.BACKUPS.idFromName("all")).list()); // solo pruebas locales
     if (url.pathname === "/api/mp/checkout" && request.method === "POST") return mpCheckout(request, env);
     if (url.pathname === "/api/mp/check" && request.method === "POST") return mpCheck(request, env);
     if (url.pathname === "/api/mp/webhook") return mpWebhook(request, env);

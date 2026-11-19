@@ -11,17 +11,20 @@
     "bindings": [
       { "name": "ROOMS", "class_name": "Room" },
       { "name": "LOBBY", "class_name": "Lobby" },
-      { "name": "PLAYERS", "class_name": "Players" }
+      { "name": "PLAYERS", "class_name": "Players" },
+      { "name": "BACKUPS", "class_name": "Backups" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Room"] },
     { "tag": "v2", "new_sqlite_classes": ["Lobby"] },
-    { "tag": "v3", "new_sqlite_classes": ["Players"] }
+    { "tag": "v3", "new_sqlite_classes": ["Players"] },
+    { "tag": "v4", "new_sqlite_classes": ["Backups"] }
   ],
   "routes": [
     { "pattern": "burako106.com", "custom_domain": true },
     { "pattern": "www.burako106.com", "custom_domain": true }
   ],
+  "triggers": { "crons": ["17 7 * * *"] },
   "workers_dev": true
 }
