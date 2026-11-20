@@ -47,3 +47,12 @@ html body.glass.onyx.onyx .zone.me.drop-hover{background:rgba(60,115,255,.52)!im
 /* Fichas: más oscuras y sin borde claro; se separan del atril por la sombra y un brillo muy suave */
 html body.glass.onyx.onyx .tile,html body.glass.onyx.onyx .rack-row .tile,html body.glass.onyx.onyx .ghost-drag .tile{background:linear-gradient(180deg,#25272e,#18191e)!important;border:1px solid rgba(0,0,0,.6)!important;box-shadow:0 6px 14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07)!important}
 html body.glass.onyx.onyx .rack-row{background:rgba(0,0,0,.7)!important;border-color:rgba(0,0,0,.6)!important}
+/* Purísima plateada y Pura madre dorada (igual que en Glass, con brillo sobre fondo oscuro) */
+html body.glass.onyx.onyx .meld.can-super{background:linear-gradient(135deg,rgba(200,208,220,.30),rgba(150,160,175,.18))!important;border-color:#c4cad3!important;box-shadow:0 0 12px rgba(200,208,220,.25),inset 0 1px 0 rgba(255,255,255,.18)!important}
+html body.glass.onyx.onyx .meld.can-mega{background:linear-gradient(135deg,rgba(242,190,60,.38),rgba(200,140,20,.22))!important;border-color:#e6b23a!important;box-shadow:0 0 14px rgba(230,178,58,.35),inset 0 1px 0 rgba(255,236,170,.2)!important}
+html body.glass.onyx.onyx .badge.tier-super{background:linear-gradient(115deg,#aeb6c2 0%,#e6e9ee 35%,#9aa3b0 50%,#dfe3e9 68%,#b3bbc6 100%)!important;background-size:220% 100%!important;color:#1d2128!important;box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 10px rgba(200,208,220,.35)!important}
+html body.glass.onyx.onyx .badge.tier-mega{color:#3a2700!important;box-shadow:0 0 0 1px rgba(255,236,170,.45),0 0 10px rgba(230,178,58,.4)!important}
+html body.glass.onyx.onyx .badge.tier-super{background:linear-gradient(115deg,#7f8894 0%,#c9cfd7 30%,#f1f3f6 45%,#9aa3b0 60%,#c3c9d2 80%,#86909c 100%)!important;background-size:220% 100%!important}
+html body.glass.onyx.onyx .meld.can-super{background:linear-gradient(135deg,rgba(205,212,224,.40),rgba(140,150,166,.24))!important;border:1.5px solid #c4cad3!important}
+html body.glass.onyx.onyx .meld.can-mega{border-width:1.5px!important}
+html body.glass.onyx.onyx .badge.tier-super{background:linear-gradient(115deg,#8a939f 0%,#b7bec8 30%,#dde1e6 45%,#8f98a5 60%,#b3bac4 80%,#8a939f 100%)!important;background-size:220% 100%!important}
