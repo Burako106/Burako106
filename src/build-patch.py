@@ -130,6 +130,7 @@ rep("""E.account.provider==='google'?'Google':'Facebook'):''} · modo prueba</sm
 rep("""<div class="el-brand">Bura<i>ko</i> <small>CLUB</small></div>""","""<div class="el-brand el-logo">${lbLogo()}</div>""")
 # pantalla de carga al volver de iniciar sesión: se activa antes de que se dibuje nada (sin parpadeos)
 rep("<head>","""<head>
+<script>/* La compu a veces avisa "cambió el tamaño de la ventana" sin que cambie nada (al tocar volumen o brillo): ese aviso falso se ignora para que el juego no se redibuje y tiemble */(function(){var w=innerWidth,h=innerHeight;addEventListener('resize',function(e){if(innerWidth===w&&innerHeight===h){e.stopImmediatePropagation();return;}w=innerWidth;h=innerHeight;});})();</script>
 <script>(function(){try{var q=/[?&]sso=/.test(location.search),t=+sessionStorage.getItem('burako-authwait')||0;if(!(q||Date.now()-t<120000))return;var th=localStorage.getItem('burako-theme-v2')?(localStorage.getItem('burako-theme')||'glass'):'glass';var d=document.documentElement;d.classList.add('auth-wait','aw-'+th);if(localStorage.getItem('burako-lang')==='en')d.classList.add('aw-en');setTimeout(function(){d.classList.remove('auth-wait')},12000);}catch(e){}})();</script>
 <style>
 html.auth-wait body{visibility:hidden}
