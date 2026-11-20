@@ -674,7 +674,29 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
 
 /* Al arrastrar una ficha del atril, la original desaparece: solo se ve la que movés */
 html body .tile.drag-src{visibility:hidden!important}
+
+/* Panel de voces (burako106.com/#voces) */
+#vozadm{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(10,10,14,.55);font-family:var(--f-ui,system-ui)}
+#vozadm .vz-card{position:relative;width:min(560px,94vw);max-height:92vh;overflow:auto;background:#fff;color:#16171b;border-radius:22px;padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+#vozadm h2{margin:0 0 6px;font-size:22px}
+#vozadm .vz-sub,#vozadm .vz-acc,#vozadm .vz-prog,#vozadm .vz-msg{margin:6px 0;font-size:14px;color:#3a3c44}
+#vozadm .vz-err{color:#c62a1e;font-weight:700}
+#vozadm .vz-x{position:absolute;top:14px;right:14px}
+#vozadm .vz-bar{height:12px;border-radius:99px;background:#e9eaef;overflow:hidden;margin-top:12px}
+#vozadm .vz-bar i{display:block;height:100%;background:#2fa65a;transition:width .4s}
+#vozadm .vz-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:6px}
+#vozadm .vz-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:#f3f4f7;font-size:14px;flex-wrap:wrap}
+#vozadm .vz-g{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b6e78;width:58px}
+#vozadm .vz-d{flex:1;font-weight:700}
+#vozadm .vz-n{font-variant-numeric:tabular-nums;color:#3a3c44}
+#vozadm .vz-e{width:100%;color:#c62a1e;font-size:13px}
+#vozadm .vz-list button{border:0;border-radius:99px;padding:6px 12px;background:#16171b;color:#fff;font-weight:800;cursor:pointer}
+#vozadm .vz-acts{margin-top:14px;display:flex;justify-content:center}
+#vozadm .vz-btn{border:0;border-radius:99px;padding:14px 26px;font-size:16px;font-weight:800;cursor:pointer;background:#e9eaef;color:#16171b}
+#vozadm .vz-btn.pri{background:#16171b;color:#fff}
+#vozadm .vz-ok{color:#1f8a46;font-size:16px}
 </style>
+<script id="voz-data">window.BURAKO_VOZ={"v": {"f0": "f", "f1": "f", "f2": "f", "f3": "f", "f4": "f", "m0": "m", "m1": "m", "m2": "m", "m3": "m", "m4": "m"}, "ids": "105l4xv,10c9wp,113ntz,11olccr,11p1lys,1234h9g,1281bq5,12aatal,12rdgk0,12wm5lg,13ku53p,149oqot,14ex312,14f1miv,14lmd4i,14qu2c4,14rxsnl,14t1z46,15e2s1p,15i4dnl,15lupvu,1678w7r,16hgiad,16pxe2g,16qmncd,17dswi2,17kg2lu,17wr143,1879bfe,18pr506,18uebpt,18ypu0b,194n0m2,1995keh,19rw3ka,1ai8wm9,1am5vdi,1awwj74,1b40prw,1boto9r,1buki0q,1d48x4a,1f233hx,1ggibsf,1gkdj45,1gourem,1gww6b1,1hf2mrn,1hoky90,1iarir1,1iqjeuj,1j7nagp,1jh15ho,1jwttgy,1k6n4ia,1kuzly3,1kyk31f,1labx9a,1ldzigq,1m9wsy6,1mit94e,1moakld,1n9eazf,1nd60dn,1nj57o0,1nlg3qx,1nlp6ar,1nv3grh,1nx3w1r,1odygxu,1ogb5jn,1oy5b77,1pdtuu1,1q99m6x,1qe43yg,1r01tit,1r6jkq1,1r8t49o,1rmr37d,1rn9m4o,1sos1az,1swskis,1u1r4ol,1ufhszu,1um1t8d,1utcscc,1v7lv3e,1vso6hg,1vt541c,1x0qe36,1x6g3on,1xe2ni,1xklzc1,1xn4f8a,1xxkyz6,24dbwi,25kq0n,2soxrn,3h6czg,43btu1,518s0c,51g6lh,575oxi,5gcafs,6eooaj,6i43k8,6vlqq5,8ynqtl,9qrw0y,a114xh,ae08xm,aijs5g,am900f,any32u,aononm,awi5fn,b1hmw3,bc8spi,bgjx7d,bibkrn,cfal42,cfo85a,cuj1xx,cz5qpg,d75rsb,dhxgr2,eyrhej,f23eyx,fx3eyo,hdy6t4,huorjk,i2aop6,i3ji73,ir36e4,itkfld,jnnb7w,k334hr,k6yual,kcfwix,kotjct,kxjhdx,lsai4t,mpji6p,mv88bb,n2t2gm,n8z649,os1zn9,our1j5,p59lgf,p8drif,plouej,pznb84,pztsqd,q8qtv5,qm8shl,r7q0ek,rjaur5,rki8yx,rl207k,s87o14,snrhru,sxsn7,tnmq1l,tu8ojm,tyo44r,u5xnoh,u9043d,ubdb3n,urwnbo,v2qgm3,vd6yum,vrho1d,vwfn77,vyhfbt,w57kqz,wz3b7v,xbdqp1,xkuio4,yb49tf,yn94ky,zen9ix,zhucxk,zq92du,zxouvq"};</script>
 <script id="net-js">
 /* ==========================================================================
    Burako 106 — Mesas online (1 contra 1, 3 jugadores y 2 contra 2)
@@ -1141,6 +1163,47 @@ html body .tile.drag-src{visibility:hidden!important}
   }
   const _render=render;
   render=function(){ const r=_render.apply(this,arguments); try{ document.body.classList.toggle('netgame',online()&&!lobbyOpen); clickHints(); if(online()&&document.getElementById('nrfocus')) closeReady(); if(online()) pushNow(false); badge(); }catch(e){} return r; };
+  // ---- Voces grabadas con ElevenLabs ----
+  // Cada personaje tiene una voz fija de su mismo género. Las frases fijas suenan con
+  // el audio grabado (/voz/<voz>-<frase>.mp3); si una frase no está grabada, usa la voz
+  // del navegador. Lo que escriben las personas reales nunca se lee en voz alta.
+  const VZ=window.BURAKO_VOZ||{v:{},ids:''}, VZIDS=new Set(String(VZ.ids||'').split(',').filter(Boolean)), VZBAD=new Set(), VZBUF={};
+  const vzNorm=t=>String(t||'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\s+/g,' ').trim();
+  const vzNum=s=>{ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h; };
+  const vzId=s=>vzNum(s).toString(36);
+  function vzGender(c){ if(c&&(c.g==='f'||c.g==='m')) return c.g; const n=c&&c.name; try{ if(n&&LB_F.includes(n)) return 'f'; if(n&&LB_M.includes(n)) return 'm'; }catch(e){} return null; }
+  function vzSlotFor(p){
+    if(!S||!p) return null; const used=new Set(); let mine=null;
+    for(let i=1;i<S.n;i++){ let c=null; try{ c=charOf(i); }catch(e){} const g=vzGender(c);
+      const l=Object.keys(VZ.v).filter(k=>!g||VZ.v[k]===g); if(!l.length) continue;
+      let k=vzNum(String((c&&c.name)||('p'+i)))%l.length, t=0; while(used.has(l[k])&&t<l.length){ k=(k+1)%l.length; t++; }
+      used.add(l[k]); if(i===p) mine=l[k]; }
+    return mine;
+  }
+  function vzLoad(url){ if(!VZBUF[url]) VZBUF[url]=fetch(url).then(r=>{ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(ab=>{ ensureAudio(); return new Promise((ok,bad)=>AC.decodeAudioData(ab,ok,bad)); }); return VZBUF[url]; }
+  let vzEnd=0;
+  function vzPlayUrl(url,fallback){
+    vzLoad(url).then(b=>{ ensureAudio(); if(!AC) throw new Error('audio');
+      const now=AC.currentTime; if(vzEnd-now>4) return; // no amontonar frases
+      const s=AC.createBufferSource(); s.buffer=b; s.connect(AC.destination); const at=Math.max(now+.02,vzEnd); s.start(at); vzEnd=at+b.duration+.15; })
+    .catch(()=>{ VZBAD.add(url); delete VZBUF[url]; if(fallback) fallback(); });
+  }
+  function vzPlay(p,text){
+    if(typeof LANG!=='undefined'&&LANG!=='es') return false;
+    const id=vzId(vzNorm(text)); if(!VZIDS.has(id)) return false;
+    const slot=vzSlotFor(p); if(!slot) return false;
+    const url='/voz/'+slot+'-'+id+'.mp3'; if(VZBAD.has(url)) return false;
+    vzPlayUrl(url,()=>_speakTTS(p,text)); return true;
+  }
+  window.BURAKO_VZ={id:t=>vzId(vzNorm(t)),play:vzPlayUrl,slotFor:vzSlotFor};
+  const _speakTTS=speak;
+  speak=function(p,text){
+    if(!S||!S.sound) return;
+    if(p===0) return; // lo que escribo yo no se lee en voz alta
+    if(online()&&!(infoAt(p)&&infoAt(p).t==='b')) return; // personas reales: sus mensajes no se leen
+    if(vzPlay(p,text)) return;
+    return _speakTTS(p,text);
+  };
 
   /* Registrar jugadas (mías, o de la máquina si soy el anfitrión) */
   const ok=r=>!r||r==='muerto'||r==='cierre';
@@ -2212,6 +2275,51 @@ html body .tile.drag-src{visibility:hidden!important}
     }catch(e){} ACC.quiet--;
     try{ if(typeof renderLobby==='function'&&lobbyOpen) renderLobby(); else if(typeof render==='function'&&S) render(); }catch(e){}
   }
+  // ---- Panel para grabar las voces con ElevenLabs: burako106.com/#voces ----
+  let vzRun=false;
+  async function vzApi(path,body){ const tok=await window.Clerk.session.getToken();
+    const r=await fetch('/api/voz/'+path,{method:body?'POST':'GET',headers:{authorization:'Bearer '+tok,'content-type':'application/json'},body:body?JSON.stringify(body):undefined});
+    const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||r.status); return j; }
+  function vzPanel(st,msg){
+    let o=document.getElementById('vozadm');
+    if(!o){ o=document.createElement('div'); o.id='vozadm'; o.setAttribute('role','dialog'); o.setAttribute('aria-label','Voces de los personajes'); document.body.appendChild(o);
+      o.addEventListener('click',async e=>{ const b=e.target.closest('[data-vz]'); if(!b) return; const a=b.dataset.vz;
+        if(a==='close'){ vzRun=false; o.remove(); if(location.hash==='#voces') history.replaceState(null,'',location.pathname+location.search); return; }
+        if(a==='go'){ vzGo(); return; } if(a==='stop'){ vzRun=false; return; }
+        if(a==='play'){ const id=window.BURAKO_VZ.id('Hola, ¿jugamos un burako? Dale, que te toca.'); ensureAudio(); window.BURAKO_VZ.play('/voz/'+b.dataset.s+'-'+id+'.mp3?'+Date.now(),()=>vzPanel(null,'Esa voz todavía no tiene la frase de prueba grabada.')); return; }
+        if(a==='retry'){ try{ await vzApi('redo',{slot:b.dataset.s}); vzRefresh(); }catch(err){} return; } }); }
+    if(!st){ const m=o.querySelector('.vz-msg'); if(m&&msg) m.textContent=msg; return; }
+    const pct=st.total?Math.round(st.done/st.total*100):0, ac=st.account;
+    if(!o.querySelector('.vz-card')) o.innerHTML='<div class="vz-card"><button class="xbtn vz-x" data-vz="close" aria-label="Cerrar">✕</button><h2>Voces de los personajes</h2><div class="vz-body"></div><p class="vz-msg" aria-live="polite"></p><div class="vz-acts"></div></div>';
+    const body=`
+      <p class="vz-sub">${st.lines} frases × ${Object.keys(st.voices).length} voces. Se graban una sola vez con ElevenLabs y quedan guardadas en el juego.</p>
+      ${!st.key?'<p class="vz-err">Falta la clave ELEVENLABS_API_KEY en Cloudflare.</p>':''}
+      ${ac&&ac.limit?`<p class="vz-acc">Créditos de ElevenLabs: <b>${(ac.left||0).toLocaleString('es-AR')}</b> libres de ${ac.limit.toLocaleString('es-AR')}</p>`:ac&&ac.error?`<p class="vz-err">No pude leer los créditos de ElevenLabs (${ac.error}).</p>`:''}
+      <div class="vz-bar"><i style="width:${pct}%"></i></div><p class="vz-prog"><b>${st.done}</b> de ${st.total} audios (${pct} %)</p>
+      <ul class="vz-list">${Object.entries(st.voices).map(([k,v])=>`<li><span class="vz-g">${v.g==='f'?'Mujer':'Hombre'}</span><span class="vz-d">${v.d}</span><span class="vz-n">${v.done}/${st.lines}</span>
+        ${st.errs[k]?`<span class="vz-e">${st.errs[k]} <button data-vz="retry" data-s="${k}">Reintentar</button></span>`:`<button data-vz="play" data-s="${k}" aria-label="Escuchar">▶</button>`}</li>`).join('')}</ul>`;
+    const acts=vzRun?'<button class="vz-btn" data-vz="stop">Pausar</button>':st.done<st.total?'<button class="vz-btn pri" data-vz="go">'+(st.done?'Seguir grabando':'Grabar todas las voces')+'</button>':'<b class="vz-ok">¡Listo! Todas las voces están grabadas.</b>';
+    const set=(sel,h)=>{ const e=o.querySelector(sel); if(e&&e._h!==h){ e.innerHTML=h; e._h=h; } };
+    set('.vz-body',body); set('.vz-acts',acts); const m=o.querySelector('.vz-msg'); if(m) m.textContent=msg||'';
+  }
+  async function vzRefresh(msg){ try{ vzPanel(await vzApi('status'),msg); }catch(e){ vzPanel({total:0,done:0,lines:0,voices:{},errs:{},key:true},'No pude leer el estado ('+e.message+').'); } }
+  async function vzGo(){
+    if(vzRun) return; vzRun=true; let idle=0, st=null;
+    await vzRefresh('Grabando… no cierres esta pestaña.');
+    while(vzRun){
+      try{ st=await vzApi('gen',{max:8}); }catch(e){ vzRun=false; vzRefresh('Se cortó: '+e.message+'. Tocá «Seguir grabando».'); return; }
+      if(st.busy){ await new Promise(r=>setTimeout(r,3000)); continue; }
+      const out=(st.fails||[]).find(f=>f.error==='sin-creditos');
+      if(out){ vzRun=false; vzRefresh('Se terminaron los créditos de ElevenLabs.'); return; }
+      idle=st.made&&st.made.length?0:idle+1;
+      if(st.done>=st.total||idle>=2){ vzRun=false; vzRefresh(st.done>=st.total?'':(st.fails&&st.fails.length?'Algunas frases fallaron: '+st.fails[0].error:'')); return; }
+      vzPanel(st,'Grabando… no cierres esta pestaña.');
+    }
+    vzRefresh('En pausa.');
+  }
+  function vzCheck(){ if(location.hash==='#voces'&&ACC.user) vzRefresh(); }
+  window.addEventListener('hashchange',vzCheck);
+
   async function onSignedIn(u){
     ACC.user=u; setTimeout(waitOff,200);
     const prov=accountHint(u).provider;
@@ -2224,6 +2332,7 @@ html body .tile.drag-src{visibility:hidden!important}
     if(ACC.me&&ACC.me.live){ try{ ECO.VIDEO_MAX=2; ECO.VIDEO_GAP=3*3600e3; }catch(e){} } // al lanzar: los mismos límites que el servidor
     try{ await mpReturn(); if(ACC.me&&ACC.me.pending>0) await claimTickets(); }catch(e){}
     if(pendName){ const nm=pendName; pendName=''; try{ localStorage.setItem('burako-name',nm); }catch(e){} try{ renderLobby(); }catch(e){} }
+    vzCheck();
   }
   function onSignedOut(){ waitOff(); if(E.sub&&E.sub.id){ E.sub=null; } ACC.user=null; ACC.me=null; ACC.wallet=false; if(E.account&&E.account.provider==='guest') return; if(E.account){ E.account=null; ecoSave(); } if(!document.getElementById('ecologin')) ecoShowLogin(); }
 

@@ -3,6 +3,7 @@
 // jugadores, les pasa los movimientos y guarda el último estado de la partida
 // (así, si alguien recarga la página, vuelve a la misma mano).
 import { DurableObject } from "cloudflare:workers";
+import { VOZ_VOICES, VOZ_LINES } from "./voz-lines.js";
 
 const CODE_RE = /^[A-Z0-9]{4,12}$/;
 const ROLES = ["host", "guest"];
@@ -715,6 +716,113 @@ async function runBackup(env) {
   return env.BACKUPS.get(env.BACKUPS.idFromName("all")).save(day, { at: Date.now(), ...data });
 }
 
+// ---------- Voces de los personajes (ElevenLabs) ----------
+// Cada frase fija de los personajes se graba UNA sola vez por voz con ElevenLabs
+// y queda guardada acá; el juego después la reproduce desde /voz/<voz>-<frase>.mp3
+// sin volver a gastar créditos. La clave vive como secreto ELEVENLABS_API_KEY.
+const EL_BASE = (env) => env.TEST_EL_BASE || "https://api.elevenlabs.io";
+const VOZ_KEY_RE = /^[fm][0-9]-[0-9a-z]{1,8}$/;
+const VOZ_RESERVE = 300; // créditos que dejamos sin usar en la cuenta
+export class Voz extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.busy = false;
+    ctx.blockConcurrencyWhile(async () => {
+      this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS clips (k TEXT PRIMARY KEY, mp3 BLOB, chars INTEGER, at INTEGER)");
+      this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS errs (slot TEXT PRIMARY KEY, msg TEXT, at INTEGER)");
+    });
+  }
+  clip(k) {
+    const r = this.ctx.storage.sql.exec("SELECT mp3 FROM clips WHERE k=?", k).toArray()[0];
+    return r ? r.mp3 : null;
+  }
+  have() { return new Set(this.ctx.storage.sql.exec("SELECT k FROM clips").toArray().map((r) => r.k)); }
+  async status(withAccount) {
+    const have = this.have(), per = {};
+    for (const slot of Object.keys(VOZ_VOICES)) per[slot] = { ...VOZ_VOICES[slot], done: VOZ_LINES.filter(([id]) => have.has(slot + "-" + id)).length };
+    const errs = {}; for (const r of this.ctx.storage.sql.exec("SELECT slot,msg FROM errs").toArray()) errs[r.slot] = r.msg;
+    const used = this.ctx.storage.sql.exec("SELECT COALESCE(SUM(chars),0) AS c FROM clips").toArray()[0].c;
+    const out = { total: VOZ_LINES.length * Object.keys(VOZ_VOICES).length, done: have.size, lines: VOZ_LINES.length, voices: per, errs, used, busy: this.busy, key: !!this.env.ELEVENLABS_API_KEY };
+    if (withAccount) out.account = await this.account();
+    return out;
+  }
+  async account() {
+    if (!this.env.ELEVENLABS_API_KEY) return null;
+    try {
+      const r = await fetch(EL_BASE(this.env) + "/v1/user/subscription", { headers: { "xi-api-key": this.env.ELEVENLABS_API_KEY } });
+      if (!r.ok) return { error: r.status };
+      const j = await r.json();
+      return { tier: j.tier, used: j.character_count, limit: j.character_limit, left: (j.character_limit || 0) - (j.character_count || 0) };
+    } catch (e) { return { error: "red" }; }
+  }
+  // Graba hasta `max` frases que falten. Una sola tanda a la vez.
+  async gen(max) {
+    if (!this.env.ELEVENLABS_API_KEY) return { error: "sin-clave" };
+    if (this.busy) return { busy: true };
+    this.busy = true;
+    const made = [], fails = [];
+    try {
+      const acc = await this.account();
+      let left = acc && typeof acc.left === "number" ? acc.left : null;
+      const have = this.have();
+      const bad = new Set(this.ctx.storage.sql.exec("SELECT slot FROM errs").toArray().map((r) => r.slot));
+      const todo = [];
+      for (const [id, text] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot)) todo.push([slot, id, text]);
+      for (const [slot, id, text] of todo.slice(0, Math.max(1, Math.min(20, max | 0 || 6)))) {
+        if (left !== null && left - text.length < VOZ_RESERVE) { fails.push({ k: slot + "-" + id, error: "sin-creditos" }); break; }
+        const v = VOZ_VOICES[slot];
+        const r = await fetch(EL_BASE(this.env) + "/v1/text-to-speech/" + v.id + "?output_format=mp3_44100_64", {
+          method: "POST",
+          headers: { "xi-api-key": this.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
+          body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true } }),
+        });
+        if (!r.ok) {
+          let msg = ""; try { const j = await r.json(); msg = (j.detail && (j.detail.status || j.detail.message)) || JSON.stringify(j).slice(0, 200); } catch (e) { msg = String(r.status); }
+          fails.push({ k: slot + "-" + id, status: r.status, error: msg });
+          if (r.status === 404 || /voice_not_found|not.found/i.test(msg)) this.ctx.storage.sql.exec("INSERT OR REPLACE INTO errs (slot,msg,at) VALUES (?,?,?)", slot, "La voz no está en tu cuenta de ElevenLabs: agregala a «Mis voces».", Date.now());
+          if (r.status === 401 || r.status === 429 || /quota|credits/i.test(msg)) break;
+          continue;
+        }
+        const mp3 = await r.arrayBuffer();
+        if (mp3.byteLength < 500) { fails.push({ k: slot + "-" + id, error: "audio-vacio" }); continue; }
+        this.ctx.storage.sql.exec("INSERT OR REPLACE INTO clips (k,mp3,chars,at) VALUES (?,?,?,?)", slot + "-" + id, mp3, text.length, Date.now());
+        if (left !== null) left -= text.length;
+        made.push(slot + "-" + id);
+      }
+    } finally { this.busy = false; }
+    return { made, fails, ...(await this.status(false)) };
+  }
+  // Volver a grabar una voz (o una frase) que salió mal, y destrabar una voz con error
+  redo(slot, id) {
+    if (!VOZ_VOICES[slot]) return { error: "voz" };
+    if (id) this.ctx.storage.sql.exec("DELETE FROM clips WHERE k=?", slot + "-" + id);
+    this.ctx.storage.sql.exec("DELETE FROM errs WHERE slot=?", slot);
+    return { ok: true };
+  }
+}
+const voz = (env) => env.VOZ.get(env.VOZ.idFromName("voces"));
+async function vozClip(request, env, ctx, k) {
+  if (!VOZ_KEY_RE.test(k)) return new Response("no", { status: 404 });
+  const cache = caches.default, ck = new Request(new URL("/voz/" + k + ".mp3", request.url).toString());
+  let res = await cache.match(ck);
+  if (res) return res;
+  const mp3 = await voz(env).clip(k);
+  if (!mp3) return new Response("todavía no", { status: 404, headers: { "cache-control": "no-store" } });
+  res = new Response(mp3, { headers: { "content-type": "audio/mpeg", "cache-control": "public, max-age=31536000, immutable" } });
+  ctx.waitUntil(cache.put(ck, res.clone()));
+  return res;
+}
+async function apiVoz(request, env, what) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  const h = { "cache-control": "no-store" };
+  if (what === "status") return Response.json(await voz(env).status(true), { headers: h });
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  if (what === "gen") return Response.json(await voz(env).gen(b.max), { headers: h });
+  if (what === "redo") return Response.json(await voz(env).redo(String(b.slot || ""), b.id ? String(b.id) : ""), { headers: h });
+  return Response.json({ error: "?" }, { status: 404 });
+}
+
 async function apiWallet(request, env) {
   const claims = await verifyClerk(request, env);
   if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
@@ -766,8 +874,12 @@ export default {
       await runBackup(env);
     })());
   },
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/voz/") && url.pathname.endsWith(".mp3")) return vozClip(request, env, ctx, url.pathname.slice(5, -4));
+    if (url.pathname === "/api/voz/status") return apiVoz(request, env, "status");
+    if (url.pathname === "/api/voz/gen" && request.method === "POST") return apiVoz(request, env, "gen");
+    if (url.pathname === "/api/voz/redo" && request.method === "POST") return apiVoz(request, env, "redo");
     if (url.pathname === "/api/tables") {
       const lb = lobby(env);
       if (request.method === "GET") {
