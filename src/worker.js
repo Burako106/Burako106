@@ -742,7 +742,7 @@ export class Voz extends DurableObject {
     for (const slot of Object.keys(VOZ_VOICES)) per[slot] = { ...VOZ_VOICES[slot], done: VOZ_LINES.filter(([id]) => have.has(slot + "-" + id)).length };
     const errs = {}; for (const r of this.ctx.storage.sql.exec("SELECT slot,msg FROM errs").toArray()) errs[r.slot] = r.msg;
     const used = this.ctx.storage.sql.exec("SELECT COALESCE(SUM(chars),0) AS c FROM clips").toArray()[0].c;
-    const out = { total: VOZ_LINES.length * Object.keys(VOZ_VOICES).length, done: have.size, lines: VOZ_LINES.length, voices: per, errs, used, busy: this.busy, key: !!this.env.ELEVENLABS_API_KEY };
+    const out = { total: VOZ_LINES.length * Object.keys(VOZ_VOICES).length, done: Object.values(per).reduce((n, v) => n + v.done, 0), lines: VOZ_LINES.length, voices: per, errs, used, busy: this.busy, key: !!this.env.ELEVENLABS_API_KEY };
     if (withAccount) out.account = await this.account();
     return out;
   }
