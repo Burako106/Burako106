@@ -6088,7 +6088,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795178476';</script>
+<script>window.BURAKO_BUILD='1795180950';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8754,5 +8754,16 @@ html body.glass.onyx.onyx .seat.t1 .seat-info b{color:#ff7d72}
 html body.glass.onyx.onyx .seat.y3 .seat-info b{color:#f0b23a}
 html body.glass.onyx.onyx .zone .empty{color:#a9abb5}
 html body.glass.onyx.onyx .pozo.live .pozo-tiles{border-color:rgba(215,215,218,.4)!important}
+/* Fichas negras con más contraste: un poco más claras que el atril, borde y brillo arriba; números más vivos */
+html body.glass.onyx.onyx{--t-r:#ff5547;--t-b:#5c8dff;--t-y:#ffb020;--t-k:#f4f5f8}
+html body.glass.onyx.onyx .tile,html body.glass.onyx.onyx .rack-row .tile,html body.glass.onyx.onyx .ghost-drag .tile{background:linear-gradient(180deg,#30333d,#1f2128)!important;border:1px solid rgba(255,255,255,.2)!important;box-shadow:0 6px 14px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16)!important}
+html body.glass.onyx.onyx .tile::after{background:rgba(0,0,0,.35)!important;box-shadow:inset 0 1.5px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.08)!important}
+html body.glass.onyx.onyx .rack-row{background:rgba(5,6,9,.6)!important}
+html body.glass.onyx.onyx .tile.sel{box-shadow:0 0 0 2px #f4f5f8,0 10px 20px rgba(0,0,0,.6)!important}
+/* Fondos de juegos rojo y azul más intensos */
+html body.glass.onyx.onyx .zone.op{background:rgba(240,70,60,.36)!important}
+html body.glass.onyx.onyx .zone.me{background:rgba(60,115,255,.38)!important}
+html body.glass.onyx.onyx .zone.op.y3{background:rgba(255,185,30,.32)!important}
+html body.glass.onyx.onyx .zone.me.drop-hover{background:rgba(60,115,255,.52)!important}
 </style></body>
 </html>
