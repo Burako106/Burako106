@@ -6090,7 +6090,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795213508';</script>
+<script>window.BURAKO_BUILD='1795217741';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6809,8 +6809,8 @@ html body .tile.drag-src{visibility:hidden!important}
   const clone=o=>JSON.parse(JSON.stringify(o));
   const NET={role:null,code:null,ws:null,v:0,last:'',ev:[],seat:0,n:2,seats:null,open:false,on:{},retry:0,timer:null,ping:null,ui:null,pub:false,want:null,nextAt:null};
   window.BURAKO_NET=NET; NET._ui=()=>readyUI();
-  // Modo prueba: los videos dan tickets sin límite (las compras ya son simuladas)
-  try{ ECO.VIDEO_MAX=999; ECO.VIDEO_GAP=0; }catch(e){}
+  // Videos con anuncio: hasta 2 por día (200 tickets), con 3 horas entre uno y otro (lo mismo que controla el servidor)
+  try{ ECO.VIDEO_MAX=2; ECO.VIDEO_GAP=3*3600e3; }catch(e){}
   const PEN=e=>Math.round((e||ECO.ENTRIES[0])*.5);   // penalización por abandonar: la mitad de la entrada, además de perderla
   const online=()=>!!(S&&S.kind==='online'&&NET.code&&S.net&&S.net.code===NET.code);
 

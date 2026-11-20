@@ -461,9 +461,7 @@ export class Players extends DurableObject {
       else { ok = true; sql.exec("UPDATE games SET pm=pm+1 WHERE id=?", game.id); }
     } else if (kind === "video") {
       const vids = sql.exec("SELECT at FROM tx WHERE user_id=? AND kind='video' AND at>=? ORDER BY at DESC", id, dayStart).toArray();
-      const live = this.env && this.env.MP_LIVE === "1";
       if (delta !== 100) why = "monto";
-      else if (!live) ok = true; // modo prueba: videos libres para los que prueban
       else if (vids.length >= 2) why = "limite";
       else if (vids[0] && now - vids[0].at < 3 * 3600e3 - 60e3) why = "espera";
       else ok = true;
