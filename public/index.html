@@ -6090,7 +6090,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795207256';</script>
+<script>window.BURAKO_BUILD='1795207834';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8019,7 +8019,7 @@ html body .tile.drag-src{visibility:hidden!important}
     clr(); if(!hd||!hr||!g||!act||innerWidth<901) return;
     /* columna de referencia: el ancho real de las mesas */
     const cards=[...document.querySelectorAll('#lobby .lcard, #lobby .hb')].filter(e=>e.offsetWidth&&!e.closest('#nrfocus'));
-    let L,R; if(cards.length){ L=Math.min(...cards.map(c=>c.getBoundingClientRect().left)); R=Math.max(...cards.map(c=>c.getBoundingClientRect().right)); } else { const r=act.getBoundingClientRect(); L=r.left; R=r.right; }
+    let L,R; const lm=lbCompact&&document.querySelector('#lobby .lmain'); /* mesas compactas: mismo ancho que las mesas normales, no el del racimo de burbujas */ if(lm&&lm.clientWidth){ const mr=lm.getBoundingClientRect(); L=mr.left+lm.clientLeft; R=L+lm.clientWidth-6; } else if(cards.length){ L=Math.min(...cards.map(c=>c.getBoundingClientRect().left)); R=Math.max(...cards.map(c=>c.getBoundingClientRect().right)); } else { const r=act.getBoundingClientRect(); L=r.left; R=r.right; }
     const CW=R-L;
     /* botones grandes: primero a la izquierda, último a la derecha, los del medio repartidos */
     const ar=act.getBoundingClientRect(); act.style.marginLeft=(L-ar.left)+'px'; act.style.width=CW+'px';
