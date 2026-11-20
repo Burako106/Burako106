@@ -4225,7 +4225,7 @@ function pureTier(m){ if(canStatus(m)!=='pura') return null; const a=analyze(m.t
   if(m.tiles.length===14) return 'mega'; const q=a.seq; if(m.tiles.length===13&&q[0].n===1&&q[12].n===13) return 'super'; return 'pura'; }
 const canVal=m=>{ const t=pureTier(m); return t==='mega'?500:t==='super'?300:t?200:isCanasta(m)?100:0; };
 function fxCheck(m){ const st=canStatus(m); if(st&&st!==m.st) startFx(m,st); m.st=st;
-  const tr=pureTier(m); if((tr==='super'||tr==='mega')&&tr!==m.tier){ const id=m.id; setTimeout(()=>tierFx(tr,id),st!==m.prevSt?1900:0); if(tr==='mega') ecoPuraMadre(id); } m.tier=tr; m.prevSt=st; }
+  const tr=pureTier(m); if((tr==='super'||tr==='mega')&&tr!==m.tier){ const id=m.id; const foe=!(S.melds[0]||[]).includes(m); setTimeout(()=>tierFx(tr,id,foe),st!==m.prevSt?1900:0); if(tr==='mega') ecoPuraMadre(id); } m.tier=tr; m.prevSt=st; }
 function brass(notes,vol){ if(!AC) return; const t0=AC.currentTime+.02, out=AC.createGain(); out.gain.value=vol||.16; out.connect(AC.destination);
   notes.forEach(([f,st,du])=>{ const t=t0+st;
     [0,7].forEach((det,k)=>{ const o=AC.createOscillator(), fl=AC.createBiquadFilter(), g=AC.createGain(), lfo=AC.createOscillator(), lg=AC.createGain();
@@ -4241,13 +4241,13 @@ function fanfare(mega){ if(!AC||!S||!S.sound||S.sfx===false) return; try{
   else { brass([[C5,0,.11],[C5,.12,.11],[C5,.24,.11],[E5,.36,.22],[C5,.6,.11],[E5,.72,.11],[G5,.84,.3],[E5,1.16,.12],[G5,1.3,.12],[C6,1.44,.8]],.15);
          brass([[G4,.36,.22],[G4,.84,.3],[C5,1.3,.12],[E5,1.44,.8]],.09); brass([[E4,1.44,.8],[C5*.5,1.44,.8]],.07); }
 }catch(e){} }
-function sparkle(mega){ fanfare(mega); if(!AC||!S||!S.sound||S.sfx===false) return; try{ const t0=AC.currentTime+(mega?1.4:.8), ns=mega?[1047,1319,1568,2093,2637,3136]:[1319,1568,2093,2637];
+function sparkle(mega,foe){ if(!foe) fanfare(mega); if(!AC||!S||!S.sound||S.sfx===false) return; try{ const t0=AC.currentTime+(mega?1.4:.8), ns=mega?[1047,1319,1568,2093,2637,3136]:[1319,1568,2093,2637];
   ns.forEach((f,i)=>{ const o=AC.createOscillator(), g=AC.createGain(), t=t0+i*.07; o.type='triangle'; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*1.02,t+.25);
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.12,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+.35); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+.4); });
   for(let k=0;k<(mega?10:6);k++){ const o=AC.createOscillator(), g=AC.createGain(), t=t0+.3+k*.06+Math.random()*.03; o.type='sine'; o.frequency.value=2600+Math.random()*2200;
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.05,t+.005); g.gain.exponentialRampToValueAtTime(.001,t+.12); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+.15); } }catch(e){} }
-function tierFx(tier,id){
-  const mega=tier==='mega'; sparkle(mega);
+function tierFx(tier,id,foe){
+  const mega=tier==='mega'; sparkle(mega,foe);
   if(reduced()) return;
   const mel=document.querySelector(`.meld[data-id="${id}"]`), fl=document.querySelector('.felt');
   const r=(mel||fl).getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
@@ -6088,7 +6088,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795186227';</script>
+<script>window.BURAKO_BUILD='1795186471';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -7157,6 +7157,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     if(c.over==null&&S.over){ try{ if(closeFx) finishClose(); }catch(e){} }
     const g=rot(c,me), prevTurn=S.turn, prevRound=S.round, prevOver=!!S.over, prevDone=!!(S.over&&S.over.done);
     const canPrev={}; [].concat(...(S.melds||[])).forEach(m=>{ canPrev[m.id]=isCanasta(m)?(analyze(m.tiles).wilds===0?'pura':'impura'):''; });
+    const tierPrev={}; [].concat(...(S.melds||[])).forEach(m=>{ try{ tierPrev[m.id]=pureTier(m)||''; }catch(x){} });
     const srcDraw=mazoRect(), evs=ev||[];
     // mismas animaciones que cuando juega la máquina: orígenes tomados antes de actualizar la mesa
     const fx={pozo:null,fly:null,muerto:null};
@@ -7193,6 +7194,8 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     });
     // canastas nuevas de los demás: mismo festejo y sonido
     [].concat(...S.melds).forEach(m=>{ if(!isCanasta(m)) return; const k=analyze(m.tiles).wilds===0?'pura':'impura'; if(canPrev[m.id]!==k){ try{ startFx(m,k); }catch(x){} } });
+    // purísima / pura madre de cualquiera: cartel para todos, trompetas solo para el equipo que la hizo
+    S.melds.forEach((ms,T)=>ms.forEach(m=>{ let tr=''; try{ tr=pureTier(m)||''; }catch(x){} if((tr==='super'||tr==='mega')&&tierPrev[m.id]!==tr){ const nw=canPrev[m.id]!==(isCanasta(m)?(analyze(m.tiles).wilds===0?'pura':'impura'):''); setTimeout(()=>{ try{ tierFx(tr,m.id,T!==0); }catch(x){} },nw?1900:0); } }));
     if(S.over&&!prevOver){
       const cl=S.over.closer;
       say(cl===0?'¡Cerraste la mano!':typeof cl==='number'?nm(cl)+' cerró la mano.':'Se terminó el mazo: fin de la mano.');

@@ -1066,6 +1066,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     if(c.over==null&&S.over){ try{ if(closeFx) finishClose(); }catch(e){} }
     const g=rot(c,me), prevTurn=S.turn, prevRound=S.round, prevOver=!!S.over, prevDone=!!(S.over&&S.over.done);
     const canPrev={}; [].concat(...(S.melds||[])).forEach(m=>{ canPrev[m.id]=isCanasta(m)?(analyze(m.tiles).wilds===0?'pura':'impura'):''; });
+    const tierPrev={}; [].concat(...(S.melds||[])).forEach(m=>{ try{ tierPrev[m.id]=pureTier(m)||''; }catch(x){} });
     const srcDraw=mazoRect(), evs=ev||[];
     // mismas animaciones que cuando juega la máquina: orígenes tomados antes de actualizar la mesa
     const fx={pozo:null,fly:null,muerto:null};
@@ -1102,6 +1103,8 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     });
     // canastas nuevas de los demás: mismo festejo y sonido
     [].concat(...S.melds).forEach(m=>{ if(!isCanasta(m)) return; const k=analyze(m.tiles).wilds===0?'pura':'impura'; if(canPrev[m.id]!==k){ try{ startFx(m,k); }catch(x){} } });
+    // purísima / pura madre de cualquiera: cartel para todos, trompetas solo para el equipo que la hizo
+    S.melds.forEach((ms,T)=>ms.forEach(m=>{ let tr=''; try{ tr=pureTier(m)||''; }catch(x){} if((tr==='super'||tr==='mega')&&tierPrev[m.id]!==tr){ const nw=canPrev[m.id]!==(isCanasta(m)?(analyze(m.tiles).wilds===0?'pura':'impura'):''); setTimeout(()=>{ try{ tierFx(tr,m.id,T!==0); }catch(x){} },nw?1900:0); } }));
     if(S.over&&!prevOver){
       const cl=S.over.closer;
       say(cl===0?'¡Cerraste la mano!':typeof cl==='number'?nm(cl)+' cerró la mano.':'Se terminó el mazo: fin de la mano.');
