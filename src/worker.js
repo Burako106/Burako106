@@ -730,6 +730,7 @@ export class Voz extends DurableObject {
     ctx.blockConcurrencyWhile(async () => {
       this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS clips (k TEXT PRIMARY KEY, mp3 BLOB, chars INTEGER, at INTEGER)");
       this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS errs (slot TEXT PRIMARY KEY, msg TEXT, at INTEGER)");
+      this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS lerr (k TEXT PRIMARY KEY, msg TEXT, at INTEGER)");
     });
   }
   clip(k) {
@@ -742,7 +743,9 @@ export class Voz extends DurableObject {
     for (const slot of Object.keys(VOZ_VOICES)) per[slot] = { ...VOZ_VOICES[slot], done: VOZ_LINES.filter(([id]) => have.has(slot + "-" + id)).length };
     const errs = {}; for (const r of this.ctx.storage.sql.exec("SELECT slot,msg FROM errs").toArray()) errs[r.slot] = r.msg;
     const used = this.ctx.storage.sql.exec("SELECT COALESCE(SUM(chars),0) AS c FROM clips").toArray()[0].c;
-    const out = { total: VOZ_LINES.length * Object.keys(VOZ_VOICES).length, done: Object.values(per).reduce((n, v) => n + v.done, 0), lines: VOZ_LINES.length, voices: per, errs, used, busy: this.busy, key: !!this.env.ELEVENLABS_API_KEY };
+    const txt = Object.fromEntries(VOZ_LINES.map(([id, t]) => [id, t]));
+    const lerrs = this.ctx.storage.sql.exec("SELECT k,msg FROM lerr ORDER BY k").toArray().map((r) => ({ k: r.k, msg: r.msg, text: txt[r.k.split("-")[1]] || "" }));
+    const out = { total: VOZ_LINES.length * Object.keys(VOZ_VOICES).length, done: Object.values(per).reduce((n, v) => n + v.done, 0), lines: VOZ_LINES.length, voices: per, errs, lerrs, used, busy: this.busy, key: !!this.env.ELEVENLABS_API_KEY };
     if (withAccount) out.account = await this.account();
     return out;
   }
@@ -766,8 +769,9 @@ export class Voz extends DurableObject {
       let left = acc && typeof acc.left === "number" ? acc.left : null;
       const have = this.have();
       const bad = new Set(this.ctx.storage.sql.exec("SELECT slot FROM errs").toArray().map((r) => r.slot));
+      const lbad = new Set(this.ctx.storage.sql.exec("SELECT k FROM lerr").toArray().map((r) => r.k));
       const todo = [];
-      for (const [id, text, model] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot) && !(this.skip && this.skip.has(slot + "-" + id))) todo.push([slot, id, text, model]);
+      for (const [id, text, model] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot) && !lbad.has(slot + "-" + id)) todo.push([slot, id, text, model]);
       const batch = todo.slice(0, Math.max(1, Math.min(24, max | 0 || 6)));
       let stop = false;
       const one = async ([slot, id, text, model]) => {
@@ -775,17 +779,26 @@ export class Voz extends DurableObject {
         if (left !== null && left - text.length < VOZ_RESERVE) { fails.push({ k: slot + "-" + id, error: "sin-creditos" }); stop = true; return; }
         if (left !== null) left -= text.length;
         const v = VOZ_VOICES[slot];
-        const r = await fetch(EL_BASE(this.env) + "/v1/text-to-speech/" + v.id + "?output_format=mp3_44100_64", {
+        let r = await fetch(EL_BASE(this.env) + "/v1/text-to-speech/" + v.id + "?output_format=mp3_44100_64", {
           method: "POST",
           headers: { "xi-api-key": this.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
           // eleven_v3: actúa las risas y suspiros marcados entre corchetes; el resto, multilingual_v2
           body: JSON.stringify(model === "eleven_v3" ? { text, model_id: "eleven_v3", voice_settings: { stability: 0.5 } } : { text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true } }),
         });
+        if (!r.ok && model === "eleven_v3" && (r.status === 400 || r.status === 422)) {
+          // si esta voz no acepta el modelo v3, se graba con el modelo de siempre y sin las indicaciones entre corchetes
+          const plain = text.replace(/\[[^\]]*\]\s*/g, "").trim() || "Ja, ja, ja.";
+          r = await fetch(EL_BASE(this.env) + "/v1/text-to-speech/" + v.id + "?output_format=mp3_44100_64", {
+            method: "POST",
+            headers: { "xi-api-key": this.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
+            body: JSON.stringify({ text: plain, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true } }),
+          });
+        }
         if (!r.ok) {
           if (left !== null) left += text.length;
           let msg = ""; try { const j = await r.json(); msg = (j.detail && (j.detail.status || j.detail.message)) || JSON.stringify(j).slice(0, 200); } catch (e) { msg = String(r.status); }
           fails.push({ k: slot + "-" + id, status: r.status, error: msg });
-          if (r.status === 400 || r.status === 422) (this.skip = this.skip || new Set()).add(slot + "-" + id); // frase rechazada: no trabar las demás
+          if (r.status === 400 || r.status === 422) this.ctx.storage.sql.exec("INSERT OR REPLACE INTO lerr (k,msg,at) VALUES (?,?,?)", slot + "-" + id, String(msg).slice(0, 300), Date.now()); // frase rechazada: se anota y no traba las demás
           if (r.status === 404 || /voice_not_found|not.found/i.test(msg)) this.ctx.storage.sql.exec("INSERT OR REPLACE INTO errs (slot,msg,at) VALUES (?,?,?)", slot, "La voz no está en tu cuenta de ElevenLabs: agregala a «Mis voces».", Date.now());
           if (r.status === 401 || /quota|credits/i.test(msg)) stop = true;
           return;
@@ -802,6 +815,7 @@ export class Voz extends DurableObject {
   }
   // Volver a grabar una voz (o una frase) que salió mal, y destrabar una voz con error
   redo(slot, id) {
+    if (slot === "*") { this.ctx.storage.sql.exec("DELETE FROM lerr"); return { ok: true }; }
     if (!VOZ_VOICES[slot]) return { error: "voz" };
     if (id) this.ctx.storage.sql.exec("DELETE FROM clips WHERE k=?", slot + "-" + id);
     this.ctx.storage.sql.exec("DELETE FROM errs WHERE slot=?", slot);
