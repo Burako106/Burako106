@@ -62,7 +62,7 @@ rep("Elegí fichas y arrastralas acá.","Elegí fichas y arrastralas, o tocá ac
 rep("Select tiles and drag them here.","Select tiles and drag them here, or tap here.",2)
 # Glass es el diseño inicial para todos (una vez se pasa a Glass a quien ya tenía otro guardado)
 rep("let theme='fun'; try{ theme=localStorage.getItem('burako-theme')||'fun'; }catch(e){}",
-    "let theme='glass'; try{ if(!localStorage.getItem('burako-theme-v2')){ localStorage.setItem('burako-theme','glass'); localStorage.setItem('burako-theme-v2','1'); } theme=localStorage.getItem('burako-theme')||'glass'; }catch(e){}")
+    "let theme='glass'; try{ if(!localStorage.getItem('burako-theme-v2')){ localStorage.setItem('burako-theme','glass'); localStorage.setItem('burako-theme-v2','1'); } const t0=localStorage.getItem('burako-theme'); theme=(t0==='onyx'||t0==='classic')?'onyx':'glass'; localStorage.setItem('burako-theme',theme); }catch(e){}")
 # logo de Facebook en el ingreso: dibujado, no una letra estirada
 rep('<button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic">f</span>',
     '<button class="el-btn el-fb" data-eco="login" data-v="facebook"><span class="el-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#fff"/><path fill="#1877f2" d="M13.4 24v-8.4h2.8l.42-3.26H13.4v-2.08c0-.94.26-1.59 1.62-1.59h1.73V5.75a23 23 0 0 0-2.53-.13c-2.5 0-4.22 1.53-4.22 4.34v2.4H7.18v3.26H10V24z"/></svg></span>')
@@ -96,8 +96,8 @@ rep("  document.body.appendChild(t); setTimeout(()=>t.remove(),2300);\n  tone([3
 # de a tres: «Jimmy contra Graciela contra Gladys»
 rep("<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"${d(2200)}>${LL('y','&')}</span><span class=\"lm-side y\"","<span class=\"lm-side r\"${d(2000)}>${nm(o[0])}</span><span class=\"lm-vs\"${d(2200)}>${LL('contra','vs')}</span><span class=\"lm-side y\"")
 # orden de diseños en el menú: Glass, Classic, Fun
-rep("['fun','classic','glass'].map","['glass','classic','fun'].map",2)
-rep("""data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button>""","""data-v="glass" aria-selected="${theme==='glass'}">Glass</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="fun" aria-selected="${theme==='fun'}">Fun</button>""",2)
+rep("['fun','classic','glass'].map","['glass','onyx'].map",2)
+rep("""data-v="fun" aria-selected="${theme==='fun'}">Fun</button><button role="tab" data-act="theme" data-v="classic" aria-selected="${theme==='classic'}">Classic</button><button role="tab" data-act="theme" data-v="glass" aria-selected="${theme==='glass'}">Glass</button>""","""data-v="glass" aria-selected="${theme==='glass'}">Glass</button><button role="tab" data-act="theme" data-v="onyx" aria-selected="${theme==='onyx'}">Onyx</button>""",2)
 # saludo del lobby: saludo con nombre y después un mensaje según el momento
 rep('<h1 class="lgreet">¡Hola, <span>${esc(lbMyName())}</span>!</h1>','<h1 class="lgreet">${window.lgH?lgH():\'¡Hola, <span>\'+esc(lbMyName())+\'</span>!\'}</h1>')
 rep('<small class="set-note">Así te ven en las mesas.</small>','<small class="set-note">Así te ven en las mesas.</small>${window.lgBdayH?lgBdayH():\'\'}')
@@ -135,6 +135,9 @@ rep("<head>","""<head>
 html.auth-wait body{visibility:hidden}
 html.auth-wait{background:linear-gradient(160deg,#e3e7fb,#f3e9f0) fixed!important;min-height:100%}
 html.auth-wait.aw-fun{background:#ffe9a8!important}
+html.auth-wait.aw-onyx{background:linear-gradient(160deg,#1a1c22,#121318) fixed!important}
+html.auth-wait.aw-onyx::before{border-color:rgba(255,255,255,.18);border-top-color:#f2f3f7}
+html.auth-wait.aw-onyx::after{color:#f2f3f7}
 html.auth-wait.aw-classic{background:radial-gradient(circle at 50% 40%,#4a1f22,#1e0d0f) fixed!important}
 html.auth-wait::before{content:"";position:fixed;left:50%;top:calc(50% - 28px);width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid rgba(20,20,30,.15);border-top-color:#1b1c21;animation:awSpin .8s linear infinite;z-index:2147483647}
 html.auth-wait.aw-fun::before{border-color:rgba(20,20,20,.18);border-top-color:#141414}
@@ -159,8 +162,24 @@ rep('<head>','<head>\n<script>(window.adsbygoogle=window.adsbygoogle||[]).pauseA
 # suscripciones reales: textos de la tienda
 rep("""<a href="#" data-eco="unsub">Cancelar (prueba)</a>""","""${E.sub.cancelled?'No se renueva (cancelada).':'Se renueva sola. <a href="#" data-eco="unsub">Cancelar suscripción</a>'}""")
 rep("""${sub&&E.sub.plan===p.id?'Extender':'Suscribirme'}""","""${sub&&E.sub.plan===p.id?(E.sub.cancelled?'Volver a suscribirme':'Tu plan actual'):'Suscribirme'}""")
+# modos de color: solo Glass (claro) y Onyx (oscuro, generado desde Glass)
+rep("th={fun:'Fun',classic:'Classic',glass:'Glass'}","th={glass:'Glass',onyx:'Onyx'}")
+rep("theme=['classic','glass'].includes(el.dataset.v)?el.dataset.v:'fun';","theme=el.dataset.v==='onyx'?'onyx':'glass';")
+rep("function applyTheme(){ document.body.classList.toggle('fun',theme==='fun'); document.body.classList.toggle('glass',theme==='glass');",
+    "function applyTheme(){ document.body.classList.remove('fun'); document.body.classList.add('glass'); document.body.classList.toggle('onyx',theme==='onyx'); document.documentElement.classList.toggle('onyx',theme==='onyx');")
+rep('''<span class="label">Diseño</span><div class="lang-tabs" role="tablist" aria-label="Diseño">''','''<span class="label">Modo de color</span><div class="lang-tabs" role="tablist" aria-label="Modo de color">''',2)
+rep("it('diseno','lnavx','Diseño'","it('diseno','lnavx','Color'")
+rep('aria-label="Diseño"','aria-label="Modo de color"',3)
+# Onyx: paños oscuros propios (los de Glass son claros)
+rep("let FELTS=FELTS_C, felt='bordo';","const FELTS_O=[['noche','Noche','rgba(255,255,255,.06)'],['azul','Azul noche','rgba(70,110,220,.22)'],['vino','Vino','rgba(200,60,90,.20)'],['verde','Verde paño','rgba(40,170,120,.18)'],['humo','Humo','rgba(0,0,0,.28)']];\nlet FELTS=FELTS_C, felt='bordo';")
+rep("const feltKey=()=>theme==='fun'?'burako-felt-fun':theme==='glass'?'burako-felt-glass':'burako-felt';","const feltKey=()=>theme==='onyx'?'burako-felt-onyx':theme==='fun'?'burako-felt-fun':theme==='glass'?'burako-felt-glass':'burako-felt';")
+rep("FELTS=theme==='fun'?FELTS_F:theme==='glass'?FELTS_G:FELTS_C;","FELTS=theme==='onyx'?FELTS_O:theme==='fun'?FELTS_F:theme==='glass'?FELTS_G:FELTS_C;")
 # 5) módulo online al final
 import time
 rep("</body>", "<script>window.BURAKO_BUILD='"+str(int(time.time()))+"';</script>\n" + open(net, encoding='utf-8').read() + "\n</body>")
 open(out, 'w', encoding='utf-8').write(h)
 print("ok", len(h))
+
+# 6) modo Onyx (oscuro) generado desde Glass
+import subprocess as _sp, os as _os
+_sp.run(['python3', _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'onyx.py'), sys.argv[3], _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'onyx-manual.css')], check=True)
