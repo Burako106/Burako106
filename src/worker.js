@@ -617,6 +617,7 @@ async function mpSubCreate(request, env) {
   };
   const r = await mpApi(env, "/preapproval", { method: "POST", body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
+  if (!r.ok && /payer|email/i.test(String(j.message || ""))) return Response.json({ error: "email-mp", detail: j.message }, { status: 400 });
   if (!r.ok || !j.init_point) return Response.json({ error: "mp", detail: j.message || r.status }, { status: 502 });
   await st.subSave({ id: j.id, user: claims.sub, plan: b.plan, status: "pending", amount: pl.amount, next_payment: 0 });
   return Response.json({ url: j.init_point, id: j.id });
