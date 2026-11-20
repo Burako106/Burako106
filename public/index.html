@@ -6085,7 +6085,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795175382';</script>
+<script>window.BURAKO_BUILD='1795175654';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8622,7 +8622,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     const until=E.sub&&E.sub.until?new Date(E.sub.until).toLocaleDateString(E_?'en-US':'es-AR'):'';
     m.innerHTML=`<div class="eco-bg" data-eco="close"></div><div class="eco-card-w del-card" role="dialog" aria-modal="true"><button class="eco-x" data-eco="close" aria-label="${E_?'Close':'Cerrar'}">×</button>
       <h2>${E_?'Cancel your subscription?':'¿Cancelar tu suscripción?'}</h2>
-      <p class="eco-p">${E_?'It won’t renew. You keep the benefits until':'No se va a renovar. Seguís con los beneficios hasta el'} <b>${until}</b>.</p>
+      <p class="eco-p">${ACC.me&&!ACC.me.live?(E_?'Test mode: it ends right away.':'Modo prueba: se corta en el momento.'):`${E_?'It won’t renew. You keep the benefits until':'No se va a renovar. Seguís con los beneficios hasta el'} <b>${until}</b>.`}</p>
       <div class="eco-col"><button class="btn del-go" type="button">${E_?'Cancel subscription':'Cancelar suscripción'}</button><button class="btn" data-eco="close">${E_?'Keep it':'Mantenerla'}</button></div>
       <p class="del-msg" hidden></p></div>`;
     m.hidden=false;

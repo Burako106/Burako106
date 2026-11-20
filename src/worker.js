@@ -498,6 +498,7 @@ export class Players extends DurableObject {
     return null;
   }
   async subGet(user) { return this.subOf(user); }
+  async subEnd(id) { this.ctx.storage.sql.exec("UPDATE subs SET status='cancelled', paid_until=?, updated=? WHERE id=?", Date.now() - 1000, Date.now(), id); return true; }
   async subRow(id) { return this.ctx.storage.sql.exec("SELECT * FROM subs WHERE id=?", id).toArray()[0] || null; }
   async subsToRefresh() { return this.ctx.storage.sql.exec("SELECT id FROM subs WHERE status IN ('authorized','pending','paused') OR paid_until>?", Date.now()).toArray().map((r) => r.id); }
   // Copia de seguridad: todo lo importante, sin las fotos (que pesan mucho)
@@ -639,9 +640,11 @@ async function mpSubCancel(request, env) {
   const st = players(env);
   const cur = await st.subGet(claims.sub);
   if (!cur) return Response.json({ sub: null });
-  const r = await mpApi(env, "/preapproval/" + encodeURIComponent(cur.id), { method: "PUT", body: JSON.stringify({ status: "cancelled" }) });
-  if (!r.ok) return Response.json({ error: "mp" }, { status: 502 });
-  await mpSubRefresh(env, cur.id);
+  const live = env.MP_LIVE === "1";
+  const r = cur.cancelled ? { ok: true } : await mpApi(env, "/preapproval/" + encodeURIComponent(cur.id), { method: "PUT", body: JSON.stringify({ status: "cancelled" }) });
+  if (!r.ok && live) return Response.json({ error: "mp" }, { status: 502 });
+  if (live) await mpSubRefresh(env, cur.id);
+  else await st.subEnd(cur.id); // modo prueba: se corta en el momento, para poder volver a probar
   return Response.json({ sub: await st.subGet(claims.sub) });
 }
 
