@@ -113,8 +113,9 @@ export const VOZ_LINES = [
 "below"
 ],
 [
-"14qu2c4",
-"Bah, cualquiera"
+"14qu2c4b",
+"[dismissive] Bah... cualquiera.",
+"eleven_v3"
 ],
 [
 "14rxsnl",
@@ -149,8 +150,9 @@ export const VOZ_LINES = [
 "burako-voice"
 ],
 [
-"16qmncd",
-"Jaja, sí"
+"16qmncdb",
+"[laughs] ¡Sí, sí!",
+"eleven_v3"
 ],
 [
 "17dswi2",
@@ -201,8 +203,9 @@ export const VOZ_LINES = [
 "Aprovechala, eh"
 ],
 [
-"1awwj74",
-"Jajaja"
+"1awwj74b",
+"[laughs heartily]",
+"eleven_v3"
 ],
 [
 "1b40prw",
@@ -269,8 +272,9 @@ export const VOZ_LINES = [
 "Hola, ¿jugamos un burako?"
 ],
 [
-"1k6n4ia",
-"Jaja, no fue a propósito"
+"1k6n4iab",
+"[laughs] No fue a propósito.",
+"eleven_v3"
 ],
 [
 "1kuzly3",
@@ -297,8 +301,9 @@ export const VOZ_LINES = [
 "Así se juega, señores"
 ],
 [
-"1moakld",
-"Jaja, dale"
+"1moakldb",
+"[laughs] ¡Dale!",
+"eleven_v3"
 ],
 [
 "1n9eazf",
@@ -337,8 +342,9 @@ export const VOZ_LINES = [
 "Ni idea"
 ],
 [
-"1oy5b77",
-"Mmm, no me gusta nada"
+"1oy5b77b",
+"[doubtful] Mmm... no me gusta nada.",
+"eleven_v3"
 ],
 [
 "1pdtuu1",
@@ -353,8 +359,9 @@ export const VOZ_LINES = [
 "Puede ser"
 ],
 [
-"1r01tit",
-"Hmm."
+"1r01titb",
+"[thoughtful] Hmm...",
+"eleven_v3"
 ],
 [
 "1r6jkq1",
@@ -425,8 +432,9 @@ export const VOZ_LINES = [
 "Ya sé, ya sé"
 ],
 [
-"1xn4f8a",
-"Hmm. Veremos."
+"1xn4f8ab",
+"[thoughtful] Hmm... Veremos.",
+"eleven_v3"
 ],
 [
 "1xxkyz6",
@@ -441,16 +449,18 @@ export const VOZ_LINES = [
 "Hola, ¿jugamos un burako? Dale, que te toca."
 ],
 [
-"2soxrn",
-"Mmm, no sé"
+"2soxrnb",
+"[doubtful] Mmm... no sé.",
+"eleven_v3"
 ],
 [
 "3h6czg",
 "¡Gracias, igualmente!"
 ],
 [
-"43btu1",
-"Ajá"
+"43btu1b",
+"[amused] Ajá.",
+"eleven_v3"
 ],
 [
 "518s0c",
@@ -489,8 +499,9 @@ export const VOZ_LINES = [
 "Hablás mucho vos"
 ],
 [
-"a114xh",
-"Jaja, fue sin querer"
+"a114xhb",
+"[laughs] Fue sin querer.",
+"eleven_v3"
 ],
 [
 "ae08xm",
@@ -613,8 +624,9 @@ export const VOZ_LINES = [
 "emoji"
 ],
 [
-"kxjhdx",
-"Mmm, puede ser"
+"kxjhdxb",
+"[thoughtful] Mmm... puede ser.",
+"eleven_v3"
 ],
 [
 "lsai4t",
@@ -653,8 +665,9 @@ export const VOZ_LINES = [
 "Cierro. Buena partida."
 ],
 [
-"plouej",
-"Jaja, ya vamos a ver"
+"plouejb",
+"[laughs] Ya vamos a ver...",
+"eleven_v3"
 ],
 [
 "pznb84",
@@ -693,8 +706,9 @@ export const VOZ_LINES = [
 "La próxima no te salvás"
 ],
 [
-"snrhru",
-"Jeje, lo siento"
+"snrhrub",
+"[chuckles] Lo siento.",
+"eleven_v3"
 ],
 [
 "sxsn7",
@@ -709,8 +723,9 @@ export const VOZ_LINES = [
 "¡Hola, qué gusto!"
 ],
 [
-"tyo44r",
-"Hmm. Anotado."
+"tyo44rb",
+"[thoughtful] Hmm... Anotado.",
+"eleven_v3"
 ],
 [
 "u5xnoh",
@@ -737,8 +752,9 @@ export const VOZ_LINES = [
 "Ay, qué lindo"
 ],
 [
-"vrho1d",
-"Uff… me mataste"
+"vrho1db",
+"[sighs] Uff... me mataste.",
+"eleven_v3"
 ],
 [
 "vwfn77",
@@ -761,8 +777,9 @@ export const VOZ_LINES = [
 "Uy, se llevó todo"
 ],
 [
-"xkuio4",
-"Mmm, riquísimo"
+"xkuio4b",
+"[delighted] Mmm... ¡riquísimo!",
+"eleven_v3"
 ],
 [
 "yb49tf",

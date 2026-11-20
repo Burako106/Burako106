@@ -721,7 +721,7 @@ async function runBackup(env) {
 // y queda guardada acá; el juego después la reproduce desde /voz/<voz>-<frase>.mp3
 // sin volver a gastar créditos. La clave vive como secreto ELEVENLABS_API_KEY.
 const EL_BASE = (env) => env.TEST_EL_BASE || "https://api.elevenlabs.io";
-const VOZ_KEY_RE = /^[fm][0-9]-[0-9a-z]{1,8}$/;
+const VOZ_KEY_RE = /^[fm][0-9]-[0-9a-z]{1,10}$/;
 const VOZ_RESERVE = 300; // créditos que dejamos sin usar en la cuenta
 export class Voz extends DurableObject {
   constructor(ctx, env) {
@@ -767,10 +767,10 @@ export class Voz extends DurableObject {
       const have = this.have();
       const bad = new Set(this.ctx.storage.sql.exec("SELECT slot FROM errs").toArray().map((r) => r.slot));
       const todo = [];
-      for (const [id, text] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot)) todo.push([slot, id, text]);
+      for (const [id, text, model] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot)) todo.push([slot, id, text, model]);
       const batch = todo.slice(0, Math.max(1, Math.min(24, max | 0 || 6)));
       let stop = false;
-      const one = async ([slot, id, text]) => {
+      const one = async ([slot, id, text, model]) => {
         if (stop) return;
         if (left !== null && left - text.length < VOZ_RESERVE) { fails.push({ k: slot + "-" + id, error: "sin-creditos" }); stop = true; return; }
         if (left !== null) left -= text.length;
@@ -778,7 +778,8 @@ export class Voz extends DurableObject {
         const r = await fetch(EL_BASE(this.env) + "/v1/text-to-speech/" + v.id + "?output_format=mp3_44100_64", {
           method: "POST",
           headers: { "xi-api-key": this.env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
-          body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true } }),
+          // eleven_v3: actúa las risas y suspiros marcados entre corchetes; el resto, multilingual_v2
+          body: JSON.stringify(model === "eleven_v3" ? { text, model_id: "eleven_v3", voice_settings: { stability: 0.5 } } : { text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true } }),
         });
         if (!r.ok) {
           if (left !== null) left += text.length;
