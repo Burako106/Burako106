@@ -244,7 +244,7 @@ export const VOZ_LINES = [
 ],
 [
 "1awwj74b",
-"[laughs heartily]",
+"[laughs heartily] ¡Jajaja!",
 "eleven_v3"
 ],
 [

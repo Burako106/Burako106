@@ -24,7 +24,7 @@ EXTRA=['Hola, ¿jugamos un burako?','Hola, ¿jugamos un burako? Dale, que te toc
 # (termina en "b") para que el juego no use la grabación vieja guardada.
 FIX={
  'Jaja, sí':'[laughs] ¡Sí, sí!',
- 'Jajaja':'[laughs heartily]',
+ 'Jajaja':'[laughs heartily] ¡Jajaja!',
  'Jaja, no fue a propósito':'[laughs] No fue a propósito.',
  'Jaja, dale':'[laughs] ¡Dale!',
  'Jaja, fue sin querer':'[laughs] Fue sin querer.',

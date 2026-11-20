@@ -767,7 +767,7 @@ export class Voz extends DurableObject {
       const have = this.have();
       const bad = new Set(this.ctx.storage.sql.exec("SELECT slot FROM errs").toArray().map((r) => r.slot));
       const todo = [];
-      for (const [id, text, model] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot)) todo.push([slot, id, text, model]);
+      for (const [id, text, model] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot) && !(this.skip && this.skip.has(slot + "-" + id))) todo.push([slot, id, text, model]);
       const batch = todo.slice(0, Math.max(1, Math.min(24, max | 0 || 6)));
       let stop = false;
       const one = async ([slot, id, text, model]) => {
@@ -785,6 +785,7 @@ export class Voz extends DurableObject {
           if (left !== null) left += text.length;
           let msg = ""; try { const j = await r.json(); msg = (j.detail && (j.detail.status || j.detail.message)) || JSON.stringify(j).slice(0, 200); } catch (e) { msg = String(r.status); }
           fails.push({ k: slot + "-" + id, status: r.status, error: msg });
+          if (r.status === 400 || r.status === 422) (this.skip = this.skip || new Set()).add(slot + "-" + id); // frase rechazada: no trabar las demás
           if (r.status === 404 || /voice_not_found|not.found/i.test(msg)) this.ctx.storage.sql.exec("INSERT OR REPLACE INTO errs (slot,msg,at) VALUES (?,?,?)", slot, "La voz no está en tu cuenta de ElevenLabs: agregala a «Mis voces».", Date.now());
           if (r.status === 401 || /quota|credits/i.test(msg)) stop = true;
           return;
