@@ -342,6 +342,9 @@ export class Players extends DurableObject {
       this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS tx (
         id TEXT PRIMARY KEY, user_id TEXT, delta INTEGER, kind TEXT, meta TEXT, bal INTEGER, at INTEGER)`);
       this.ctx.storage.sql.exec("CREATE INDEX IF NOT EXISTS tx_user ON tx(user_id, at)");
+      this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS subs (
+        id TEXT PRIMARY KEY, user_id TEXT, plan TEXT, status TEXT, amount REAL, next_payment INTEGER,
+        paid_until INTEGER DEFAULT 0, created INTEGER, updated INTEGER)`);
       this.ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS games (
         id TEXT PRIMARY KEY, user_id TEXT, entry INTEGER, settled INTEGER DEFAULT 0, pm INTEGER DEFAULT 0, at INTEGER)`);
     });
@@ -473,12 +476,35 @@ export class Players extends DurableObject {
     for (const t of (list || []).slice(0, 30)) res.push({ id: t.id, ...(await this.applyTx(id, t)) });
     return { results: res, ...this.wallet(id) };
   }
+  // ===== Suscripciones (Mercado Pago cobra solo; acá guardamos el estado) =====
+  async subSave(x) {
+    const sql = this.ctx.storage.sql, now = Date.now();
+    const r = sql.exec("SELECT * FROM subs WHERE id=?", x.id).toArray()[0];
+    let paid = (r && r.paid_until) || 0;
+    if (x.status === "authorized" && x.next_payment) paid = Math.max(paid, x.next_payment + 3 * 864e5); // 3 días de margen por si el cobro se demora
+    if (!r) sql.exec("INSERT INTO subs (id,user_id,plan,status,amount,next_payment,paid_until,created,updated) VALUES (?,?,?,?,?,?,?,?,?)", x.id, x.user, x.plan, x.status, x.amount, x.next_payment || null, paid, now, now);
+    else sql.exec("UPDATE subs SET status=?, next_payment=?, paid_until=?, updated=? WHERE id=?", x.status, x.next_payment || null, paid, now, x.id);
+    return this.subOf(x.user);
+  }
+  subOf(user) {
+    const now = Date.now();
+    const rows = this.ctx.storage.sql.exec("SELECT * FROM subs WHERE user_id=? ORDER BY updated DESC", user).toArray();
+    const act = rows.find((r) => r.paid_until > now && ["authorized", "cancelled", "paused"].includes(r.status));
+    const pend = rows.find((r) => r.status === "pending" && now - r.created < 864e5);
+    if (act) return { id: act.id, plan: act.plan, status: act.status, until: act.paid_until, cancelled: act.status !== "authorized" };
+    if (pend) return { id: pend.id, plan: pend.plan, status: "pending", until: 0, cancelled: false };
+    return null;
+  }
+  async subGet(user) { return this.subOf(user); }
+  async subRow(id) { return this.ctx.storage.sql.exec("SELECT * FROM subs WHERE id=?", id).toArray()[0] || null; }
+  async subsToRefresh() { return this.ctx.storage.sql.exec("SELECT id FROM subs WHERE status IN ('authorized','pending','paused') OR paid_until>?", Date.now()).toArray().map((r) => r.id); }
   // Copia de seguridad: todo lo importante, sin las fotos (que pesan mucho)
   async exportAll() {
     const sql = this.ctx.storage.sql;
     return {
       players: sql.exec("SELECT id,email,name,name_custom,image_url,avatar,provider,verified,created,last_seen,pending,bal,wallet,data FROM players").toArray(),
       orders: sql.exec("SELECT * FROM orders").toArray(),
+      subs: sql.exec("SELECT * FROM subs").toArray(),
       tx: sql.exec("SELECT * FROM tx WHERE at>=?", Date.now() - 90 * 864e5).toArray(),
     };
   }
@@ -546,6 +572,76 @@ async function mpSettle(env, paymentId) {
   return { ...res, status: "approved", user: o.user_id };
 }
 
+// ---------------------------------------------------------------------------
+// Suscripciones con Mercado Pago (cobro automático mensual o anual). Precios fijados acá.
+// ---------------------------------------------------------------------------
+const MP_SUBS = {
+  mensual: { reason: "Burako 106 · Suscripción mensual", amount: 6260, months: 1 },
+  anual: { reason: "Burako 106 · Suscripción anual", amount: 63852, months: 12 },
+};
+// Lee la suscripción en Mercado Pago (la fuente de verdad) y guarda su estado
+async function mpSubRefresh(env, id) {
+  if (!id || !/^[\w-]{6,64}$/.test(id)) return null;
+  const r = await mpApi(env, "/preapproval/" + encodeURIComponent(id));
+  if (!r.ok) return null;
+  const p = await r.json();
+  const [user, plan] = String(p.external_reference || "").split("|");
+  const pl = MP_SUBS[plan]; if (!user || !pl) return null;
+  const ar = p.auto_recurring || {};
+  if (ar.currency_id !== "ARS" || Number(ar.transaction_amount) + 0.001 < pl.amount) return null; // monto o moneda no coinciden: no se activa
+  const next = p.next_payment_date ? Date.parse(p.next_payment_date) : 0;
+  return players(env).subSave({ id: p.id, user, plan, status: p.status, amount: Number(ar.transaction_amount), next_payment: next });
+}
+async function mpSubCreate(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  if (!env.MP_ACCESS_TOKEN) return Response.json({ error: "falta MP_ACCESS_TOKEN" }, { status: 500 });
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const pl = MP_SUBS[b.plan]; if (!pl) return Response.json({ error: "plan" }, { status: 400 });
+  const email = String(b.email || "").trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return Response.json({ error: "email" }, { status: 400 });
+  if (!(await mpIsTest(env))) return Response.json({ error: "no-test" }, { status: 409 });
+  const st = players(env);
+  await st.ensure(claims.sub);
+  const cur = await st.subGet(claims.sub);
+  if (cur && cur.status === "authorized") return Response.json({ error: "ya-activa" }, { status: 409 });
+  const u0 = new URL(request.url);
+  const origin = /^(localhost|127\.)/.test(u0.hostname) ? u0.origin : "https://" + u0.host;
+  const body = {
+    reason: pl.reason,
+    external_reference: claims.sub + "|" + b.plan + "|" + rid(),
+    payer_email: email,
+    auto_recurring: { frequency: pl.months, frequency_type: "months", transaction_amount: pl.amount, currency_id: "ARS" },
+    back_url: origin + "/?mp=sub",
+    status: "pending",
+  };
+  const r = await mpApi(env, "/preapproval", { method: "POST", body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.init_point) return Response.json({ error: "mp", detail: j.message || r.status }, { status: 502 });
+  await st.subSave({ id: j.id, user: claims.sub, plan: b.plan, status: "pending", amount: pl.amount, next_payment: 0 });
+  return Response.json({ url: j.init_point, id: j.id });
+}
+async function mpSubCheck(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  let b = {}; try { b = await request.json(); } catch (e) {}
+  const st = players(env);
+  const id = b.id || ((await st.subGet(claims.sub)) || {}).id;
+  if (id) { const row = await st.subRow(id); if (row && row.user_id === claims.sub) await mpSubRefresh(env, id); }
+  return Response.json({ sub: await st.subGet(claims.sub) });
+}
+async function mpSubCancel(request, env) {
+  const claims = await verifyClerk(request, env);
+  if (!claims) return Response.json({ error: "no autorizado" }, { status: 401 });
+  const st = players(env);
+  const cur = await st.subGet(claims.sub);
+  if (!cur) return Response.json({ sub: null });
+  const r = await mpApi(env, "/preapproval/" + encodeURIComponent(cur.id), { method: "PUT", body: JSON.stringify({ status: "cancelled" }) });
+  if (!r.ok) return Response.json({ error: "mp" }, { status: 502 });
+  await mpSubRefresh(env, cur.id);
+  return Response.json({ sub: await st.subGet(claims.sub) });
+}
+
 async function mpSigOk(request, env, dataId) {
   if (!env.MP_WEBHOOK_SECRET) return true; // si no hay clave, igual consultamos el pago a MP antes de acreditar
   const sig = request.headers.get("x-signature") || "", reqId = request.headers.get("x-request-id") || "";
@@ -568,6 +664,10 @@ async function mpWebhook(request, env) {
   const id = url.searchParams.get("data.id") || (b.data && b.data.id) || url.searchParams.get("id") || "";
   if (!(await mpSigOk(request, env, url.searchParams.get("data.id") || (b.data && b.data.id) || ""))) return new Response("firma", { status: 401 });
   if (type.startsWith("payment") && id) { try { await mpSettle(env, id); } catch (e) {} }
+  if (type === "subscription_preapproval" && id) { try { await mpSubRefresh(env, id); } catch (e) {} }
+  if (type === "subscription_authorized_payment" && id) {
+    try { const r = await mpApi(env, "/authorized_payments/" + encodeURIComponent(id)); if (r.ok) { const a = await r.json(); if (a.preapproval_id) await mpSubRefresh(env, a.preapproval_id); } } catch (e) {}
+  }
   return new Response("ok");
 }
 
@@ -645,11 +745,17 @@ async function apiMe(request, env) {
   else { await st.ensure(id); me = await st.get(id); } // pedidos sin datos de cuenta (cambios de nombre, tickets): no tocar el perfil
   if (request.method === "POST" && (b.name !== undefined || b.avatar !== undefined || b.data)) me = await st.edit(id, b);
   if (request.method === "POST" && b.claim) { me.claimed = await st.claim(id); me.pending = 0; }
+  if (me) me.sub = await st.subGet(id);
   return Response.json(me, { headers: { "cache-control": "no-store" } });
 }
 
 export default {
-  async scheduled(event, env, ctx) { ctx.waitUntil(runBackup(env)); },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil((async () => {
+      try { for (const id of await players(env).subsToRefresh()) await mpSubRefresh(env, id); } catch (e) {}
+      await runBackup(env);
+    })());
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/tables") {
@@ -674,6 +780,9 @@ export default {
     if (url.pathname === "/api/mp/checkout" && request.method === "POST") return mpCheckout(request, env);
     if (url.pathname === "/api/mp/check" && request.method === "POST") return mpCheck(request, env);
     if (url.pathname === "/api/mp/webhook") return mpWebhook(request, env);
+    if (url.pathname === "/api/mp/sub" && request.method === "POST") return mpSubCreate(request, env);
+    if (url.pathname === "/api/mp/sub/check" && request.method === "POST") return mpSubCheck(request, env);
+    if (url.pathname === "/api/mp/sub/cancel" && request.method === "POST") return mpSubCancel(request, env);
     if (url.pathname === "/ws/lobby") return lobby(env).fetch(request);
     if (url.pathname === "/ws") {
       const code = (url.searchParams.get("mesa") || "").toUpperCase();
