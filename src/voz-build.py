@@ -69,7 +69,8 @@ for orig,new in FIX.items():
 ids=sorted(lines)
 chars=sum(len(t) for t in lines.values())
 print('frases',len(lines),'caracteres por voz',chars,'total',chars*len(VOICES))
-data={'v':{k:v[1] for k,v in VOICES.items()},'ids':','.join(ids),'alias':alias}
+ARG=[k for k,v in VOICES.items() if 'argentin' in v[2].lower()]  # se eligen más seguido
+data={'v':{k:v[1] for k,v in VOICES.items()},'ids':','.join(ids),'alias':alias,'arg':ARG}
 open('/home/claude/tools/voz.html','w').write('<script id="voz-data">window.BURAKO_VOZ='+json.dumps(data,ensure_ascii=False)+';</script>\n')
 js='// Generado por tools/voz.py: frases que se graban con ElevenLabs y las voces elegidas.\n'
 js+='export const VOZ_VOICES = '+json.dumps({k:{'id':v[0],'g':v[1],'d':v[2]} for k,v in VOICES.items()},ensure_ascii=False,indent=1)+';\n'
