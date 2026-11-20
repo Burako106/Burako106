@@ -13,6 +13,10 @@ VOICES={  # slot: (voice_id de ElevenLabs, género, descripción)
  'm2':('Rt1JHkPO27QCUX6Nd5bV','m','Jorge, mexicano'),
  'm3':('0bu1GUsOfNJYyXbmSTxD','m','Fran, argentino'),
  'm4':('QK4xDwo9ESPHA4JNUpX3','m','Tomás, argentino'),
+ 'f5':('RO0BdeZ6XxVXOfbdD4H0','f','Malena, argentina'),
+ 'f6':('yFykvY9iSJewrANOC0cU','f','Cande, argentina'),
+ 'm5':('dChy4ih9MLx375Se3g65','m','Paul, argentino'),
+ 'm6':('gBTPbHzRd0ZmV75Z5Zk4','m','Carlos, argentino'),
 }
 EXTRA=['Hola, ¿jugamos un burako?','Hola, ¿jugamos un burako? Dale, que te toca.']
 # Frases con risas o sonidos: se graban con el modelo eleven_v3, que actúa las indicaciones

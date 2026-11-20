@@ -49,6 +49,26 @@ export const VOZ_VOICES = {
   "id": "QK4xDwo9ESPHA4JNUpX3",
   "g": "m",
   "d": "Tomás, argentino"
+ },
+ "f5": {
+  "id": "RO0BdeZ6XxVXOfbdD4H0",
+  "g": "f",
+  "d": "Malena, argentina"
+ },
+ "f6": {
+  "id": "yFykvY9iSJewrANOC0cU",
+  "g": "f",
+  "d": "Cande, argentina"
+ },
+ "m5": {
+  "id": "dChy4ih9MLx375Se3g65",
+  "g": "m",
+  "d": "Paul, argentino"
+ },
+ "m6": {
+  "id": "gBTPbHzRd0ZmV75Z5Zk4",
+  "g": "m",
+  "d": "Carlos, argentino"
  }
 };
 export const VOZ_LINES = [
