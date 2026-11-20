@@ -5631,8 +5631,7 @@ function lbNavH(){ const on=lnavActive(), th={glass:'Glass',onyx:'Onyx'};
       ${it('chat','lchat','Chat del club')}
       ${it('reglas','lbook','Cómo se juega')}
       <div class="lni-b lni-row" data-nav="idioma">${LNAV_IC.idioma}<span class="lni-l">Idioma</span><span class="lni-seg" role="tablist" aria-label="Idioma"><button role="tab" data-act="lang" data-v="es" aria-selected="${LANG==='es'}">ES</button><button role="tab" data-act="lang" data-v="en" aria-selected="${LANG==='en'}">EN</button></span></div>
-      <div class="lni-grp${lnavX==='diseno'?' open':''}">${it('diseno','lnavx','Color',`<span class="lni-v">${th[theme]}</span><svg class="lni-car" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`)}
-        <div class="lni-sub" role="tablist" aria-label="Modo de color">${['glass','onyx'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" class="th-${v}"><i></i>${th[v]}</button>`).join('')}</div></div>
+      <div class="lni-b lni-row" data-nav="diseno">${LNAV_IC.diseno}<span class="lni-l">Color</span><span class="lni-seg lni-col" role="tablist" aria-label="Modo de color">${['glass','onyx'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" aria-label="${th[v]}" title="${th[v]}"><i class="cdot cd-${v}"></i></button>`).join('')}</span></div>
       ${it('config','lcfg','Configuración')}
     </div>
     <div class="lver">V.1</div><button class="lnav-tog" data-act="lnavslim" aria-label="Menú angosto (solo iconos)" title="Menú angosto (solo iconos)">${LNAV_IC.collapse}</button></nav>`; }
@@ -5646,7 +5645,7 @@ function lbNavSlimH(on,th,it){ const st=lbStats(), tot=st.w+st.l, pct=tot?Math.r
       <div class="lns-x${lnavX==='idioma'?' open':''}"><button class="lni-b" data-act="lnavx" data-x="idioma" data-nav="idioma" aria-label="Idioma" aria-expanded="${lnavX==='idioma'}">${LNAV_IC.idioma}<b class="lns-badge">${LANG.toUpperCase()}</b></button>
         <span class="lns-fly lni-seg" role="tablist" aria-label="Idioma"><button role="tab" data-act="lang" data-v="es" aria-selected="${LANG==='es'}">ES</button><button role="tab" data-act="lang" data-v="en" aria-selected="${LANG==='en'}">EN</button></span></div>
       <div class="lns-x${lnavX==='diseno'?' open':''}"><button class="lni-b" data-act="lnavx" data-x="diseno" data-nav="diseno" aria-label="Modo de color" aria-expanded="${lnavX==='diseno'}">${LNAV_IC.diseno}</button>
-        <span class="lns-fly lni-sub" role="tablist" aria-label="Modo de color">${['glass','onyx'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" class="th-${v}"><i></i>${th[v]}</button>`).join('')}</span></div>
+        <span class="lns-fly lni-seg lni-col" role="tablist" aria-label="Modo de color">${['glass','onyx'].map(v=>`<button role="tab" data-act="theme" data-v="${v}" aria-selected="${theme===v}" aria-label="${th[v]}" title="${th[v]}"><i class="cdot cd-${v}"></i></button>`).join('')}</span></div>
       ${it('config','lcfg','Configuración')}</div>
     <button class="lni-b lns-tog" data-act="lnavslim" data-nav="tog" aria-label="Menú completo">${LNAV_IC.expand}<span class="lni-l">Ver menú completo</span></button>
   </nav>`; }
@@ -6089,7 +6088,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795176436';</script>
+<script>window.BURAKO_BUILD='1795178476';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -6755,6 +6754,14 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
 .del-card .del-go{background:#d23b30!important;color:#fff!important;border-color:#d23b30!important}
 .del-card .del-go:disabled{opacity:.6}
 .del-card .del-msg{margin:10px 0 0;font-size:13px;color:#d23b30}
+
+/* Toggle de color (círculo blanco = Glass, negro = Onyx) */
+.lni-col button{display:grid;place-items:center;padding:5px 8px}
+.lni-col .cdot{display:block;width:15px;height:15px;border-radius:50%}
+.lni-col .cd-glass{background:#fff;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.28)}
+.lni-col .cd-onyx{background:#111215;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4)}
+.lnav.slim .lns-fly.lni-col button{padding:8px 11px}
+.lnav.slim .lns-fly.lni-col .cdot{width:17px;height:17px}
 </style>
 <script id="net-js">
 /* ==========================================================================
@@ -8725,5 +8732,27 @@ html body.glass.onyx.onyx .menu-tab{color:#f2f3f7}
 html body.glass.onyx.onyx .bar .goal-pill,html body.glass.onyx.onyx .bar .mode-pill{background:#2b2d36!important;color:#f2f3f7!important}
 html body.glass.onyx.onyx .pile.mazo-c .lbl,html body.glass.onyx.onyx .pile.mazo-c b,html body.glass.onyx.onyx .pile.mazo-c span{color:#f2f3f7!important}
 html body.glass.onyx.onyx .lvl i.on{color:inherit!important;opacity:1}
+/* Mesas del lobby: paño oscuro con el color del modo y borde gris suave (sin blanco) */
+html body.glass.onyx.onyx .loval{background:linear-gradient(180deg,#3a3c45,#25272e)!important;box-shadow:0 12px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)!important}
+html body.glass.onyx.onyx .lfelt{background:radial-gradient(120% 120% at 50% 30%,rgba(110,160,255,.26),rgba(255,120,120,.12)),#1d1f25!important;color:#e6e7ec;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)!important}
+html body.glass.onyx.onyx .lcard.m2 .lfelt,html body.glass.onyx.onyx .ltable.m2 .lfelt{background:radial-gradient(120% 120% at 50% 30%,rgba(91,157,255,.42),rgba(91,157,255,.14)),#1d1f25!important}
+html body.glass.onyx.onyx .ltable.m3 .lfelt{background:radial-gradient(120% 120% at 50% 30%,rgba(60,190,115,.38),rgba(60,190,115,.12)),#1d1f25!important}
+html body.glass.onyx.onyx .ltable.m4 .lfelt,html body.glass.onyx.onyx .lcard.m3:not(:has(.ltable)) .lfelt{background:radial-gradient(120% 120% at 50% 30%,rgba(255,90,80,.40),rgba(255,90,80,.13)),#1d1f25!important}
+html body.glass.onyx.onyx .lcard.m4:not(:has(.ltable)) .lfelt{background:radial-gradient(120% 120% at 50% 30%,rgba(230,182,63,.40),rgba(230,182,63,.13)),#1d1f25!important}
+html body.glass.onyx.onyx .lfelt .lstate{color:#b4b6c0}
+/* "No jugar" y otros botones con borde: claros sobre oscuro */
+html body.glass.onyx.onyx .nr-no.btn{border-color:#cecfd7!important;color:#e6e7ec!important}
+html body.glass.onyx.onyx .nr-no.btn:hover{background:#e6e7ec!important;color:#111215!important}
+/* Ventanas de mesa online: textos e inputs oscuros */
+html body.glass.onyx.onyx .lw-msg{color:#a9abb5}
+html body.glass.onyx.onyx #netov input,html body.glass.onyx.onyx .net-in{background:#111215;color:#f2f3f7;border-color:rgba(255,255,255,.2)}
+html body.glass.onyx.onyx .s2-sum{color:#a9abb5;opacity:1}
+/* Mesa: nombres, contador del mazo, textos vacíos y borde del pozo */
+html body.glass.onyx.onyx .pile.mazo-c.live .cnt,html body.glass.onyx.onyx .pile.mazo-c.live .lbl,html body.glass.onyx.onyx .pile.mazo-c .cnt{color:#f2f3f7!important}
+html body.glass.onyx.onyx .seat.t0 .seat-info b{color:#7aa4ff}
+html body.glass.onyx.onyx .seat.t1 .seat-info b{color:#ff7d72}
+html body.glass.onyx.onyx .seat.y3 .seat-info b{color:#f0b23a}
+html body.glass.onyx.onyx .zone .empty{color:#a9abb5}
+html body.glass.onyx.onyx .pozo.live .pozo-tiles{border-color:rgba(215,215,218,.4)!important}
 </style></body>
 </html>
