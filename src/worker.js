@@ -460,7 +460,9 @@ export class Players extends DurableObject {
       else { ok = true; sql.exec("UPDATE games SET pm=pm+1 WHERE id=?", game.id); }
     } else if (kind === "video") {
       const vids = sql.exec("SELECT at FROM tx WHERE user_id=? AND kind='video' AND at>=? ORDER BY at DESC", id, dayStart).toArray();
+      const live = this.env && this.env.MP_LIVE === "1";
       if (delta !== 100) why = "monto";
+      else if (!live) ok = true; // modo prueba: videos libres para los que prueban
       else if (vids.length >= 2) why = "limite";
       else if (vids[0] && now - vids[0].at < 3 * 3600e3 - 60e3) why = "espera";
       else ok = true;
@@ -746,7 +748,11 @@ async function apiMe(request, env) {
   else { await st.ensure(id); me = await st.get(id); } // pedidos sin datos de cuenta (cambios de nombre, tickets): no tocar el perfil
   if (request.method === "POST" && (b.name !== undefined || b.avatar !== undefined || b.data)) me = await st.edit(id, b);
   if (request.method === "POST" && b.claim) { me.claimed = await st.claim(id); me.pending = 0; }
-  if (me) me.sub = await st.subGet(id);
+  if (me) {
+    me.sub = await st.subGet(id);
+    if (me.sub && me.sub.status === "pending") { try { await mpSubRefresh(env, me.sub.id); me.sub = await st.subGet(id); } catch (e) {} }
+    me.live = env.MP_LIVE === "1";
+  }
   return Response.json(me, { headers: { "cache-control": "no-store" } });
 }
 

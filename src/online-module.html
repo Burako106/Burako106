@@ -2207,6 +2207,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     await walletStart(!isNew);
     try{ applyMe(await api('POST',{account:accountHint(u),data:{bal:E.bal,sub:E.sub?{plan:E.sub.plan,until:E.sub.until}:null}})); }catch(e){ console.warn('perfil',e); }
     if(ACC.me) setSub(ACC.me.sub||null);
+    if(ACC.me&&ACC.me.live){ try{ ECO.VIDEO_MAX=2; ECO.VIDEO_GAP=3*3600e3; }catch(e){} } // al lanzar: los mismos límites que el servidor
     try{ await mpReturn(); if(ACC.me&&ACC.me.pending>0) await claimTickets(); }catch(e){}
     if(pendName){ const nm=pendName; pendName=''; try{ localStorage.setItem('burako-name',nm); }catch(e){} try{ renderLobby(); }catch(e){} }
   }
