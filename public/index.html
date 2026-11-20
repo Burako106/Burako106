@@ -6085,7 +6085,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795136079';</script>
+<script>window.BURAKO_BUILD='1795174853';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8612,7 +8612,7 @@ body:not(.fun):not(.glass) .del-card .del-warn{color:#ff8a7e}
     f.onsubmit=async ev=>{ ev.preventDefault(); go.disabled=true; go.textContent=E_?'Opening Mercado Pago…':'Abriendo Mercado Pago…'; msg.hidden=true;
       try{ const j=await mpPost('/api/mp/sub',{plan,email:f.mail.value}); location.href=j.url; }
       catch(e){ go.disabled=false; go.textContent=E_?'Continue to Mercado Pago':'Continuar a Mercado Pago'; msg.hidden=false;
-        msg.textContent=e.code==='no-test'?(E_?'Payments are paused: the store isn’t in test mode yet.':'Pagos en pausa: la tienda todavía no está en modo prueba.'):e.code==='email'?(E_?'Check the email.':'Revisá el email.'):e.code==='email-mp'?(E_?'That email isn’t a Mercado Pago account. Use the one you sign in to Mercado Pago with.':'Ese email no es de una cuenta de Mercado Pago. Usá el email con el que entrás a Mercado Pago.'):e.code==='ya-activa'?(E_?'You already have an active subscription.':'Ya tenés una suscripción activa.'):(E_?'Couldn’t open Mercado Pago. Try again.':'No se pudo abrir Mercado Pago. Probá de nuevo.'); } };
+        msg.textContent=e.code==='no-test'?(E_?'Payments are paused: the store isn’t in test mode yet.':'Pagos en pausa: la tienda todavía no está en modo prueba.'):e.code==='email'?(E_?'Check the email.':'Revisá el email.'):e.code==='email-mp'?(E_?'Mercado Pago didn’t accept that email. It must be the email of the Mercado Pago account that will pay (in test mode, a test account).':'Mercado Pago no aceptó ese email. Tiene que ser el de la cuenta de Mercado Pago que va a pagar (en modo prueba, una cuenta de prueba).'):e.code==='ya-activa'?(E_?'You already have an active subscription.':'Ya tenés una suscripción activa.'):(E_?'Couldn’t open Mercado Pago. Try again.':'No se pudo abrir Mercado Pago. Probá de nuevo.'); } };
     setTimeout(()=>f.mail.focus(),50);
   }
   function subCancelDialog(){
