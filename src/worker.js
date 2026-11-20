@@ -768,8 +768,12 @@ export class Voz extends DurableObject {
       const bad = new Set(this.ctx.storage.sql.exec("SELECT slot FROM errs").toArray().map((r) => r.slot));
       const todo = [];
       for (const [id, text] of VOZ_LINES) for (const slot of Object.keys(VOZ_VOICES)) if (!have.has(slot + "-" + id) && !bad.has(slot)) todo.push([slot, id, text]);
-      for (const [slot, id, text] of todo.slice(0, Math.max(1, Math.min(20, max | 0 || 6)))) {
-        if (left !== null && left - text.length < VOZ_RESERVE) { fails.push({ k: slot + "-" + id, error: "sin-creditos" }); break; }
+      const batch = todo.slice(0, Math.max(1, Math.min(24, max | 0 || 6)));
+      let stop = false;
+      const one = async ([slot, id, text]) => {
+        if (stop) return;
+        if (left !== null && left - text.length < VOZ_RESERVE) { fails.push({ k: slot + "-" + id, error: "sin-creditos" }); stop = true; return; }
+        if (left !== null) left -= text.length;
         const v = VOZ_VOICES[slot];
         const r = await fetch(EL_BASE(this.env) + "/v1/text-to-speech/" + v.id + "?output_format=mp3_44100_64", {
           method: "POST",
@@ -777,18 +781,20 @@ export class Voz extends DurableObject {
           body: JSON.stringify({ text, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true } }),
         });
         if (!r.ok) {
+          if (left !== null) left += text.length;
           let msg = ""; try { const j = await r.json(); msg = (j.detail && (j.detail.status || j.detail.message)) || JSON.stringify(j).slice(0, 200); } catch (e) { msg = String(r.status); }
           fails.push({ k: slot + "-" + id, status: r.status, error: msg });
           if (r.status === 404 || /voice_not_found|not.found/i.test(msg)) this.ctx.storage.sql.exec("INSERT OR REPLACE INTO errs (slot,msg,at) VALUES (?,?,?)", slot, "La voz no está en tu cuenta de ElevenLabs: agregala a «Mis voces».", Date.now());
-          if (r.status === 401 || r.status === 429 || /quota|credits/i.test(msg)) break;
-          continue;
+          if (r.status === 401 || /quota|credits/i.test(msg)) stop = true;
+          return;
         }
         const mp3 = await r.arrayBuffer();
-        if (mp3.byteLength < 500) { fails.push({ k: slot + "-" + id, error: "audio-vacio" }); continue; }
+        if (mp3.byteLength < 500) { fails.push({ k: slot + "-" + id, error: "audio-vacio" }); return; }
         this.ctx.storage.sql.exec("INSERT OR REPLACE INTO clips (k,mp3,chars,at) VALUES (?,?,?,?)", slot + "-" + id, mp3, text.length, Date.now());
-        if (left !== null) left -= text.length;
         made.push(slot + "-" + id);
-      }
+      };
+      // de a 3 a la vez (el máximo que permite el plan Starter)
+      for (let i = 0; i < batch.length && !stop; i += 3) await Promise.all(batch.slice(i, i + 3).map(one));
     } finally { this.busy = false; }
     return { made, fails, ...(await this.status(false)) };
   }

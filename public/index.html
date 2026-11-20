@@ -6088,7 +6088,7 @@ window.claude?.hot?.snapshot?.(()=>S);
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 </script>
 
-<script>window.BURAKO_BUILD='1795201066';</script>
+<script>window.BURAKO_BUILD='1795201299';</script>
 <style id="net-css">
 .lfriend{background:rgba(0,0,0,.18)}
 body.fun .lfriend{background:var(--cr)}
@@ -8398,7 +8398,7 @@ html body .tile.drag-src{visibility:hidden!important}
     if(vzRun) return; vzRun=true; let idle=0, st=null;
     await vzRefresh('Grabando… no cierres esta pestaña.');
     while(vzRun){
-      try{ st=await vzApi('gen',{max:8}); }catch(e){ vzRun=false; vzRefresh('Se cortó: '+e.message+'. Tocá «Seguir grabando».'); return; }
+      try{ st=await vzApi('gen',{max:12}); }catch(e){ vzRun=false; vzRefresh('Se cortó: '+e.message+'. Tocá «Seguir grabando».'); return; }
       if(st.busy){ await new Promise(r=>setTimeout(r,3000)); continue; }
       const out=(st.fails||[]).find(f=>f.error==='sin-creditos');
       if(out){ vzRun=false; vzRefresh('Se terminaron los créditos de ElevenLabs.'); return; }
