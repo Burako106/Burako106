@@ -54,6 +54,9 @@ i=h.find('const LINES={'); j=h.find('\n};',i); block=h[i:j]
 keys=set(re.findall(r"(\w+):\[",block))
 strs=[s.replace("\\'","'") for s in re.findall(r"'((?:[^'\\]|\\.)*)'",block)]
 k=h.find("PRESETS=["); pre=re.findall(r"'([^']*)'",h[k:h.find('];',k)])
+# frases del chat del club (lobby)
+k=h.find('const LC_PRE='); k2=h.find('\n',h.find('const LC_LOBBY=')+10)
+pre+= [x for x in re.findall(r"'((?:[^'\\]|\\.)*)'",h[k:k2]) if x not in ('dulce','picante','serio')]
 lines={}
 for s in strs+pre+EXTRA:
     n=norm(s)

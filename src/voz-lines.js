@@ -85,12 +85,20 @@ export const VOZ_LINES = [
 "¡Gracias por el regalo!"
 ],
 [
+"12e7rip",
+"¡Yo me prendo!"
+],
+[
 "12rdgk0",
 "Muy conveniente."
 ],
 [
 "12wm5lg",
 "Suerte vas a necesitar vos"
+],
+[
+"1345ff5",
+"Ya vuelvo, no me esperen"
 ],
 [
 "13ku53p",
@@ -113,6 +121,10 @@ export const VOZ_LINES = [
 "below"
 ],
 [
+"14pph3h",
+"¡Buena partida!"
+],
+[
 "14qu2c4b",
 "[dismissive] Bah... cualquiera.",
 "eleven_v3"
@@ -124,6 +136,10 @@ export const VOZ_LINES = [
 [
 "14t1z46",
 "¡Vamos, equipo!"
+],
+[
+"15bwv84",
+"Me sumo y te gano"
 ],
 [
 "15e2s1p",
@@ -153,6 +169,10 @@ export const VOZ_LINES = [
 "16qmncdb",
 "[laughs] ¡Sí, sí!",
 "eleven_v3"
+],
+[
+"16vrr3u",
+"Dale, pero después no llores"
 ],
 [
 "17dswi2",
@@ -208,6 +228,10 @@ export const VOZ_LINES = [
 "eleven_v3"
 ],
 [
+"1az6zyf",
+"¡Hola a todos!"
+],
+[
 "1b40prw",
 "Tranqui, que estoy pensando"
 ],
@@ -222,6 +246,10 @@ export const VOZ_LINES = [
 [
 "1d48x4a",
 "voiceschanged"
+],
+[
+"1dlkvnt",
+"¡Dale, me sumo!"
 ],
 [
 "1f233hx",
@@ -370,6 +398,10 @@ export const VOZ_LINES = [
 [
 "1r8t49o",
 "Ya veremos."
+],
+[
+"1rlk84i",
+"¡Qué lindo, vamos!"
 ],
 [
 "1rmr37d",
@@ -564,8 +596,16 @@ export const VOZ_LINES = [
 "Bien."
 ],
 [
+"d7njo1",
+"Me sumo."
+],
+[
 "dhxgr2",
 "Quizás."
+],
+[
+"dr08bd",
+"Falta uno, ¿te sumás?"
 ],
 [
 "eyrhej",
@@ -649,6 +689,10 @@ export const VOZ_LINES = [
 "big"
 ],
 [
+"onqmuf",
+"¡Suerte en las mesas!"
+],
+[
 "os1zn9",
 "px"
 ],
@@ -668,6 +712,10 @@ export const VOZ_LINES = [
 "plouejb",
 "[laughs] Ya vamos a ver...",
 "eleven_v3"
+],
+[
+"pwkwex",
+"¿Armamos una mesa?"
 ],
 [
 "pznb84",
@@ -721,6 +769,10 @@ export const VOZ_LINES = [
 [
 "tu8ojm",
 "¡Hola, qué gusto!"
+],
+[
+"twhu7t",
+"Puede ser. ¿A cuánto?"
 ],
 [
 "tyo44rb",
@@ -780,6 +832,10 @@ export const VOZ_LINES = [
 "xkuio4b",
 "[delighted] Mmm... ¡riquísimo!",
 "eleven_v3"
+],
+[
+"xwl8v4",
+"¿A cuánto? Yo voy"
 ],
 [
 "yb49tf",
